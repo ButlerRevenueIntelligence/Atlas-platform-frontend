@@ -13,7 +13,10 @@ import {
 } from "recharts";
 
 import AtlasAccountExpansionSignals from "../components/atlas/AtlasAccountExpansionSignals";
-import { getDashboard } from "../api";
+import {
+  getDashboard,
+  searchGraphIQOrganizations,
+} from "../api";
 
 const axisTick = { fill: "#9fb0d0", fontSize: 11 };
 
@@ -120,10 +123,74 @@ function normalizeDeal(d) {
   };
 }
 
+function normalizeGraphIQOrganization(org, index) {
+  if (!org || typeof org !== "object") {
+    return {
+      id: `graphiq-${index}`,
+      name: "Unknown organization",
+      website: "",
+      description: "",
+      industries: [],
+      capabilities: [],
+      locations: [],
+      raw: org,
+    };
+  }
+
+  const industries = Array.isArray(org.industries)
+    ? org.industries
+    : org.industry
+    ? [org.industry]
+    : [];
+
+  const capabilities = Array.isArray(org.capabilities)
+    ? org.capabilities
+    : [];
+
+  const locations = Array.isArray(org.locations)
+    ? org.locations
+    : org.location
+    ? [org.location]
+    : [];
+
+  return {
+    id:
+      org.id ||
+      org._id ||
+      org.organizationId ||
+      org.uri ||
+      `graphiq-${index}`,
+    name:
+      org.name ||
+      org.organizationName ||
+      org.legalName ||
+      org.title ||
+      "Unknown organization",
+    website:
+      org.website ||
+      org.websiteUrl ||
+      org.domain ||
+      org.url ||
+      "",
+    description:
+      org.description ||
+      org.summary ||
+      org.overview ||
+      "",
+    industries,
+    capabilities,
+    locations,
+    raw: org,
+  };
+}
 export default function AccountIntelligence() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [dashboard, setDashboard] = useState(null);
+  const [graphiqQuery, setGraphiqQuery] = useState("");
+  const [graphiqLoading, setGraphiqLoading] = useState(false);
+  const [graphiqError, setGraphiqError] = useState("");
+  const [graphiqResults, setGraphiqResults] = useState([]);
 
   useEffect(() => {
     let mounted = true;
@@ -150,10 +217,59 @@ export default function AccountIntelligence() {
       mounted = false;
     };
   }, []);
+async function handleGraphIQSearch(event) {
+  event?.preventDefault?.();
 
+  const query = graphiqQuery.trim();
+
+  if (!query) {
+    setGraphiqError("Enter a company name, website, industry, or capability.");
+    setGraphiqResults([]);
+    return;
+  }
+
+  try {
+    setGraphiqLoading(true);
+    setGraphiqError("");
+    setGraphiqResults([]);
+
+    const response = await searchGraphIQOrganizations({
+      search: query,
+    });
+
+    const rawData = response?.data ?? response;
+
+    const results =
+      rawData?.organizations ||
+      rawData?.results ||
+      rawData?.items ||
+      rawData?.data ||
+      [];
+
+    setGraphiqResults(Array.isArray(results) ? results : []);
+  } catch (err) {
+    console.error("GraphIQ search error:", err);
+
+    setGraphiqError(
+      err?.data?.details?.message ||
+        err?.data?.message ||
+        err?.message ||
+        "GraphIQ search failed."
+    );
+  } finally {
+    setGraphiqLoading(false);
+  }
+}
   const workspaceMode = String(dashboard?.workspaceMode || "demo").toLowerCase();
   const isDemo = workspaceMode === "demo";
   const orgName = dashboard?.activeWorkspace?.name || "Workspace";
+  const normalizedGraphIQResults = useMemo(
+  () =>
+    graphiqResults.map((organization, index) =>
+      normalizeGraphIQOrganization(organization, index)
+    ),
+  [graphiqResults]
+);
 
   const deals = useMemo(() => {
     return (Array.isArray(dashboard?.deals) ? dashboard.deals : [])
@@ -399,6 +515,124 @@ export default function AccountIntelligence() {
         </div>
 
         <AtlasAccountExpansionSignals clients={accounts} />
+        <Section
+  title="GraphIQ Organization Search"
+  subtitle="External Intelligence"
+>
+  <form onSubmit={handleGraphIQSearch} style={styles.graphiqForm}>
+    <input
+      type="text"
+      value={graphiqQuery}
+      onChange={(event) => setGraphiqQuery(event.target.value)}
+      placeholder="Search a company, website, industry, or capability"
+      style={styles.graphiqInput}
+      disabled={graphiqLoading}
+    />
+
+    <button
+      type="submit"
+      style={{
+        ...styles.graphiqButton,
+        opacity: graphiqLoading ? 0.65 : 1,
+        cursor: graphiqLoading ? "wait" : "pointer",
+      }}
+      disabled={graphiqLoading}
+    >
+      {graphiqLoading ? "Searching GraphIQ..." : "Search GraphIQ"}
+    </button>
+  </form>
+
+  <div style={styles.graphiqHelp}>
+    Search GraphIQ for organizations and market intelligence without exposing
+    the GraphIQ API key in the browser.
+  </div>
+
+  {graphiqError ? (
+    <div style={styles.graphiqError}>{graphiqError}</div>
+  ) : null}
+
+  {!graphiqLoading &&
+  graphiqQuery.trim() &&
+  !graphiqError &&
+  normalizedGraphIQResults.length === 0 ? (
+    <div style={styles.graphiqEmpty}>
+      No GraphIQ organizations were returned for this search.
+    </div>
+  ) : null}
+
+  {normalizedGraphIQResults.length > 0 ? (
+    <div style={styles.graphiqResults}>
+      {normalizedGraphIQResults.map((organization) => (
+        <div key={organization.id} style={styles.graphiqCard}>
+          <div style={styles.graphiqCardTop}>
+            <div>
+              <div style={styles.graphiqName}>{organization.name}</div>
+
+              {organization.website ? (
+                <div style={styles.graphiqWebsite}>
+                  {organization.website}
+                </div>
+              ) : null}
+            </div>
+
+            <div style={styles.graphiqSource}>GraphIQ</div>
+          </div>
+
+          {organization.description ? (
+            <div style={styles.graphiqDescription}>
+              {organization.description}
+            </div>
+          ) : null}
+
+          {organization.industries.length > 0 ? (
+            <div style={styles.graphiqTagSection}>
+              <div style={styles.graphiqTagLabel}>Industries</div>
+
+              <div style={styles.graphiqTags}>
+                {organization.industries.slice(0, 6).map((industry, index) => (
+                  <div
+                    key={`${organization.id}-industry-${index}`}
+                    style={styles.graphiqTag}
+                  >
+                    {typeof industry === "string"
+                      ? industry
+                      : industry?.name || industry?.label || "Industry"}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {organization.capabilities.length > 0 ? (
+            <div style={styles.graphiqTagSection}>
+              <div style={styles.graphiqTagLabel}>Capabilities</div>
+
+              <div style={styles.graphiqTags}>
+                {organization.capabilities
+                  .slice(0, 8)
+                  .map((capability, index) => (
+                    <div
+                      key={`${organization.id}-capability-${index}`}
+                      style={styles.graphiqTag}
+                    >
+                      {typeof capability === "string"
+                        ? capability
+                        : capability?.name ||
+                          capability?.label ||
+                          capability?.title ||
+                          "Capability"}
+                    </div>
+                  ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      ))}
+    </div>
+  ) : null}
+</Section>
+
+<div style={styles.statsGrid}>
 
         <div style={styles.statsGrid}>
           {topStats.map((item) => (
@@ -862,4 +1096,142 @@ const styles = {
     padding: 16,
     fontSize: 14,
   },
+      graphiqForm: {
+  display: "grid",
+  gridTemplateColumns: "minmax(0, 1fr) auto",
+  gap: 10,
+},
+
+graphiqInput: {
+  width: "100%",
+  minWidth: 0,
+  boxSizing: "border-box",
+  border: "1px solid rgba(255,255,255,0.12)",
+  borderRadius: 14,
+  padding: "13px 14px",
+  background: "rgba(4,10,24,0.72)",
+  color: "#fff",
+  fontSize: 14,
+  outline: "none",
+},
+
+graphiqButton: {
+  border: "1px solid rgba(125,211,252,0.3)",
+  borderRadius: 14,
+  padding: "13px 18px",
+  background:
+    "linear-gradient(135deg, rgba(37,99,235,0.95), rgba(14,165,233,0.88))",
+  color: "#fff",
+  fontSize: 13,
+  fontWeight: 800,
+  whiteSpace: "nowrap",
+},
+
+graphiqHelp: {
+  marginTop: 10,
+  fontSize: 12,
+  lineHeight: 1.5,
+  color: "rgba(203,213,225,0.72)",
+},
+
+graphiqError: {
+  marginTop: 12,
+  border: "1px solid rgba(248,113,113,0.3)",
+  borderRadius: 14,
+  padding: "12px 14px",
+  background: "rgba(127,29,29,0.2)",
+  color: "#fecaca",
+  fontSize: 13,
+},
+
+graphiqEmpty: {
+  marginTop: 12,
+  border: "1px dashed rgba(255,255,255,0.12)",
+  borderRadius: 14,
+  padding: 16,
+  color: "rgba(226,232,240,0.76)",
+  fontSize: 13,
+  textAlign: "center",
+},
+
+graphiqResults: {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+  gap: 12,
+  marginTop: 14,
+},
+
+graphiqCard: {
+  border: "1px solid rgba(255,255,255,0.08)",
+  borderRadius: 16,
+  padding: 14,
+  background: "rgba(4,10,24,0.46)",
+},
+
+graphiqCardTop: {
+  display: "flex",
+  alignItems: "flex-start",
+  justifyContent: "space-between",
+  gap: 12,
+},
+
+graphiqName: {
+  fontSize: 17,
+  fontWeight: 800,
+  color: "#fff",
+},
+
+graphiqWebsite: {
+  marginTop: 5,
+  color: "#7dd3fc",
+  fontSize: 12,
+  overflowWrap: "anywhere",
+},
+
+graphiqSource: {
+  border: "1px solid rgba(56,189,248,0.24)",
+  borderRadius: 999,
+  padding: "6px 9px",
+  background: "rgba(56,189,248,0.1)",
+  color: "#bae6fd",
+  fontSize: 10,
+  fontWeight: 800,
+  textTransform: "uppercase",
+  letterSpacing: "0.12em",
+},
+
+graphiqDescription: {
+  marginTop: 12,
+  fontSize: 13,
+  lineHeight: 1.6,
+  color: "rgba(226,232,240,0.82)",
+},
+
+graphiqTagSection: {
+  marginTop: 13,
+},
+
+graphiqTagLabel: {
+  marginBottom: 7,
+  color: "rgba(148,163,184,0.88)",
+  fontSize: 10,
+  fontWeight: 800,
+  textTransform: "uppercase",
+  letterSpacing: "0.14em",
+},
+
+graphiqTags: {
+  display: "flex",
+  flexWrap: "wrap",
+  gap: 6,
+},
+
+graphiqTag: {
+  border: "1px solid rgba(255,255,255,0.08)",
+  borderRadius: 999,
+  padding: "6px 9px",
+  background: "rgba(255,255,255,0.04)",
+  color: "#dbeafe",
+  fontSize: 11,
+},
 };
