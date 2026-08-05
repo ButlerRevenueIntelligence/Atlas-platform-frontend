@@ -501,6 +501,11 @@ export const getRevenueStability = () => apiGet("/revenue-stability");
 export const getForecastScenarios = () => apiGet("/forecast/scenarios");
 export const getOperatorSignals = () => apiGet("/operator/signals");
 
+// -------------------- GraphIQ --------------------
+export const searchGraphIQOrganizations = (organization) =>
+  apiPost("/graphiq/organizations/search", {
+    organization,
+  });
 // -------------------- Integrations (Extended) --------------------
 export const syncHubSpot = () =>
   apiPost("/integrations/hubspot/sync", {});
