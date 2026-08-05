@@ -542,7 +542,7 @@ async function handleGraphIQSearch(event) {
       }}
       disabled={graphiqLoading}
     >
-      {graphiqLoading ? "Searching GraphIQ..." : "Search GraphIQ"}
+      {graphiqLoading ? "Searching Companies..." : "Search Companies"}
     </button>
   </form>
 
