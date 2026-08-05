@@ -1,6 +1,10 @@
 // frontend/src/pages/Metrics.jsx
 import React, { useEffect, useMemo, useState } from "react";
-import { getMetricsDaily, getMetricsSummary } from "../api";
+import {
+  getMetricsDaily,
+  getMetricsSummary,
+  searchGraphIQOrganizations,
+} from "../api";
 import OpportunityRadar from "../components/atlas/OpportunityRadar";
 import RevenueTimeline from "../components/atlas/RevenueTimeline";
 import {
@@ -9,35 +13,34 @@ import {
   Line,
   BarChart,
   Bar,
-  AreaChart,
-  Area,
   XAxis,
   YAxis,
   Tooltip,
   CartesianGrid,
 } from "recharts";
 
-const safeNum = (v) => {
-  const n = Number(v);
-  return Number.isFinite(n) ? n : 0;
+const safeNum = (value) => {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : 0;
 };
 
-const money = (n) =>
-  safeNum(n).toLocaleString(undefined, {
+const money = (value) =>
+  safeNum(value).toLocaleString(undefined, {
     style: "currency",
     currency: "USD",
     maximumFractionDigits: 0,
   });
 
-const moneyCompact = (n) => {
-  const num = safeNum(n);
-  if (num >= 1_000_000) return `$${(num / 1_000_000).toFixed(1)}M`;
-  if (num >= 1_000) return `$${Math.round(num / 1_000)}K`;
-  return `$${Math.round(num)}`;
+const moneyCompact = (value) => {
+  const number = safeNum(value);
+  if (number >= 1_000_000) return `$${(number / 1_000_000).toFixed(1)}M`;
+  if (number >= 1_000) return `$${Math.round(number / 1_000)}K`;
+  return `$${Math.round(number)}`;
 };
 
-const pct = (n) => `${Math.round(safeNum(n) * 100)}%`;
-const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+const pct = (value) => `${Math.round(safeNum(value) * 100)}%`;
+const clamp = (value, minimum, maximum) =>
+  Math.max(minimum, Math.min(maximum, value));
 
 function Section({ title, subtitle, children, action }) {
   return (
@@ -82,6 +85,58 @@ function SignalItem({ title, body, tone = "neutral" }) {
   );
 }
 
+function normalizeOrganization(org, index) {
+  const industries = Array.isArray(org?.industries)
+    ? org.industries
+    : org?.industry
+    ? [org.industry]
+    : [];
+
+  const capabilities = Array.isArray(org?.capabilities)
+    ? org.capabilities
+    : [];
+
+  const locations = Array.isArray(org?.locations)
+    ? org.locations
+    : org?.location
+    ? [org.location]
+    : [];
+
+  return {
+    id:
+      org?.id ||
+      org?._id ||
+      org?.organizationId ||
+      org?.uri ||
+      `market-org-${index}`,
+    name:
+      org?.name ||
+      org?.organizationName ||
+      org?.legalName ||
+      org?.title ||
+      "Unknown organization",
+    website:
+      org?.website ||
+      org?.websiteUrl ||
+      org?.domain ||
+      org?.url ||
+      "",
+    description:
+      org?.description ||
+      org?.summary ||
+      org?.overview ||
+      "",
+    industries,
+    capabilities,
+    locations,
+  };
+}
+
+function readableValue(value, fallback = "") {
+  if (typeof value === "string") return value;
+  return value?.name || value?.label || value?.title || fallback;
+}
+
 export default function Metrics() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -89,20 +144,28 @@ export default function Metrics() {
   const [summary, setSummary] = useState(null);
   const [series, setSeries] = useState([]);
 
+  const [marketQuery, setMarketQuery] = useState("");
+  const [marketLoading, setMarketLoading] = useState(false);
+  const [marketError, setMarketError] = useState("");
+  const [marketResults, setMarketResults] = useState([]);
+  const [marketTotal, setMarketTotal] = useState(0);
+
   async function load() {
     try {
       setLoading(true);
       setError("");
 
-      const [sRes, dRes] = await Promise.all([
+      const [summaryResponse, dailyResponse] = await Promise.all([
         getMetricsSummary(days),
         getMetricsDaily(days),
       ]);
 
-      setSummary(sRes?.summary || null);
-      setSeries(Array.isArray(dRes?.days) ? dRes.days : []);
-    } catch (e) {
-      setError(e?.message || "Failed to load market signals");
+      setSummary(summaryResponse?.summary || null);
+      setSeries(
+        Array.isArray(dailyResponse?.days) ? dailyResponse.days : []
+      );
+    } catch (loadError) {
+      setError(loadError?.message || "Failed to load market signals");
     } finally {
       setLoading(false);
     }
@@ -113,140 +176,153 @@ export default function Metrics() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [days]);
 
-  const kpis = useMemo(() => {
-    const s = summary || {};
-    return [
-      {
-        label: "Signal Volume",
-        value: s.totalDeals ?? 0,
-        sub: "Tracked opportunities contributing to signal activity.",
-      },
-      {
-        label: "Weighted Pipeline",
-        value: money(s.weighted ?? 0),
-        sub: "Probability-adjusted market opportunity value.",
-      },
-      {
-        label: "Revenue Captured",
-        value: money(s.wonRevenue ?? 0),
-        sub: "Won revenue realized in the selected window.",
-      },
-      {
-        label: "Win Rate",
-        value: pct(s.winRate ?? 0),
-        sub: "Signal-to-revenue conversion efficiency.",
-      },
-      {
-        label: "Avg Deal Size",
-        value: money(s.avgDeal ?? 0),
-        sub: "Average value across tracked opportunities.",
-      },
-      {
-        label: "Avg Sales Cycle",
-        value: `${Math.round(safeNum(s.avgCycleDays ?? 0))}d`,
-        sub: "Average time required to close.",
-      },
-      {
-        label: "Stale Opportunities",
-        value: s.staleCount ?? 0,
-        sub: "Signals needing re-engagement or movement.",
-      },
-      {
-        label: "Raw Pipeline",
-        value: money(s.raw ?? 0),
-        sub: "Total unweighted opportunity pool.",
-      },
-    ];
-  }, [summary]);
+  async function handleMarketSearch(event) {
+    event?.preventDefault?.();
+
+    const query = marketQuery.trim();
+
+    if (!query) {
+      setMarketError("Enter a product, service, capability, or market.");
+      setMarketResults([]);
+      setMarketTotal(0);
+      return;
+    }
+
+    try {
+      setMarketLoading(true);
+      setMarketError("");
+      setMarketResults([]);
+      setMarketTotal(0);
+
+      const response = await searchGraphIQOrganizations({
+        capabilities: [query],
+      });
+
+      const rawData = response?.data ?? response;
+
+      const results = Array.isArray(rawData)
+        ? rawData
+        : rawData?.entities ||
+          rawData?.organizations ||
+          rawData?.results ||
+          rawData?.items ||
+          rawData?.data ||
+          [];
+
+      setMarketResults(Array.isArray(results) ? results.slice(0, 10) : []);
+      setMarketTotal(
+        safeNum(rawData?.total_count) ||
+          safeNum(rawData?.totalCount) ||
+          (Array.isArray(results) ? results.length : 0)
+      );
+    } catch (searchError) {
+      setMarketError(
+        searchError?.data?.details?.message ||
+          searchError?.data?.message ||
+          searchError?.message ||
+          "Company intelligence search failed."
+      );
+    } finally {
+      setMarketLoading(false);
+    }
+  }
+
+  const organizations = useMemo(
+    () =>
+      marketResults.map((organization, index) =>
+        normalizeOrganization(organization, index)
+      ),
+    [marketResults]
+  );
 
   const totals = useMemo(() => {
-    const weightedCreatedTotal = (series || []).reduce(
+    const weightedCreatedTotal = series.reduce(
       (sum, row) => sum + safeNum(row?.weightedCreated),
       0
     );
-    const wonRevenueTotal = (series || []).reduce(
+    const wonRevenueTotal = series.reduce(
       (sum, row) => sum + safeNum(row?.wonRevenue),
       0
     );
-    const avgDailyWon = series?.length ? wonRevenueTotal / series.length : 0;
 
     return {
       weightedCreatedTotal,
       wonRevenueTotal,
-      avgDailyWon,
+      avgDailyWon: series.length ? wonRevenueTotal / series.length : 0,
     };
   }, [series]);
 
   const signalStrength = useMemo(() => {
-    const s = summary || {};
-    const winComponent = clamp(safeNum(s.winRate) * 100, 0, 100);
-    const stalePenalty = clamp(safeNum(s.staleCount) * 8, 0, 40);
+    const current = summary || {};
+    const winComponent = clamp(safeNum(current.winRate) * 100, 0, 100);
+    const stalePenalty = clamp(safeNum(current.staleCount) * 8, 0, 40);
     return clamp(Math.round(winComponent - stalePenalty + 20), 0, 100);
   }, [summary]);
 
   const signalTone =
-    signalStrength >= 75 ? "#22C55E" : signalStrength >= 50 ? "#F59E0B" : "#FB7185";
+    signalStrength >= 75
+      ? "#22C55E"
+      : signalStrength >= 50
+      ? "#F59E0B"
+      : "#FB7185";
 
-  const avgCloseProbability = useMemo(() => {
-    const s = summary || {};
-    return clamp(Math.round(safeNum(s.winRate) * 100), 0, 100);
-  }, [summary]);
-
-  const weightedPressure = useMemo(() => {
-    const s = summary || {};
-    const stale = safeNum(s.staleCount);
-    const pressure = clamp(Math.round(stale * 12 + (1 - Math.min(safeNum(s.winRate), 1)) * 45), 0, 100);
-    return safeNum(s.weighted ?? 0) * (pressure / 100);
-  }, [summary]);
+  const chartSeries = useMemo(
+    () =>
+      series.map((row, index) => ({
+        ...row,
+        label: row?.date || row?.day || row?.createdAt || `D${index + 1}`,
+      })),
+    [series]
+  );
 
   const marketInsights = useMemo(() => {
-    const s = summary || {};
+    const current = summary || {};
     const insights = [];
 
-    if (safeNum(s.winRate) < 0.3) {
+    if (safeNum(current.winRate) < 0.3) {
       insights.push({
-        title: "Close efficiency needs attention",
+        title: "Demand is not converting efficiently",
         body: `Current win rate is ${pct(
-          s.winRate
-        )}. Market signals are being generated, but conversion into revenue is softer than it should be.`,
+          current.winRate
+        )}. Atlas is detecting opportunity activity, but too little of it is reaching closed revenue.`,
         tone: "bad",
       });
     } else {
       insights.push({
-        title: "Conversion quality is holding",
+        title: "Demand conversion is holding",
         body: `Current win rate is ${pct(
-          s.winRate
-        )}, suggesting revenue conversion remains relatively stable across this window.`,
+          current.winRate
+        )}, which suggests market demand is translating into revenue at a stable rate.`,
         tone: "good",
       });
     }
 
-    if (safeNum(s.staleCount) >= 5) {
+    if (safeNum(current.staleCount) >= 5) {
       insights.push({
-        title: "Stale signal pressure detected",
-        body: `${s.staleCount} opportunities are showing inactivity. Leadership should push re-engagement and tighten follow-up timing.`,
+        title: "Opportunity drag is building",
+        body: `${current.staleCount} opportunities are stale. Leadership should tighten follow-up before market interest loses momentum.`,
         tone: "warn",
       });
     } else {
       insights.push({
-        title: "Signal flow remains manageable",
+        title: "Opportunity drag remains controlled",
         body: `Only ${
-          s.staleCount ?? 0
-        } opportunities are currently stale, which keeps signal drag under control.`,
+          current.staleCount ?? 0
+        } opportunities are currently stale, keeping execution friction manageable.`,
         tone: "good",
       });
     }
 
     if (totals.weightedCreatedTotal > totals.wonRevenueTotal) {
       insights.push({
-        title: "Signal creation is outpacing revenue capture",
-        body: "The system is generating opportunity momentum faster than it is being converted into won revenue.",
+        title: "New demand is outpacing revenue capture",
+        body: "Atlas is seeing more weighted opportunity creation than won revenue in the selected period.",
         tone: "neutral",
       });
     } else {
       insights.push({
         title: "Revenue capture is keeping pace",
-        body: "Won revenue is tracking closely against weighted opportunity creation in this period.",
+        body: "Won revenue is tracking closely against weighted opportunity creation in the selected period.",
         tone: "good",
       });
     }
@@ -254,112 +330,60 @@ export default function Metrics() {
     return insights.slice(0, 3);
   }, [summary, totals]);
 
-  const priorityActions = useMemo(() => {
-    const s = summary || {};
+  const recommendations = useMemo(() => {
+    const current = summary || {};
     const items = [];
 
-    if (safeNum(s.staleCount) >= 5) {
-      items.push("Re-engage stale opportunities within the next 24 hours.");
-    }
-
-    if (safeNum(s.winRate) < 0.3) {
-      items.push("Tighten qualification and improve late-stage follow-up.");
-    }
-
-    if (totals.weightedCreatedTotal > totals.wonRevenueTotal) {
-      items.push("Improve handoff from market demand to revenue realization.");
-    }
-
-    if (!items.length) {
-      items.push("Protect current signal quality and keep momentum consistent.");
-      items.push("Scale the channels generating the strongest revenue efficiency.");
-      items.push("Look for selective expansion without adding conversion drag.");
-    }
-
-    return items.slice(0, 4);
-  }, [summary, totals]);
-
-  const aiRecommendations = useMemo(() => {
-    const s = summary || {};
-    const recs = [];
-
-    if (safeNum(s.winRate) < 0.3) {
-      recs.push({
-        title: "Improve signal monetization",
-        body: "More of the demand being generated needs to be converted into closed revenue. Focus on conversion quality, not just volume.",
-      });
-    } else {
-      recs.push({
-        title: "Preserve winning channel mix",
-        body: "The current market signal mix is supporting stable conversion. Keep budget allocation disciplined around what is already working.",
+    if (safeNum(current.staleCount) >= 5) {
+      items.push({
+        title: "Protect active market demand",
+        body: "Re-engage stale opportunities before interest declines or competitors enter the conversation.",
       });
     }
 
-    if (safeNum(s.staleCount) >= 5) {
-      recs.push({
-        title: "Reduce stalled opportunity buildup",
-        body: "Stale opportunity volume is beginning to suppress signal efficiency. Push next-step enforcement and follow-up acceleration.",
-      });
-    } else {
-      recs.push({
-        title: "Execution drag remains moderate",
-        body: "Opportunity aging is present but still manageable. The system can stay focused on growth and conversion optimization.",
+    if (safeNum(current.winRate) < 0.3) {
+      items.push({
+        title: "Improve qualification",
+        body: "Focus the team on the segments and accounts most likely to convert instead of increasing volume alone.",
       });
     }
 
-    recs.push({
-      title: "Use radar and timeline together",
-      body: "Opportunity Radar shows where momentum is strongest, while Revenue Timeline helps leadership judge how signal flow may translate into revenue.",
+    items.push({
+      title: "Use external discovery with internal signals",
+      body: "Search for companies in attractive markets, then compare those results against pipeline, account fit, and revenue priorities inside Atlas.",
     });
 
-    return recs.slice(0, 3);
+    return items.slice(0, 3);
   }, [summary]);
 
-  const atRiskDeals = useMemo(() => {
-    const s = summary || {};
-    const staleCount = safeNum(s.staleCount);
-    const avgDeal = safeNum(s.avgDeal);
-    const totalDeals = safeNum(s.totalDeals);
+  const industryCounts = useMemo(() => {
+    const counts = new Map();
 
-    const generated = [];
-    const count = Math.min(Math.max(staleCount, 0), 4);
-
-    for (let i = 0; i < count; i += 1) {
-      generated.push({
-        name: `Signal Opportunity ${i + 1}`,
-        stage: i % 2 === 0 ? "Proposal" : "Negotiation",
-        risk: i === 0 ? "High" : i === 1 ? "Medium" : "Watch",
-        value: avgDeal > 0 ? avgDeal : totalDeals > 0 ? 45000 + i * 12000 : 0,
-        reason:
-          i === 0
-            ? "Signal activity is present, but deal movement has stalled."
-            : i === 1
-            ? "Opportunity aging is exceeding the expected pace."
-            : "Needs a faster next action to preserve momentum.",
+    organizations.forEach((organization) => {
+      organization.industries.forEach((industry) => {
+        const label = readableValue(industry, "Other");
+        if (!label) return;
+        counts.set(label, (counts.get(label) || 0) + 1);
       });
-    }
+    });
 
-    return generated;
-  }, [summary]);
+    return Array.from(counts.entries())
+      .map(([industry, count]) => ({ industry, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 6);
+  }, [organizations]);
 
   const executiveBriefing = useMemo(() => {
-    const s = summary || {};
-    const winRateText = pct(s.winRate ?? 0);
-    const stale = s.staleCount ?? 0;
+    const current = summary || {};
 
-    if (stale >= 5) {
-      return `Atlas Market Signals is detecting rising friction in the current ${days}-day window. Opportunity creation remains active, but ${stale} stale opportunities and a ${winRateText} win rate suggest leadership should focus on re-engagement, faster follow-up, and stronger signal-to-revenue conversion.`;
+    if (organizations.length) {
+      return `Atlas found ${marketTotal || organizations.length} organizations connected to "${marketQuery}". The first ${organizations.length} results are shown below so leadership can quickly identify companies and markets worth deeper account research.`;
     }
 
-    return `Atlas Market Signals shows stable demand intelligence across the current ${days}-day window. Opportunity creation, revenue capture, and conversion performance remain visible, and current close performance is ${winRateText}. Leadership can focus on preserving momentum, improving efficiency, and scaling the strongest channels.`;
-  }, [summary, days]);
-
-  const chartSeries = useMemo(() => {
-    return (series || []).map((row, idx) => ({
-      ...row,
-      label: row?.date || row?.day || row?.createdAt || `D${idx + 1}`,
-    }));
-  }, [series]);
+    return `Atlas Market Signals combines external company discovery with internal demand, pipeline, and conversion intelligence. Search a product, service, or capability to find relevant companies, then use Atlas to decide where the strongest revenue opportunities may exist. Current close performance is ${pct(
+      current.winRate ?? 0
+    )} across the selected ${days}-day window.`;
+  }, [summary, days, organizations, marketTotal, marketQuery]);
 
   const axisTick = { fill: "#9fb0d0", fontSize: 11 };
 
@@ -376,8 +400,8 @@ export default function Metrics() {
       <div style={S.page}>
         <div style={S.wrap}>
           <div style={S.hero}>
-            <div style={S.eyebrow}>Market Intelligence</div>
-            <h1 style={S.h1}>Atlas Market Signals</h1>
+            <div style={S.eyebrow}>External Market Intelligence</div>
+            <h1 style={S.h1}>Market Signals</h1>
             <div style={S.heroText}>Loading market intelligence…</div>
           </div>
         </div>
@@ -391,39 +415,32 @@ export default function Metrics() {
         <div style={S.hero}>
           <div style={S.heroTop}>
             <div>
-              <div style={S.eyebrow}>Revenue Intelligence Signals</div>
-              <h1 style={S.h1}>Atlas Market Signals</h1>
+              <div style={S.eyebrow}>External Market Intelligence</div>
+              <h1 style={S.h1}>Market Signals</h1>
               <div style={S.heroText}>
-                Real-time market demand visibility, signal quality tracking,
-                opportunity momentum, and conversion intelligence across the selected window.
+                Discover where opportunity is building, identify relevant
+                companies, and connect external market intelligence to the
+                revenue data already inside Atlas.
               </div>
             </div>
 
             <div style={S.controlsWrap}>
-              <div style={S.badge}>Systems Online</div>
+              <div style={S.badge}>Powered by GraphIQ</div>
               <div style={S.badge}>Signals Active</div>
               <div style={S.badge}>
-                {signalStrength >= 60 ? "Signal Strength Elevated" : "Signal Flow Stable"}
+                {signalStrength >= 60
+                  ? "Signal Strength Elevated"
+                  : "Signal Flow Stable"}
               </div>
 
               <div style={{ width: "100%" }} />
-
-              <div style={S.quickSignal}>
-                <span style={S.quickSignalLabel}>Win rate</span>
-                <span style={S.quickSignalValue}>{pct(summary?.winRate ?? 0)}</span>
-              </div>
-
-              <div style={S.quickSignal}>
-                <span style={S.quickSignalLabel}>Weighted pressure</span>
-                <span style={S.quickSignalValue}>{moneyCompact(weightedPressure)}</span>
-              </div>
 
               <div style={S.pill}>Window</div>
 
               <select
                 style={S.select}
                 value={days}
-                onChange={(e) => setDays(Number(e.target.value))}
+                onChange={(event) => setDays(Number(event.target.value))}
               >
                 <option value={14}>14 days</option>
                 <option value={30}>30 days</option>
@@ -441,25 +458,138 @@ export default function Metrics() {
         {error ? <div style={S.error}>{error}</div> : null}
 
         <div style={S.briefingCard}>
-          <div style={S.briefingEyebrow}>Atlas AI Executive Summary</div>
+          <div style={S.briefingEyebrow}>Atlas AI Market Outlook</div>
           <div style={S.briefingBody}>{executiveBriefing}</div>
         </div>
 
+        <Section
+          title="External Opportunity Discovery"
+          subtitle="Powered by GraphIQ"
+          action={
+            marketTotal > 0 ? (
+              <div style={S.sectionTag}>
+                {marketTotal.toLocaleString()} matches
+              </div>
+            ) : null
+          }
+        >
+          <form onSubmit={handleMarketSearch} style={S.searchForm}>
+            <input
+              value={marketQuery}
+              onChange={(event) => setMarketQuery(event.target.value)}
+              placeholder="Search by product, capability, technology, or service"
+              style={S.searchInput}
+              disabled={marketLoading}
+            />
+            <button
+              type="submit"
+              style={{
+                ...S.searchButton,
+                opacity: marketLoading ? 0.65 : 1,
+                cursor: marketLoading ? "wait" : "pointer",
+              }}
+              disabled={marketLoading}
+            >
+              {marketLoading ? "Searching Companies..." : "Search Companies"}
+            </button>
+          </form>
+
+          <div style={S.searchHelp}>
+            Find organizations based on what they make, sell, or provide, then
+            use Atlas to decide which markets and accounts deserve attention.
+          </div>
+
+          {marketError ? <div style={S.searchError}>{marketError}</div> : null}
+
+          {!marketLoading &&
+          marketQuery.trim() &&
+          !marketError &&
+          organizations.length === 0 ? (
+            <div style={S.emptyStateBox}>
+              No organizations were returned for this search.
+            </div>
+          ) : null}
+
+          {organizations.length > 0 ? (
+            <div style={S.companyGrid}>
+              {organizations.map((organization) => (
+                <div key={organization.id} style={S.companyCard}>
+                  <div style={S.companyTop}>
+                    <div>
+                      <div style={S.companyName}>{organization.name}</div>
+                      {organization.website ? (
+                        <div style={S.companyWebsite}>
+                          {organization.website}
+                        </div>
+                      ) : null}
+                    </div>
+                    <div style={S.opportunityPill}>
+                      Potential Opportunity
+                    </div>
+                  </div>
+
+                  {organization.description ? (
+                    <div style={S.companyDescription}>
+                      {organization.description}
+                    </div>
+                  ) : null}
+
+                  {organization.industries.length > 0 ? (
+                    <div style={S.tagSection}>
+                      <div style={S.tagLabel}>Industries</div>
+                      <div style={S.tags}>
+                        {organization.industries
+                          .slice(0, 5)
+                          .map((industry, index) => (
+                            <div
+                              key={`${organization.id}-industry-${index}`}
+                              style={S.tag}
+                            >
+                              {readableValue(industry, "Industry")}
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {organization.capabilities.length > 0 ? (
+                    <div style={S.tagSection}>
+                      <div style={S.tagLabel}>Capabilities</div>
+                      <div style={S.tags}>
+                        {organization.capabilities
+                          .slice(0, 7)
+                          .map((capability, index) => (
+                            <div
+                              key={`${organization.id}-capability-${index}`}
+                              style={S.tag}
+                            >
+                              {readableValue(capability, "Capability")}
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </Section>
+
         <div style={S.statsGrid}>
           <StatCard
-            label="Signal Pipeline"
-            value={money(summary?.raw ?? 0)}
-            note="Total tracked opportunity pool generated from current market activity."
+            label="Companies Discovered"
+            value={marketTotal || organizations.length}
+            note="Organizations returned by the most recent external market search."
           />
           <StatCard
-            label="Weighted Signal Value"
+            label="Weighted Opportunity"
             value={money(summary?.weighted ?? 0)}
-            note="Probability-adjusted value of current signal activity."
+            note="Probability-adjusted internal opportunity value in the selected window."
           />
           <StatCard
-            label="Avg Close Probability"
-            value={`${avgCloseProbability}%`}
-            note="Average close confidence across active signal-driven opportunities."
+            label="Revenue Captured"
+            value={money(summary?.wonRevenue ?? 0)}
+            note="Won revenue realized from current opportunity activity."
           />
           <StatCard
             label="Signal Strength"
@@ -470,218 +600,8 @@ export default function Metrics() {
         </div>
 
         <div style={S.twoCol}>
-          <Section title="Signal Momentum Timeline" subtitle="Demand Flow">
+          <Section title="Market Activity Over Time" subtitle="Demand Flow">
             <div style={S.chartShellLg}>
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartSeries}>
-                  <defs>
-                    <linearGradient id="weightedFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#67e8f9" stopOpacity={0.45} />
-                      <stop offset="100%" stopColor="#67e8f9" stopOpacity={0.03} />
-                    </linearGradient>
-                  </defs>
-
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="rgba(255,255,255,0.10)"
-                  />
-                  <XAxis
-                    dataKey="label"
-                    tick={axisTick}
-                    stroke="#94a3b8"
-                    minTickGap={24}
-                  />
-                  <YAxis
-                    tick={axisTick}
-                    stroke="#94a3b8"
-                    tickFormatter={(v) => moneyCompact(v)}
-                  />
-                  <Tooltip
-                    formatter={(v) => [money(v), "Weighted Created"]}
-                    labelFormatter={(l) => `Date: ${l}`}
-                    contentStyle={tooltipStyle}
-                    labelStyle={{ color: "#fff" }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="weightedCreated"
-                    stroke="#67e8f9"
-                    strokeWidth={3}
-                    fill="url(#weightedFill)"
-                    animationDuration={1400}
-                    animationEasing="ease-out"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </Section>
-
-          <Section title="Priority Actions" subtitle="Next Best Moves">
-            <div style={S.signalList}>
-              {priorityActions.map((item, idx) => (
-                <SignalItem
-                  key={`${item}-${idx}`}
-                  title={`Priority ${idx + 1}`}
-                  body={item}
-                  tone={idx === 0 ? "warn" : "neutral"}
-                />
-              ))}
-            </div>
-          </Section>
-        </div>
-
-        <div style={S.twoCol}>
-          <Section
-            title="At-Risk Opportunities"
-            subtitle="Signal Watchlist"
-            action={
-              <div style={S.sectionTag}>
-                {atRiskDeals.length ? `${atRiskDeals.length} flagged` : "No critical risks"}
-              </div>
-            }
-          >
-            {atRiskDeals.length ? (
-              <div style={S.dealList}>
-                {atRiskDeals.map((deal, idx) => (
-                  <div key={`${deal.name}-${idx}`} style={S.dealCard}>
-                    <div style={S.dealTop}>
-                      <div>
-                        <div style={S.dealName}>{deal.name}</div>
-                        <div style={S.dealMeta}>
-                          Stage: <strong>{deal.stage}</strong> • Value:{" "}
-                          <strong>{money(deal.value)}</strong>
-                        </div>
-                      </div>
-                      <div
-                        style={{
-                          ...S.riskPill,
-                          color:
-                            deal.risk === "High"
-                              ? "#FB7185"
-                              : deal.risk === "Medium"
-                              ? "#F59E0B"
-                              : "#38BDF8",
-                        }}
-                      >
-                        {deal.risk}
-                      </div>
-                    </div>
-                    <div style={S.dealReason}>{deal.reason}</div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div style={S.emptyState}>
-                No high-risk opportunities are currently flagged in this window.
-              </div>
-            )}
-          </Section>
-
-          <Section title="Opportunity Radar" subtitle="Growth Levers">
-            <OpportunityRadar
-              pipeline={{ pipelineValue: summary?.raw ?? 0 }}
-              revenue={summary?.wonRevenue ?? totals.wonRevenueTotal}
-            />
-          </Section>
-        </div>
-
-        <div style={S.twoCol}>
-          <Section title="Revenue Timeline Projection" subtitle="Forward View">
-            <RevenueTimeline
-              forecast={Math.max(summary?.weighted ?? 0, summary?.wonRevenue ?? 0)}
-            />
-          </Section>
-
-          <Section title="AI Recommendations" subtitle="Signal Intelligence">
-            <div style={S.signalList}>
-              {aiRecommendations.map((item, idx) => (
-                <SignalItem
-                  key={`${item.title}-${idx}`}
-                  title={item.title}
-                  body={item.body}
-                  tone={idx === 0 ? "good" : "neutral"}
-                />
-              ))}
-            </div>
-          </Section>
-        </div>
-
-        <Section title="Signal KPI Grid" subtitle="Performance">
-          <div style={S.kpiGrid}>
-            {kpis.map((k) => (
-              <div key={k.label} style={S.kpiCard}>
-                <div style={S.label}>{k.label}</div>
-                <div style={S.value}>{k.value}</div>
-                <div style={S.sub}>{k.sub}</div>
-              </div>
-            ))}
-          </div>
-        </Section>
-
-        <Section title="Atlas Signals" subtitle="AI Narrative">
-          <div style={S.insightGrid}>
-            {marketInsights.map((item, idx) => (
-              <div
-                key={`${item.title}-${idx}`}
-                style={{
-                  ...S.insightCard,
-                  borderLeft:
-                    item.tone === "good"
-                      ? "3px solid #22C55E"
-                      : item.tone === "warn"
-                      ? "3px solid #F59E0B"
-                      : item.tone === "bad"
-                      ? "3px solid #FB7185"
-                      : "3px solid #38BDF8",
-                }}
-              >
-                <div style={S.insightTitle}>{item.title}</div>
-                <div style={S.insightBody}>{item.body}</div>
-              </div>
-            ))}
-          </div>
-        </Section>
-
-        <div style={S.charts}>
-          <Section title="Won Revenue (Daily)" subtitle="Revenue Capture">
-            <div style={S.chartShell}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartSeries}>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="rgba(255,255,255,0.10)"
-                  />
-                  <XAxis
-                    dataKey="label"
-                    tick={axisTick}
-                    stroke="#94a3b8"
-                    minTickGap={24}
-                  />
-                  <YAxis
-                    tick={axisTick}
-                    stroke="#94a3b8"
-                    tickFormatter={(v) => moneyCompact(v)}
-                  />
-                  <Tooltip
-                    formatter={(v) => [money(v), "Won Revenue"]}
-                    labelFormatter={(l) => `Date: ${l}`}
-                    contentStyle={tooltipStyle}
-                    labelStyle={{ color: "#fff" }}
-                  />
-                  <Bar
-                    dataKey="wonRevenue"
-                    fill="#93c5fd"
-                    radius={[10, 10, 0, 0]}
-                    animationDuration={1500}
-                    animationEasing="ease-out"
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </Section>
-
-          <Section title="Signal Balance" subtitle="Creation vs Conversion">
-            <div style={S.chartShell}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartSeries}>
                   <CartesianGrid
@@ -697,18 +617,18 @@ export default function Metrics() {
                   <YAxis
                     tick={axisTick}
                     stroke="#94a3b8"
-                    tickFormatter={(v) => moneyCompact(v)}
+                    tickFormatter={(value) => moneyCompact(value)}
                   />
                   <Tooltip
-                    formatter={(v, name) => [money(v), name]}
-                    labelFormatter={(l) => `Date: ${l}`}
+                    formatter={(value, name) => [money(value), name]}
+                    labelFormatter={(label) => `Date: ${label}`}
                     contentStyle={tooltipStyle}
                     labelStyle={{ color: "#fff" }}
                   />
                   <Line
                     type="monotone"
                     dataKey="weightedCreated"
-                    name="Weighted Created"
+                    name="Weighted Opportunity"
                     stroke="#67e8f9"
                     strokeWidth={3}
                     dot={false}
@@ -727,23 +647,104 @@ export default function Metrics() {
               </ResponsiveContainer>
             </div>
           </Section>
+
+          <Section title="Atlas Recommendations" subtitle="Where to Focus">
+            <div style={S.signalList}>
+              {recommendations.map((item, index) => (
+                <SignalItem
+                  key={`${item.title}-${index}`}
+                  title={item.title}
+                  body={item.body}
+                  tone={index === 0 ? "good" : "neutral"}
+                />
+              ))}
+            </div>
+          </Section>
+        </div>
+
+        <div style={S.twoCol}>
+          <Section title="Revenue Opportunity Radar" subtitle="Growth Levers">
+            <OpportunityRadar
+              pipeline={{ pipelineValue: summary?.raw ?? 0 }}
+              revenue={summary?.wonRevenue ?? totals.wonRevenueTotal}
+            />
+          </Section>
+
+          <Section title="Industry Mix From Search" subtitle="External Results">
+            {industryCounts.length ? (
+              <div style={S.chartShell}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={industryCounts}>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="rgba(255,255,255,0.10)"
+                    />
+                    <XAxis
+                      dataKey="industry"
+                      tick={axisTick}
+                      stroke="#94a3b8"
+                    />
+                    <YAxis
+                      allowDecimals={false}
+                      tick={axisTick}
+                      stroke="#94a3b8"
+                    />
+                    <Tooltip
+                      formatter={(value) => [value, "Companies"]}
+                      contentStyle={tooltipStyle}
+                      labelStyle={{ color: "#fff" }}
+                    />
+                    <Bar
+                      dataKey="count"
+                      fill="#93c5fd"
+                      radius={[10, 10, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div style={S.emptyStateBox}>
+                Run a company search to see the industry mix across the returned
+                organizations.
+              </div>
+            )}
+          </Section>
+        </div>
+
+        <div style={S.twoCol}>
+          <Section title="Revenue Timeline Projection" subtitle="Forward View">
+            <RevenueTimeline
+              forecast={Math.max(
+                summary?.weighted ?? 0,
+                summary?.wonRevenue ?? 0
+              )}
+            />
+          </Section>
+
+          <Section title="Current Market Signals" subtitle="AI Narrative">
+            <div style={S.signalList}>
+              {marketInsights.map((item, index) => (
+                <SignalItem
+                  key={`${item.title}-${index}`}
+                  title={item.title}
+                  body={item.body}
+                  tone={item.tone}
+                />
+              ))}
+            </div>
+          </Section>
         </div>
 
         <div style={S.footerStats}>
           <StatCard
-            label="Avg Daily Won Revenue"
+            label="Average Daily Won Revenue"
             value={money(totals.avgDailyWon)}
             note="Average daily realized revenue in the selected window."
           />
-
           <StatCard
-            label="Signal Balance"
-            value={
-              totals.weightedCreatedTotal >= totals.wonRevenueTotal
-                ? "Creation-led"
-                : "Conversion-led"
-            }
-            note="Shows whether demand creation or revenue conversion is dominating the current period."
+            label="Current Win Rate"
+            value={pct(summary?.winRate ?? 0)}
+            note="The share of tracked opportunities converting into won revenue."
           />
         </div>
       </div>
@@ -823,7 +824,6 @@ const S = {
   pill: {
     display: "inline-flex",
     alignItems: "center",
-    gap: 8,
     padding: "6px 10px",
     borderRadius: 999,
     border: "1px solid rgba(255,255,255,0.10)",
@@ -851,25 +851,6 @@ const S = {
     fontWeight: 900,
     fontSize: 12,
     outline: "none",
-  },
-  quickSignal: {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: 8,
-    padding: "8px 12px",
-    borderRadius: 999,
-    border: "1px solid rgba(255,255,255,0.10)",
-    background: "rgba(255,255,255,0.04)",
-  },
-  quickSignalLabel: {
-    fontSize: 11,
-    color: "rgba(203,213,225,0.74)",
-    fontWeight: 700,
-  },
-  quickSignalValue: {
-    fontSize: 12,
-    color: "#fff",
-    fontWeight: 900,
   },
   briefingCard: {
     borderRadius: 18,
@@ -971,68 +952,8 @@ const S = {
     gridTemplateColumns: "1.1fr 0.9fr",
     gap: 12,
   },
-  kpiGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-    gap: 10,
-  },
-  kpiCard: {
-    borderRadius: 16,
-    padding: 14,
-    border: "1px solid rgba(255,255,255,0.08)",
-    background: "rgba(255,255,255,0.04)",
-    boxShadow: "0 10px 24px rgba(0,0,0,0.14)",
-  },
-  label: {
-    fontSize: 10,
-    textTransform: "uppercase",
-    letterSpacing: "0.14em",
-    color: "rgba(148,163,184,0.88)",
-    fontWeight: 800,
-  },
-  value: {
-    marginTop: 10,
-    fontSize: 24,
-    fontWeight: 900,
-    color: "#fff",
-    lineHeight: 1.08,
-  },
-  sub: {
-    marginTop: 8,
-    fontSize: 12,
-    color: "rgba(203,213,225,0.78)",
-    lineHeight: 1.5,
-  },
-  insightGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-    gap: 10,
-  },
-  insightCard: {
-    borderRadius: 16,
-    padding: 14,
-    border: "1px solid rgba(255,255,255,0.08)",
-    background: "rgba(10,16,35,0.35)",
-    boxShadow: "0 10px 24px rgba(0,0,0,0.12)",
-  },
-  insightTitle: {
-    fontWeight: 900,
-    fontSize: 14,
-    marginBottom: 8,
-    color: "#fff",
-  },
-  insightBody: {
-    fontSize: 13,
-    color: "rgba(219,228,240,0.84)",
-    lineHeight: 1.6,
-  },
-  charts: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: 12,
-  },
   chartShell: {
-    height: 260,
+    height: 280,
     border: "1px solid rgba(255,255,255,0.08)",
     borderRadius: 16,
     background: "rgba(4,10,24,0.72)",
@@ -1066,53 +987,6 @@ const S = {
     color: "rgba(219,228,240,0.84)",
     lineHeight: 1.55,
   },
-  dealList: {
-    display: "grid",
-    gap: 10,
-  },
-  dealCard: {
-    borderRadius: 14,
-    padding: 13,
-    background: "rgba(255,255,255,0.03)",
-    border: "1px solid rgba(255,255,255,0.08)",
-  },
-  dealTop: {
-    display: "flex",
-    justifyContent: "space-between",
-    gap: 10,
-    flexWrap: "wrap",
-    alignItems: "flex-start",
-  },
-  dealName: {
-    fontSize: 14,
-    fontWeight: 900,
-    color: "#fff",
-  },
-  dealMeta: {
-    marginTop: 6,
-    fontSize: 12,
-    color: "rgba(203,213,225,0.78)",
-    lineHeight: 1.5,
-  },
-  riskPill: {
-    fontSize: 11,
-    fontWeight: 900,
-    padding: "6px 10px",
-    borderRadius: 999,
-    border: "1px solid rgba(255,255,255,0.10)",
-    background: "rgba(255,255,255,0.04)",
-  },
-  dealReason: {
-    marginTop: 10,
-    fontSize: 13,
-    color: "rgba(219,228,240,0.84)",
-    lineHeight: 1.55,
-  },
-  emptyState: {
-    fontSize: 13,
-    color: "rgba(203,213,225,0.76)",
-    lineHeight: 1.6,
-  },
   footerStats: {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
@@ -1124,5 +998,134 @@ const S = {
     border: "1px solid rgba(255,0,0,0.25)",
     background: "rgba(255,0,0,0.10)",
     color: "#FFD7D7",
+  },
+  searchForm: {
+    display: "grid",
+    gridTemplateColumns: "minmax(0, 1fr) auto",
+    gap: 10,
+  },
+  searchInput: {
+    width: "100%",
+    minWidth: 0,
+    boxSizing: "border-box",
+    border: "1px solid rgba(255,255,255,0.12)",
+    borderRadius: 14,
+    padding: "13px 14px",
+    background: "rgba(4,10,24,0.72)",
+    color: "#fff",
+    fontSize: 14,
+    outline: "none",
+  },
+  searchButton: {
+    border: "1px solid rgba(125,211,252,0.3)",
+    borderRadius: 14,
+    padding: "13px 18px",
+    background:
+      "linear-gradient(135deg, rgba(37,99,235,0.95), rgba(14,165,233,0.88))",
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: 800,
+    whiteSpace: "nowrap",
+  },
+  searchHelp: {
+    marginTop: 10,
+    fontSize: 12,
+    lineHeight: 1.5,
+    color: "rgba(203,213,225,0.72)",
+  },
+  searchError: {
+    marginTop: 12,
+    border: "1px solid rgba(248,113,113,0.3)",
+    borderRadius: 14,
+    padding: "12px 14px",
+    background: "rgba(127,29,29,0.2)",
+    color: "#fecaca",
+    fontSize: 13,
+  },
+  emptyStateBox: {
+    marginTop: 12,
+    minHeight: 120,
+    border: "1px dashed rgba(255,255,255,0.12)",
+    borderRadius: 14,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 18,
+    color: "rgba(226,232,240,0.76)",
+    fontSize: 13,
+    lineHeight: 1.6,
+    textAlign: "center",
+    background: "rgba(4,10,24,0.34)",
+  },
+  companyGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+    gap: 12,
+    marginTop: 14,
+  },
+  companyCard: {
+    border: "1px solid rgba(255,255,255,0.08)",
+    borderRadius: 16,
+    padding: 14,
+    background: "rgba(4,10,24,0.46)",
+  },
+  companyTop: {
+    display: "flex",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  companyName: {
+    fontSize: 17,
+    fontWeight: 800,
+    color: "#fff",
+  },
+  companyWebsite: {
+    marginTop: 5,
+    color: "#7dd3fc",
+    fontSize: 12,
+    overflowWrap: "anywhere",
+  },
+  opportunityPill: {
+    border: "1px solid rgba(34,197,94,0.24)",
+    borderRadius: 999,
+    padding: "6px 9px",
+    background: "rgba(34,197,94,0.1)",
+    color: "#bbf7d0",
+    fontSize: 10,
+    fontWeight: 800,
+    textTransform: "uppercase",
+    letterSpacing: "0.09em",
+    whiteSpace: "nowrap",
+  },
+  companyDescription: {
+    marginTop: 12,
+    fontSize: 13,
+    lineHeight: 1.6,
+    color: "rgba(226,232,240,0.82)",
+  },
+  tagSection: {
+    marginTop: 13,
+  },
+  tagLabel: {
+    marginBottom: 7,
+    color: "rgba(148,163,184,0.88)",
+    fontSize: 10,
+    fontWeight: 800,
+    textTransform: "uppercase",
+    letterSpacing: "0.14em",
+  },
+  tags: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: 6,
+  },
+  tag: {
+    border: "1px solid rgba(255,255,255,0.08)",
+    borderRadius: 999,
+    padding: "6px 9px",
+    background: "rgba(255,255,255,0.04)",
+    color: "#dbeafe",
+    fontSize: 11,
   },
 };
