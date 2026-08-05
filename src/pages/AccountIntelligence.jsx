@@ -852,12 +852,6 @@ async function handleGraphIQSearch(event) {
   );
 }
 
-const styles = {
-  page: {
-    minHeight: "100vh",
-    color: "#fff",
-  },
-  wrap: {
     maxWidth: 1380,
     margin: "0 auto",
     display: "grid",
@@ -1233,5 +1227,5 @@ graphiqTag: {
   background: "rgba(255,255,255,0.04)",
   color: "#dbeafe",
   fontSize: 11,
-},
+  },
 };
