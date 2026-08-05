@@ -851,7 +851,12 @@ async function handleGraphIQSearch(event) {
     </div>
   );
 }
-
+const styles = {
+  page: {
+    minHeight: "100vh",
+    color: "#fff",
+  },
+  wrap: {
     maxWidth: 1380,
     margin: "0 auto",
     display: "grid",
