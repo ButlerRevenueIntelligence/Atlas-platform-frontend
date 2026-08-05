@@ -239,12 +239,13 @@ async function handleGraphIQSearch(event) {
 
     const rawData = response?.data ?? response;
 
-    const results =
-      rawData?.organizations ||
-      rawData?.results ||
-      rawData?.items ||
-      rawData?.data ||
-      [];
+    const results = Array.isArray(rawData)
+  ? rawData
+  : rawData?.organizations ||
+    rawData?.results ||
+    rawData?.items ||
+    rawData?.data ||
+    [];
 
     setGraphiqResults(Array.isArray(results) ? results : []);
   } catch (err) {
