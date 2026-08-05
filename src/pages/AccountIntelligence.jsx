@@ -1220,12 +1220,12 @@ graphiqTags: {
   gap: 6,
 },
 
-graphiqTag: {
-  border: "1px solid rgba(255,255,255,0.08)",
-  borderRadius: 999,
-  padding: "6px 9px",
-  background: "rgba(255,255,255,0.04)",
-  color: "#dbeafe",
-  fontSize: 11,
+  graphiqTag: {
+    border: "1px solid rgba(255,255,255,0.08)",
+    borderRadius: 999,
+    padding: "6px 9px",
+    background: "rgba(255,255,255,0.04)",
+    color: "#dbeafe",
+    fontSize: 11,
   },
 };
