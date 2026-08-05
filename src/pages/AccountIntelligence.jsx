@@ -520,8 +520,8 @@ async function handleGraphIQSearch(event) {
 
         <AtlasAccountExpansionSignals clients={accounts} />
         <Section
-  title="GraphIQ Organization Search"
-  subtitle="External Intelligence"
+  title="Company Intelligence Search"
+  subtitle="Powered by GraphIQ"
 >
   <form onSubmit={handleGraphIQSearch} style={styles.graphiqForm}>
     <input
