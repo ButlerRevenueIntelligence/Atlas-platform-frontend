@@ -241,7 +241,8 @@ async function handleGraphIQSearch(event) {
 
     const results = Array.isArray(rawData)
   ? rawData
-  : rawData?.organizations ||
+  : rawData?.entities ||
+    rawData?.organizations ||
     rawData?.results ||
     rawData?.items ||
     rawData?.data ||
