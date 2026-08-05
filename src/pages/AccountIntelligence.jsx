@@ -248,7 +248,9 @@ async function handleGraphIQSearch(event) {
     rawData?.data ||
     [];
 
-    setGraphiqResults(Array.isArray(results) ? results : []);
+    setGraphiqResults(
+  Array.isArray(results) ? results.slice(0, 10) : []
+);
   } catch (err) {
     console.error("GraphIQ search error:", err);
 
@@ -526,7 +528,7 @@ async function handleGraphIQSearch(event) {
       type="text"
       value={graphiqQuery}
       onChange={(event) => setGraphiqQuery(event.target.value)}
-      placeholder="Search a company, website, industry, or capability"
+      placeholder="Search by capability, product, or service"
       style={styles.graphiqInput}
       disabled={graphiqLoading}
     />
@@ -545,8 +547,7 @@ async function handleGraphIQSearch(event) {
   </form>
 
   <div style={styles.graphiqHelp}>
-    Search GraphIQ for organizations and market intelligence without exposing
-    the GraphIQ API key in the browser.
+    Search GraphIQ for companies based on what they make, sell, or provide.
   </div>
 
   {graphiqError ? (
