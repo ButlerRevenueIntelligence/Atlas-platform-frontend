@@ -632,8 +632,6 @@ async function handleGraphIQSearch(event) {
   ) : null}
 </Section>
 
-<div style={styles.statsGrid}>
-
         <div style={styles.statsGrid}>
           {topStats.map((item) => (
             <SmallStat
