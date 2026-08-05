@@ -234,8 +234,8 @@ async function handleGraphIQSearch(event) {
     setGraphiqResults([]);
 
     const response = await searchGraphIQOrganizations({
-      search: query,
-    });
+  capabilities: [query],
+});
 
     const rawData = response?.data ?? response;
 
