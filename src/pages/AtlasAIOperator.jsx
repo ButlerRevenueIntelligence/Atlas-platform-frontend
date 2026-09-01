@@ -1,5 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { analyzeWithAtlas, getDashboard } from "../api";
+import {
+  analyzeWithAtlas,
+  getDashboard,
+  searchGraphIQOrganizations,
+} from "../api";
 import RevenueRiskAlerts from "../components/atlas/RevenueRiskAlerts";
 import RecommendedActions from "../components/atlas/RecommendedActions";
 import {
@@ -364,6 +368,8 @@ export default function AtlasAIOperator() {
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+  const [externalIntelUsed, setExternalIntelUsed] = useState(false);
+  const [externalCompanyCount, setExternalCompanyCount] = useState(0);
 
   useEffect(() => {
     let mounted = true;
@@ -541,8 +547,8 @@ export default function AtlasAIOperator() {
   const strategicPrompts = [
     "What is the highest-risk forecast scenario right now?",
     "Which accounts should leadership prioritize this week?",
-    "What deals are most likely to slip and why?",
-    "Where should we shift budget to improve revenue efficiency?",
+    "Find companies that provide revenue intelligence software.",
+    "Find companies that could be good targets for our business.",
   ];
 
   const liveCoverage = useMemo(() => {
@@ -757,6 +763,47 @@ export default function AtlasAIOperator() {
     ]
   );
 
+  function shouldUseGraphIQ(questionText) {
+    const text = String(questionText || "").toLowerCase();
+
+    const externalTerms = [
+      "find companies",
+      "find organizations",
+      "find businesses",
+      "companies that",
+      "organizations that",
+      "businesses that",
+      "companies like",
+      "who sells",
+      "who provides",
+      "who makes",
+      "suppliers",
+      "vendors",
+      "manufacturers",
+      "companies in",
+      "businesses in",
+      "market opportunities",
+      "target companies",
+      "prospects",
+      "potential customers",
+    ];
+
+    return externalTerms.some((term) => text.includes(term));
+  }
+
+  function cleanGraphIQQuery(questionText) {
+    return String(questionText || "")
+      .replace(/find companies (that )?/i, "")
+      .replace(/find organizations (that )?/i, "")
+      .replace(/find businesses (that )?/i, "")
+      .replace(/show me companies (that )?/i, "")
+      .replace(/companies that /i, "")
+      .replace(/organizations that /i, "")
+      .replace(/businesses that /i, "")
+      .replace(/who (sells|provides|makes) /i, "")
+      .trim();
+  }
+
   async function handleAsk(customQuestion) {
     const finalQuestion = (customQuestion ?? question).trim();
     if (!finalQuestion || asking) return;
@@ -764,6 +811,86 @@ export default function AtlasAIOperator() {
     try {
       setAsking(true);
       setAtlasResponse("");
+      setExternalIntelUsed(false);
+      setExternalCompanyCount(0);
+
+      let graphiqContext = null;
+
+      if (shouldUseGraphIQ(finalQuestion)) {
+        try {
+          const graphiqQuery =
+            cleanGraphIQQuery(finalQuestion) || finalQuestion;
+
+          const graphiqResponse = await searchGraphIQOrganizations({
+            capabilities: [graphiqQuery],
+          });
+
+          const rawGraphIQ =
+            graphiqResponse?.data ?? graphiqResponse;
+
+          const organizations = Array.isArray(rawGraphIQ)
+            ? rawGraphIQ
+            : rawGraphIQ?.entities ||
+              rawGraphIQ?.organizations ||
+              rawGraphIQ?.results ||
+              rawGraphIQ?.items ||
+              rawGraphIQ?.data ||
+              [];
+
+          const limitedOrganizations = Array.isArray(organizations)
+            ? organizations.slice(0, 10)
+            : [];
+
+          graphiqContext = {
+            source: "GraphIQ",
+            query: graphiqQuery,
+            totalMatches:
+              Number(rawGraphIQ?.total_count) ||
+              Number(rawGraphIQ?.totalCount) ||
+              limitedOrganizations.length,
+            organizations: limitedOrganizations.map((org) => ({
+              name:
+                org?.name ||
+                org?.organizationName ||
+                org?.legalName ||
+                org?.title ||
+                "Unknown organization",
+              website:
+                org?.website ||
+                org?.websiteUrl ||
+                org?.domain ||
+                org?.url ||
+                "",
+              description:
+                org?.description ||
+                org?.summary ||
+                org?.overview ||
+                "",
+              industries: Array.isArray(org?.industries)
+                ? org.industries
+                : org?.industry
+                ? [org.industry]
+                : [],
+              capabilities: Array.isArray(org?.capabilities)
+                ? org.capabilities
+                : [],
+              locations: Array.isArray(org?.locations)
+                ? org.locations
+                : org?.location
+                ? [org.location]
+                : [],
+            })),
+          };
+
+          setExternalIntelUsed(true);
+          setExternalCompanyCount(limitedOrganizations.length);
+        } catch (graphiqError) {
+          console.error(
+            "Atlas Operator GraphIQ lookup failed:",
+            graphiqError
+          );
+        }
+      }
 
       const res = await analyzeWithAtlas({
         orgId,
@@ -776,6 +903,10 @@ export default function AtlasAIOperator() {
           summary,
           alerts: activeAlerts,
           actions: operatorMoves,
+          externalCompanyIntelligence: graphiqContext,
+          operatorInstructions: graphiqContext
+            ? "Use the GraphIQ external company intelligence included in this context when answering. Clearly distinguish external company intelligence from Atlas internal revenue data. Do not invent information that is not present in the supplied GraphIQ results."
+            : "Answer using the internal Atlas revenue and operator context supplied.",
         },
       });
 
@@ -836,6 +967,7 @@ export default function AtlasAIOperator() {
               {[
                 isDemo ? "Operator Demo" : "Operator Live",
                 hasLiveData ? "Monitoring Forecast" : "Awaiting Signals",
+                "External Intelligence Active",
                 "Atlas AI Active",
               ].map((item) => (
                 <div key={item} style={styles.badge}>
@@ -1018,7 +1150,7 @@ export default function AtlasAIOperator() {
                   style={styles.askTextarea}
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
-                  placeholder="Ask Atlas why revenue is down, which deals are at risk, where to shift budget, or what leadership should prioritize next..."
+                  placeholder="Ask about your revenue, pipeline, accounts, or market — or ask Atlas to find companies based on what they make, sell, or provide..."
                 />
 
                 <div style={styles.askActionRow}>
@@ -1042,7 +1174,10 @@ export default function AtlasAIOperator() {
                   </button>
 
                   <div style={styles.askMuted}>
-                    Atlas uses current operator metrics to generate an executive answer.
+                    Atlas can combine your internal revenue data with external company intelligence from GraphIQ.
+                    {externalIntelUsed && externalCompanyCount > 0
+                      ? ` ${externalCompanyCount} external companies were used in this answer.`
+                      : ""}
                   </div>
                 </div>
               </div>
