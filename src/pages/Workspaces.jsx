@@ -1,17 +1,23 @@
 // frontend/src/pages/Workspaces.jsx
 import { useEffect, useMemo, useState } from "react";
 import {
+  createWorkspace,
   getActiveOrgId,
   getActiveOrgName,
   getActiveWorkspace,
   getMyOrgs,
-  createWorkspace,
-  switchWorkspace,
-  deleteWorkspace,
   setActiveOrgId,
   setActiveOrgName,
   setActiveWorkspace,
+  switchWorkspace,
 } from "../api";
+
+const EMPTY_FORM = {
+  name: "",
+  type: "client",
+  companyWebsite: "",
+  industry: "",
+};
 
 const ROLE_RANK = {
   owner: 6,
@@ -23,119 +29,57 @@ const ROLE_RANK = {
   sales: 1,
 };
 
-const rankRole = (r) => ROLE_RANK[String(r || "").toLowerCase()] || 0;
-
-function roleTone(role) {
-  const rank = rankRole(role);
-  if (rank >= 6) return "#22C55E";
-  if (rank >= 5) return "#38BDF8";
-  if (rank >= 4) return "#F59E0B";
-  if (rank >= 3) return "#A78BFA";
-  return "#A3A3A3";
+function clean(value) {
+  return String(value || "").trim();
 }
 
-function scorePill(role) {
-  const tone = roleTone(role);
-
-  return {
-    fontSize: 11,
-    fontWeight: 900,
-    padding: "6px 10px",
-    borderRadius: 999,
-    border: "1px solid rgba(255,255,255,0.10)",
-    background: "rgba(255,255,255,0.05)",
-    color: tone,
-    display: "inline-flex",
-    alignItems: "center",
-    gap: 8,
-  };
+function normalizeRole(value) {
+  return clean(value).toLowerCase() || "member";
 }
 
-function Section({ title, subtitle, children, rightSlot = null }) {
-  return (
-    <div style={S.section}>
-      <div style={S.sectionHead}>
-        <div>
-          {subtitle ? <div style={S.sectionSub}>{subtitle}</div> : null}
-          <div style={S.sectionTitle}>{title}</div>
-        </div>
-        {rightSlot ? <div>{rightSlot}</div> : null}
-      </div>
-      <div style={S.sectionBody}>{children}</div>
-    </div>
-  );
+function roleRank(value) {
+  return ROLE_RANK[normalizeRole(value)] || 0;
 }
 
-function StatCard({ label, value, note, accent = "default" }) {
-  const accentMap = {
-    default: {
-      border: "1px solid rgba(255,255,255,0.08)",
-      background: "rgba(10,16,35,0.40)",
-    },
-    success: {
-      border: "1px solid rgba(34,197,94,0.20)",
-      background: "rgba(34,197,94,0.08)",
-    },
-    warning: {
-      border: "1px solid rgba(245,158,11,0.20)",
-      background: "rgba(245,158,11,0.08)",
-    },
-    danger: {
-      border: "1px solid rgba(239,68,68,0.20)",
-      background: "rgba(239,68,68,0.08)",
-    },
-    info: {
-      border: "1px solid rgba(56,189,248,0.20)",
-      background: "rgba(56,189,248,0.08)",
-    },
-  };
-
-  const style = accentMap[accent] || accentMap.default;
-
-  return (
-    <div
-      style={{
-        ...S.statCard,
-        border: style.border,
-        background: style.background,
-      }}
-    >
-      <div style={S.statLabel}>{label}</div>
-      <div style={S.statValue}>{value}</div>
-      <div style={S.statNote}>{note}</div>
-    </div>
-  );
+function titleCase(value) {
+  return clean(value)
+    .replace(/[_-]+/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-function normalizeWorkspaceRow(row) {
+function normalizeWorkspace(row) {
   if (!row) return null;
 
-  const workspace = row.workspace || row.org || row.organization || row || null;
+  const workspace =
+    row.workspace ||
+    row.organization ||
+    row.org ||
+    row;
 
   const orgId =
     workspace?._id ||
     workspace?.id ||
     row.orgId ||
     row.workspaceId ||
-    row.id ||
     "";
 
   if (!orgId) return null;
 
-  const billingStatus =
-    workspace?.billing?.status ||
-    row.billingStatus ||
-    workspace?.paymentStatus ||
-    row.paymentStatus ||
-    "";
-
-  const accessStatus =
+  const accessStatus = clean(
     workspace?.accessStatus ||
-    row.accessStatus ||
-    row.status ||
-    workspace?.status ||
-    row.membershipStatus ||
-    "active";
+      workspace?.status ||
+      row.accessStatus ||
+      row.status ||
+      "active"
+  ).toLowerCase();
+
+  const billingStatus = clean(
+    workspace?.billing?.status ||
+      workspace?.paymentStatus ||
+      row.billingStatus ||
+      row.paymentStatus ||
+      "inactive"
+  ).toLowerCase();
 
   return {
     orgId: String(orgId),
@@ -143,177 +87,516 @@ function normalizeWorkspaceRow(row) {
       workspace?.name ||
       row.orgName ||
       row.workspaceName ||
-      row.name ||
       "Workspace",
-    orgSlug: workspace?.slug || row.orgSlug || row.slug || "",
-    role: row.role || row.orgRole || row.workspaceRole || "member",
-    status: accessStatus,
-    plan: workspace?.plan || row.plan || "",
-    billingStatus,
+    orgSlug: workspace?.slug || row.orgSlug || "",
     type: workspace?.type || row.type || "client",
+    plan: workspace?.plan || row.plan || "SCALE",
+    role: normalizeRole(
+      row.role ||
+        workspace?.role ||
+        row.orgRole ||
+        row.workspaceRole
+    ),
     accessStatus,
-    paymentStatus:
-      workspace?.paymentStatus || row.paymentStatus || billingStatus || "",
-    integrationsConnected:
-      Number(
-        row.integrationsConnected ??
-          workspace?.integrationsConnected ??
-          workspace?.integrations?.connectedCount ??
-          0
-      ) || 0,
-    memberCount:
-      Number(row.memberCount ?? workspace?.memberCount ?? 0) || 0,
-    lastActivityAt:
-      row.lastActivityAt || workspace?.lastActivityAt || workspace?.updatedAt || null,
-    updatedAt: row.updatedAt || workspace?.updatedAt || null,
-    createdAt: row.createdAt || workspace?.createdAt || null,
+    billingStatus,
+    trial: workspace?.trial || row.trial || null,
+    companyWebsite:
+      workspace?.companyWebsite ||
+      row.companyWebsite ||
+      "",
+    industry: workspace?.industry || row.industry || "",
+    createdAt: workspace?.createdAt || row.createdAt || null,
+    updatedAt: workspace?.updatedAt || row.updatedAt || null,
   };
 }
 
-function getWorkspaceHealth(org) {
-  const access = String(org?.accessStatus || org?.status || "").toLowerCase();
-  const billing = String(
-    org?.billingStatus || org?.paymentStatus || ""
-  ).toLowerCase();
+function dedupeWorkspaces(rows) {
+  const workspaceMap = new Map();
 
-  const hasActiveAccess =
-    access === "active" || access === "approved" || access === "live";
+  for (const row of rows) {
+    const workspace = normalizeWorkspace(row);
+    if (!workspace) continue;
 
-  const billingGood =
-    !billing ||
-    billing === "paid" ||
-    billing === "active" ||
-    billing === "trialing" ||
-    billing === "converted";
+    const existing = workspaceMap.get(workspace.orgId);
 
-  if (!hasActiveAccess || billing === "past_due" || billing === "canceled") {
-    return "needs_attention";
+    if (
+      !existing ||
+      roleRank(workspace.role) > roleRank(existing.role)
+    ) {
+      workspaceMap.set(workspace.orgId, workspace);
+    }
   }
 
-  if (hasActiveAccess && billingGood) {
-    return "healthy";
-  }
-
-  return "monitor";
+  return Array.from(workspaceMap.values());
 }
 
-function getWorkspaceHealthTone(health) {
-  if (health === "healthy") {
+function isAccessAvailable(workspace) {
+  return ["active", "approved", "live"].includes(
+    clean(workspace?.accessStatus).toLowerCase()
+  );
+}
+
+function isBillingReady(workspace) {
+  return ["paid", "active", "converted"].includes(
+    clean(workspace?.billingStatus).toLowerCase()
+  );
+}
+
+function isTrial(workspace) {
+  return (
+    clean(workspace?.billingStatus).toLowerCase() === "trialing" ||
+    clean(workspace?.trial?.status).toLowerCase() === "trialing"
+  );
+}
+
+function needsReview(workspace) {
+  const billingStatus = clean(
+    workspace?.billingStatus
+  ).toLowerCase();
+
+  const accessUnavailable = !isAccessAvailable(workspace);
+  const billingProblem = [
+    "past_due",
+    "unpaid",
+    "canceled",
+    "cancelled",
+    "failed",
+  ].includes(billingStatus);
+
+  return accessUnavailable || billingProblem;
+}
+
+function getWorkspaceState(workspace) {
+  if (needsReview(workspace)) {
     return {
-      label: "Healthy",
-      color: "#22C55E",
-      border: "1px solid rgba(34,197,94,0.30)",
-      background: "rgba(34,197,94,0.12)",
-      text: "#DCFCE7",
+      key: "review",
+      label: "Needs Review",
+      style: styles.dangerPill,
     };
   }
 
-  if (health === "monitor") {
+  if (isTrial(workspace)) {
     return {
-      label: "Monitor",
-      color: "#F59E0B",
-      border: "1px solid rgba(245,158,11,0.30)",
-      background: "rgba(245,158,11,0.12)",
-      text: "#FEF3C7",
+      key: "trial",
+      label: "Trial",
+      style: styles.warningPill,
     };
   }
 
   return {
-    label: "Needs Attention",
-    color: "#EF4444",
-    border: "1px solid rgba(239,68,68,0.30)",
-    background: "rgba(239,68,68,0.12)",
-    text: "#FEE2E2",
+    key: "ready",
+    label: "Ready",
+    style: styles.successPill,
   };
 }
 
-function healthPill(health) {
-  const tone = getWorkspaceHealthTone(health);
+function trialDaysRemaining(workspace) {
+  const endValue =
+    workspace?.trial?.endsAt ||
+    workspace?.trial?.endDate ||
+    workspace?.trial?.expiresAt;
 
-  return {
-    fontSize: 11,
-    fontWeight: 900,
-    padding: "6px 10px",
-    borderRadius: 999,
-    border: tone.border,
-    background: tone.background,
-    color: tone.text,
-    display: "inline-flex",
-    alignItems: "center",
-    gap: 8,
-  };
+  if (!endValue) return null;
+
+  const endDate = new Date(endValue);
+
+  if (Number.isNaN(endDate.getTime())) return null;
+
+  const milliseconds = endDate.getTime() - Date.now();
+
+  return Math.max(
+    0,
+    Math.ceil(milliseconds / (1000 * 60 * 60 * 24))
+  );
 }
 
-function buildAlerts(org) {
-  const alerts = [];
-  const access = String(org?.accessStatus || org?.status || "").toLowerCase();
-  const billing = String(
-    org?.billingStatus || org?.paymentStatus || ""
-  ).toLowerCase();
+function roleStyle(role) {
+  const normalizedRole = normalizeRole(role);
 
-  if (access && access !== "active") {
-    alerts.push("Access review");
+  if (normalizedRole === "owner") {
+    return styles.ownerPill;
   }
 
-  if (billing === "past_due" || billing === "canceled") {
-    alerts.push("Billing issue");
+  if (normalizedRole === "admin") {
+    return styles.adminPill;
   }
 
-  if ((org?.integrationsConnected || 0) === 0) {
-    alerts.push("No integrations");
+  if (normalizedRole === "manager") {
+    return styles.managerPill;
   }
 
-  if ((org?.memberCount || 0) === 0) {
-    alerts.push("No team members");
-  }
+  return styles.neutralPill;
+}
 
-  return alerts;
+function formatDate(value) {
+  if (!value) return "";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return "";
+
+  return date.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function StatCard({ label, value, description, accent }) {
+  return (
+    <div
+      style={{
+        ...styles.statCard,
+        borderColor: accent,
+      }}
+    >
+      <div style={styles.statLabel}>{label}</div>
+      <div style={styles.statValue}>{value}</div>
+      <div style={styles.statDescription}>{description}</div>
+    </div>
+  );
+}
+
+function Pill({ children, style }) {
+  return <span style={style}>{children}</span>;
+}
+
+function WorkspaceCard({
+  workspace,
+  active,
+  switching,
+  actionsDisabled,
+  onSwitch,
+}) {
+  const state = getWorkspaceState(workspace);
+  const daysRemaining = trialDaysRemaining(workspace);
+
+  return (
+    <div
+      style={{
+        ...styles.workspaceCard,
+        ...(active ? styles.activeWorkspaceCard : {}),
+      }}
+    >
+      <div style={styles.workspaceTop}>
+        <div style={styles.workspaceIdentity}>
+          <div style={styles.workspaceName}>
+            {workspace.orgName}
+          </div>
+
+          <div style={styles.workspaceMetadata}>
+            {titleCase(workspace.type)} workspace
+            {workspace.industry
+              ? ` · ${workspace.industry}`
+              : ""}
+            {workspace.createdAt
+              ? ` · Created ${formatDate(workspace.createdAt)}`
+              : ""}
+          </div>
+        </div>
+
+        <div style={styles.pillRow}>
+          <Pill style={roleStyle(workspace.role)}>
+            {titleCase(workspace.role)}
+          </Pill>
+
+          <Pill style={state.style}>{state.label}</Pill>
+
+          {active ? (
+            <Pill style={styles.activePill}>Current</Pill>
+          ) : null}
+        </div>
+      </div>
+
+      <div style={styles.workspaceDetails}>
+        <div style={styles.detail}>
+          <span style={styles.detailLabel}>Plan</span>
+          <span style={styles.detailValue}>
+            {titleCase(workspace.plan)}
+          </span>
+        </div>
+
+        <div style={styles.detail}>
+          <span style={styles.detailLabel}>Access</span>
+          <span style={styles.detailValue}>
+            {isAccessAvailable(workspace)
+              ? "Available"
+              : titleCase(workspace.accessStatus)}
+          </span>
+        </div>
+
+        <div style={styles.detail}>
+          <span style={styles.detailLabel}>Billing</span>
+          <span style={styles.detailValue}>
+            {isTrial(workspace)
+              ? daysRemaining === null
+                ? "Trial"
+                : `${daysRemaining} day${
+                    daysRemaining === 1 ? "" : "s"
+                  } remaining`
+              : isBillingReady(workspace)
+              ? "Active"
+              : titleCase(workspace.billingStatus || "Not set")}
+          </span>
+        </div>
+      </div>
+
+      {workspace.companyWebsite ? (
+        <div style={styles.website}>
+          {workspace.companyWebsite}
+        </div>
+      ) : null}
+
+      <div style={styles.workspaceActions}>
+        {active ? (
+          <button
+            type="button"
+            disabled
+            style={styles.currentButton}
+          >
+            Active Workspace
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => onSwitch(workspace)}
+            disabled={actionsDisabled}
+            style={{
+              ...styles.primaryButton,
+              opacity: actionsDisabled ? 0.65 : 1,
+              cursor: actionsDisabled
+                ? "not-allowed"
+                : "pointer",
+            }}
+          >
+            {switching
+              ? "Switching..."
+              : "Switch Workspace"}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CreateWorkspaceModal({
+  form,
+  creating,
+  onChange,
+  onClose,
+  onSubmit,
+}) {
+  return (
+    <div
+      style={styles.modalBackdrop}
+      onMouseDown={onClose}
+      role="presentation"
+    >
+      <div
+        style={styles.modal}
+        onMouseDown={(event) => event.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="create-workspace-title"
+      >
+        <div style={styles.modalHeader}>
+          <div>
+            <div style={styles.eyebrow}>New Environment</div>
+            <h2
+              id="create-workspace-title"
+              style={styles.modalTitle}
+            >
+              Create Workspace
+            </h2>
+            <div style={styles.modalSubtitle}>
+              Create a separate environment for a company,
+              client, or business unit.
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={creating}
+            style={styles.closeButton}
+            aria-label="Close"
+          >
+            ×
+          </button>
+        </div>
+
+        <form onSubmit={onSubmit} style={styles.form}>
+          <div style={styles.formGroup}>
+            <label style={styles.label} htmlFor="workspace-name">
+              Workspace name
+            </label>
+
+            <input
+              id="workspace-name"
+              value={form.name}
+              onChange={(event) =>
+                onChange("name", event.target.value)
+              }
+              placeholder="Company or business unit name"
+              maxLength={120}
+              autoFocus
+              required
+              style={styles.input}
+            />
+          </div>
+
+          <div style={styles.formGrid}>
+            <div style={styles.formGroup}>
+              <label
+                style={styles.label}
+                htmlFor="workspace-type"
+              >
+                Workspace type
+              </label>
+
+              <select
+                id="workspace-type"
+                value={form.type}
+                onChange={(event) =>
+                  onChange("type", event.target.value)
+                }
+                style={styles.input}
+              >
+                <option value="client">Company</option>
+                <option value="agency">Agency</option>
+              </select>
+            </div>
+
+            <div style={styles.formGroup}>
+              <label
+                style={styles.label}
+                htmlFor="workspace-industry"
+              >
+                Industry
+              </label>
+
+              <input
+                id="workspace-industry"
+                value={form.industry}
+                onChange={(event) =>
+                  onChange("industry", event.target.value)
+                }
+                placeholder="Example: Technology"
+                maxLength={120}
+                style={styles.input}
+              />
+            </div>
+          </div>
+
+          <div style={styles.formGroup}>
+            <label
+              style={styles.label}
+              htmlFor="workspace-website"
+            >
+              Company website
+            </label>
+
+            <input
+              id="workspace-website"
+              value={form.companyWebsite}
+              onChange={(event) =>
+                onChange(
+                  "companyWebsite",
+                  event.target.value
+                )
+              }
+              placeholder="https://company.com"
+              maxLength={300}
+              style={styles.input}
+            />
+          </div>
+
+          <div style={styles.formNotice}>
+            The new workspace will begin on the standard
+            7-day trial and will become your active workspace
+            after creation.
+          </div>
+
+          <div style={styles.modalActions}>
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={creating}
+              style={styles.secondaryButton}
+            >
+              Cancel
+            </button>
+
+            <button
+              type="submit"
+              disabled={creating || !form.name.trim()}
+              style={{
+                ...styles.primaryButton,
+                opacity:
+                  creating || !form.name.trim() ? 0.65 : 1,
+                cursor:
+                  creating || !form.name.trim()
+                    ? "not-allowed"
+                    : "pointer",
+              }}
+            >
+              {creating
+                ? "Creating..."
+                : "Create Workspace"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 }
 
 export default function Workspaces() {
-  const [orgsRaw, setOrgsRaw] = useState([]);
+  const [workspaces, setWorkspaces] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [switchingId, setSwitchingId] = useState("");
-  const [deletingId, setDeletingId] = useState("");
   const [creating, setCreating] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [search, setSearch] = useState("");
-  const [sortMode, setSortMode] = useState("active_first");
-  const [healthFilter, setHealthFilter] = useState("all");
-  const [err, setErr] = useState("");
-  const [success, setSuccess] = useState("");
+  const [stateFilter, setStateFilter] = useState("all");
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [error, setError] = useState("");
 
-  const [form, setForm] = useState({
-    name: "",
-    slug: "",
-    type: "client",
-    plan: "ENTERPRISE",
-    companyWebsite: "",
-    industry: "",
-  });
-
-  const activeOrgId = getActiveOrgId();
-  const activeWorkspace = getActiveWorkspace();
+  const activeOrgId = String(getActiveOrgId() || "");
   const activeOrgName = getActiveOrgName();
+  const storedActiveWorkspace = getActiveWorkspace();
 
-  async function load() {
+  async function load({ quiet = false } = {}) {
     try {
-      setLoading(true);
-      setErr("");
+      if (quiet) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
 
-      const res = await getMyOrgs();
-      const rows = Array.isArray(res?.orgs)
-        ? res.orgs
-        : Array.isArray(res)
-        ? res
+      setError("");
+
+      const response = await getMyOrgs();
+
+      const rows = Array.isArray(response?.orgs)
+        ? response.orgs
+        : Array.isArray(response?.workspaces)
+        ? response.workspaces
+        : Array.isArray(response)
+        ? response
         : [];
 
-      setOrgsRaw(rows);
-    } catch (e) {
-      console.error(e);
-      setErr(e?.message || "Failed to load workspaces");
+      setWorkspaces(dedupeWorkspaces(rows));
+    } catch (err) {
+      console.error("Workspace load error:", err);
+      setError(
+        err?.message || "Unable to load your workspaces."
+      );
+      setWorkspaces([]);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }
 
@@ -321,1234 +604,1023 @@ export default function Workspaces() {
     load();
   }, []);
 
-  const orgs = useMemo(() => {
-    const normalized = (Array.isArray(orgsRaw) ? orgsRaw : [])
-      .map(normalizeWorkspaceRow)
-      .filter(Boolean)
-      .map((o) => {
-        const health = getWorkspaceHealth(o);
-        const alerts = buildAlerts(o);
-        return {
-          ...o,
-          health,
-          alerts,
-        };
-      });
+  const activeWorkspace = useMemo(() => {
+    const match = workspaces.find(
+      (workspace) =>
+        String(workspace.orgId) === activeOrgId
+    );
 
-    const map = new Map();
+    if (match) return match;
 
-    for (const o of normalized) {
-      const id = String(o?.orgId || "").trim();
-      if (!id) continue;
+    const fallback = normalizeWorkspace(
+      storedActiveWorkspace
+        ? {
+            ...storedActiveWorkspace,
+            name:
+              storedActiveWorkspace.name ||
+              activeOrgName ||
+              "Current Workspace",
+          }
+        : null
+    );
 
-      const current = map.get(id);
-      if (!current) {
-        map.set(id, { ...o, orgId: id });
-        continue;
-      }
-
-      const curRank = rankRole(current.role);
-      const nextRank = rankRole(o.role);
-
-      if (nextRank > curRank) {
-        map.set(id, { ...o, orgId: id });
-      } else {
-        map.set(id, {
-          ...o,
-          ...current,
-          orgId: id,
-          orgName: current.orgName || o.orgName,
-          orgSlug: current.orgSlug || o.orgSlug,
-          status: current.status || o.status,
-          plan: current.plan || o.plan,
-          billingStatus: current.billingStatus || o.billingStatus,
-          type: current.type || o.type,
-          accessStatus: current.accessStatus || o.accessStatus,
-          paymentStatus: current.paymentStatus || o.paymentStatus,
-          integrationsConnected:
-            current.integrationsConnected || o.integrationsConnected,
-          memberCount: current.memberCount || o.memberCount,
-          lastActivityAt: current.lastActivityAt || o.lastActivityAt,
-          updatedAt: current.updatedAt || o.updatedAt,
-          createdAt: current.createdAt || o.createdAt,
-          health: current.health || o.health,
-          alerts:
-            Array.isArray(current.alerts) && current.alerts.length
-              ? current.alerts
-              : o.alerts,
-        });
-      }
-    }
-
-    return Array.from(map.values());
-  }, [orgsRaw]);
-
-  const filteredOrgs = useMemo(() => {
-    let arr = [...orgs];
-
-    if (search.trim()) {
-      const q = search.trim().toLowerCase();
-      arr = arr.filter((o) => {
-        return (
-          String(o.orgName || "").toLowerCase().includes(q) ||
-          String(o.orgSlug || "").toLowerCase().includes(q) ||
-          String(o.plan || "").toLowerCase().includes(q) ||
-          String(o.type || "").toLowerCase().includes(q)
-        );
-      });
-    }
-
-    if (healthFilter !== "all") {
-      arr = arr.filter((o) => o.health === healthFilter);
-    }
-
-    arr.sort((a, b) => {
-      if (sortMode === "active_first") {
-        const aActive = String(a.orgId) === String(activeOrgId) ? 1 : 0;
-        const bActive = String(b.orgId) === String(activeOrgId) ? 1 : 0;
-        if (aActive !== bActive) return bActive - aActive;
-        const rr = rankRole(b.role) - rankRole(a.role);
-        if (rr !== 0) return rr;
-        return String(a.orgName || "").localeCompare(String(b.orgName || ""));
-      }
-
-      if (sortMode === "name_asc") {
-        return String(a.orgName || "").localeCompare(String(b.orgName || ""));
-      }
-
-      if (sortMode === "name_desc") {
-        return String(b.orgName || "").localeCompare(String(a.orgName || ""));
-      }
-
-      if (sortMode === "health_first") {
-        const healthRank = { healthy: 3, monitor: 2, needs_attention: 1 };
-        const hr = (healthRank[b.health] || 0) - (healthRank[a.health] || 0);
-        if (hr !== 0) return hr;
-        return String(a.orgName || "").localeCompare(String(b.orgName || ""));
-      }
-
-      return 0;
-    });
-
-    return arr;
-  }, [orgs, search, healthFilter, sortMode, activeOrgId]);
-
-  const activeOrg =
-    orgs.find((o) => String(o.orgId) === String(activeOrgId)) ||
-    (activeWorkspace
-      ? {
-          ...normalizeWorkspaceRow({
-            workspace: activeWorkspace,
-            role: "member",
-            status: "active",
-          }),
-          health: "healthy",
-          alerts: [],
-        }
-      : null);
+    return fallback;
+  }, [
+    workspaces,
+    activeOrgId,
+    activeOrgName,
+    storedActiveWorkspace,
+  ]);
 
   const stats = useMemo(() => {
-    const total = orgs.length;
-    const owners = orgs.filter(
-      (o) => String(o.role || "").toLowerCase() === "owner"
-    ).length;
-    const healthy = orgs.filter((o) => o.health === "healthy").length;
-    const needsAttention = orgs.filter(
-      (o) => o.health === "needs_attention"
-    ).length;
+    return {
+      total: workspaces.length,
+      accessible: workspaces.filter(isAccessAvailable).length,
+      ownerAccess: workspaces.filter(
+        (workspace) => workspace.role === "owner"
+      ).length,
+      needsReview: workspaces.filter(needsReview).length,
+    };
+  }, [workspaces]);
 
-    return { total, owners, healthy, needsAttention };
-  }, [orgs]);
+  const filteredWorkspaces = useMemo(() => {
+    const query = search.trim().toLowerCase();
 
-  const workspaceBriefing = useMemo(() => {
-    if (!orgs.length) {
-      return "No workspaces are currently available for this user. Once organizations are connected, Global HQ will let you switch environments, review access levels, create new workspaces, and manage operating context from one place.";
-    }
+    return [...workspaces]
+      .filter((workspace) => {
+        if (!query) return true;
 
-    if (activeOrg) {
-      return `Global HQ is currently tracking ${stats.total} workspace environments. The active workspace is ${activeOrg.orgName || activeOrgName || "Current Workspace"}, where your role is ${activeOrg.role || "member"}. Current workspace health is ${getWorkspaceHealthTone(activeOrg.health).label.toLowerCase()}. Use this hub to switch organizations, create new environments, and manage workspace context.`;
-    }
+        return [
+          workspace.orgName,
+          workspace.orgSlug,
+          workspace.type,
+          workspace.plan,
+          workspace.industry,
+          workspace.companyWebsite,
+        ].some((value) =>
+          clean(value).toLowerCase().includes(query)
+        );
+      })
+      .filter((workspace) => {
+        if (stateFilter === "all") return true;
+        return getWorkspaceState(workspace).key === stateFilter;
+      })
+      .sort((a, b) => {
+        const aActive =
+          String(a.orgId) === activeOrgId ? 1 : 0;
+        const bActive =
+          String(b.orgId) === activeOrgId ? 1 : 0;
 
-    return `Global HQ is currently tracking ${stats.total} workspace environments. Select a workspace to activate the correct organization context and x-org-id header.`;
-  }, [orgs, activeOrg, activeOrgName, stats]);
+        if (aActive !== bActive) {
+          return bActive - aActive;
+        }
 
-  const topAccessOrgs = useMemo(() => {
-    return [...orgs]
-      .sort((a, b) => rankRole(b.role) - rankRole(a.role))
-      .slice(0, 3);
-  }, [orgs]);
+        const roleDifference =
+          roleRank(b.role) - roleRank(a.role);
 
-  function updateForm(key, value) {
-    setForm((prev) => ({ ...prev, [key]: value }));
+        if (roleDifference !== 0) {
+          return roleDifference;
+        }
+
+        return a.orgName.localeCompare(b.orgName);
+      });
+  }, [workspaces, search, stateFilter, activeOrgId]);
+
+  function updateForm(field, value) {
+    setForm((current) => ({
+      ...current,
+      [field]: value,
+    }));
   }
 
-  async function handleCreateWorkspace(e) {
-    e.preventDefault();
+  function closeCreateModal() {
+    if (creating) return;
+
+    setShowCreate(false);
+    setForm(EMPTY_FORM);
+  }
+
+  async function handleCreate(event) {
+    event.preventDefault();
 
     if (!form.name.trim()) {
-      setErr("Workspace name is required");
+      setError("Workspace name is required.");
       return;
     }
 
     try {
       setCreating(true);
-      setErr("");
-      setSuccess("");
+      setError("");
 
-      const newWorkspaceName = form.name.trim();
-
-      const created = await createWorkspace({
-        name: newWorkspaceName,
-        slug: form.slug.trim() || undefined,
+      const response = await createWorkspace({
+        name: form.name.trim(),
         type: form.type,
-        plan: form.plan,
         companyWebsite: form.companyWebsite.trim(),
         industry: form.industry.trim(),
       });
 
-      if (created?.workspace?._id) {
-        const switched = await switchWorkspace(created.workspace._id);
-        const target = switched?.activeWorkspace || created.workspace;
+      const workspace = response?.workspace;
 
-        if (target?._id) {
-          setActiveOrgId(target._id);
-        }
-        if (target?.name) {
-          setActiveOrgName(target.name);
-        }
-        if (target) {
-          setActiveWorkspace(target);
-        }
+      if (!workspace?._id && !workspace?.id) {
+        throw new Error(
+          "The workspace was created, but no workspace ID was returned."
+        );
       }
 
-      setForm({
-        name: "",
-        slug: "",
-        type: "client",
-        plan: "ENTERPRISE",
-        companyWebsite: "",
-        industry: "",
-      });
+      const workspaceId = workspace._id || workspace.id;
+
+      setActiveOrgId(workspaceId);
+      setActiveOrgName(workspace.name || form.name.trim());
+      setActiveWorkspace(workspace);
 
       setShowCreate(false);
-      setSuccess(`Workspace "${newWorkspaceName}" created and activated`);
-      await load();
-    } catch (e) {
-      console.error(e);
-      setErr(e?.message || "Failed to create workspace");
+      setForm(EMPTY_FORM);
+
+      window.location.reload();
+    } catch (err) {
+      console.error("Create workspace error:", err);
+      setError(
+        err?.message || "Unable to create the workspace."
+      );
     } finally {
       setCreating(false);
     }
   }
 
-  async function onSelect(orgId) {
+  async function handleSwitch(workspace) {
+    if (
+      !workspace?.orgId ||
+      String(workspace.orgId) === activeOrgId
+    ) {
+      return;
+    }
+
     try {
-      setErr("");
-      setSuccess("");
-      setSwitchingId(orgId);
+      setSwitchingId(workspace.orgId);
+      setError("");
 
-      const res = await switchWorkspace(orgId);
-      const target = res?.activeWorkspace;
+      const response = await switchWorkspace(
+        workspace.orgId
+      );
 
-      if (target?._id) setActiveOrgId(target._id);
-      if (target?.name) setActiveOrgName(target.name);
-      if (target) setActiveWorkspace(target);
+      const active = response?.activeWorkspace;
 
-      setSuccess(`Switched to ${target?.name || "workspace"}`);
-      await load();
-    } catch (e) {
-      console.error(e);
-      setErr(e?.message || "Failed to switch workspace");
-    } finally {
+      if (!active?._id && !active?.id) {
+        throw new Error(
+          "The workspace could not be activated."
+        );
+      }
+
+      const workspaceId = active._id || active.id;
+
+      setActiveOrgId(workspaceId);
+      setActiveOrgName(
+        active.name || workspace.orgName
+      );
+      setActiveWorkspace(active);
+
+      window.location.reload();
+    } catch (err) {
+      console.error("Switch workspace error:", err);
+      setError(
+        err?.message || "Unable to switch workspaces."
+      );
       setSwitchingId("");
     }
   }
 
-  async function onDelete(org) {
-    const confirmed = window.confirm(
-      `Delete workspace "${org.orgName}"?\n\nThis cannot be undone.`
-    );
-
-    if (!confirmed) return;
-
-    try {
-      setErr("");
-      setSuccess("");
-      setDeletingId(org.orgId);
-
-      await deleteWorkspace(org.orgId);
-
-      setSuccess(`Deleted ${org.orgName}`);
-      await load();
-    } catch (e) {
-      console.error(e);
-      setErr(e?.message || "Failed to delete workspace");
-    } finally {
-      setDeletingId("");
-    }
-  }
-
   return (
-    <div style={S.page}>
-      <div style={S.bgGlow} />
+    <div style={styles.page}>
+      <style>{`
+        .global-hq-stats {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 12px;
+        }
 
-      <div style={S.wrap}>
-        <div style={S.hero}>
-          <div style={S.heroTop}>
+        .global-hq-details {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 10px;
+        }
+
+        .global-hq-form-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+        }
+
+        @media (max-width: 900px) {
+          .global-hq-stats {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+
+          .global-hq-details {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        @media (max-width: 620px) {
+          .global-hq-stats,
+          .global-hq-form-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        .global-hq-input::placeholder {
+          color: rgba(203, 213, 225, 0.5);
+        }
+
+        .global-hq-input:focus {
+          border-color: rgba(56, 189, 248, 0.65) !important;
+          box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.1);
+        }
+      `}</style>
+
+      <div style={styles.container}>
+        <section style={styles.hero}>
+          <div style={styles.heroContent}>
             <div>
-              <div style={S.eyebrow}>Organization Command Center</div>
-              <h1 style={S.title}>Global HQ</h1>
-              <div style={S.sub}>
-                Manage organization context, switch workspaces, create new environments,
-                and control the active operating environment across the platform.
+              <div style={styles.eyebrow}>
+                Organization Management
               </div>
+
+              <h1 style={styles.title}>Global HQ</h1>
+
+              <p style={styles.subtitle}>
+                Manage the workspaces you can access and move
+                between companies without mixing their data.
+              </p>
             </div>
 
-            <div style={S.headerControls}>
-              <div style={S.badge}>Workspace Control Active</div>
-              <div style={S.badge}>Access Validation Synced</div>
-              <div style={S.badge}>Atlas HQ Monitoring</div>
-
-              <div style={{ width: "100%" }} />
+            <div style={styles.heroActions}>
+              <button
+                type="button"
+                onClick={() => load({ quiet: true })}
+                disabled={
+                  refreshing ||
+                  loading ||
+                  creating ||
+                  Boolean(switchingId)
+                }
+                style={styles.secondaryButton}
+              >
+                {refreshing ? "Refreshing..." : "Refresh"}
+              </button>
 
               <button
-                onClick={load}
-                disabled={loading || creating || !!switchingId || !!deletingId}
-                style={{
-                  ...S.btn,
-                  cursor:
-                    loading || creating || !!switchingId || !!deletingId
-                      ? "not-allowed"
-                      : "pointer",
-                  opacity:
-                    loading || creating || !!switchingId || !!deletingId
-                      ? 0.7
-                      : 1,
+                type="button"
+                onClick={() => {
+                  setError("");
+                  setShowCreate(true);
                 }}
+                style={styles.primaryButton}
               >
-                {loading ? "Loading..." : "Refresh"}
+                + New Workspace
               </button>
             </div>
           </div>
-        </div>
+        </section>
 
-        <div style={S.briefingCard}>
-          <div style={S.briefingEyebrow}>Workspace Briefing</div>
-          <div style={S.briefingBody}>{workspaceBriefing}</div>
-        </div>
-
-        {err ? <div style={S.error}>{err}</div> : null}
-        {success ? <div style={S.success}>{success}</div> : null}
-
-        <div style={S.statsGrid}>
-          <StatCard
-            label="Total Workspaces"
-            value={stats.total}
-            note="Organization environments available to this user."
-            accent="info"
-          />
-          <StatCard
-            label="Owner Roles"
-            value={stats.owners}
-            note="Workspaces where this user has owner-level access."
-            accent="success"
-          />
-          <StatCard
-            label="Healthy Workspaces"
-            value={stats.healthy}
-            note="Workspaces with active access and healthy billing."
-            accent="success"
-          />
-          <StatCard
-            label="Needs Attention"
-            value={stats.needsAttention}
-            note="Workspaces that may need billing or access review."
-            accent={stats.needsAttention > 0 ? "danger" : "default"}
-          />
-        </div>
-
-        {activeOrg ? (
-          <div style={S.currentCard}>
-            <div style={S.currentEyebrow}>Current Workspace</div>
-            <div style={S.currentTitle}>
-              {activeOrg.orgName || activeOrgName || "Workspace"}
-            </div>
-            <div style={S.currentMeta}>
-              Role: <b>{activeOrg.role}</b>
-              {activeOrg.orgSlug ? (
-                <>
-                  {" • "}Slug: <b>{activeOrg.orgSlug}</b>
-                </>
-              ) : null}
-              {activeOrg.plan ? (
-                <>
-                  {" • "}Plan: <b>{activeOrg.plan}</b>
-                </>
-              ) : null}
-              {activeOrg.type ? (
-                <>
-                  {" • "}Type: <b>{activeOrg.type}</b>
-                </>
-              ) : null}
-            </div>
-
-            <div style={S.currentHealthRow}>
-              <div style={healthPill(activeOrg.health)}>
-                {getWorkspaceHealthTone(activeOrg.health).label}
-              </div>
-
-              {String(activeOrg.accessStatus || "").toLowerCase() === "active" ? (
-                <div style={S.goodPill}>Access active</div>
-              ) : null}
-
-              {["paid", "active", "trialing", "converted"].includes(
-                String(
-                  activeOrg.billingStatus || activeOrg.paymentStatus || ""
-                ).toLowerCase()
-              ) ? (
-                <div style={S.goodPill}>Billing paid</div>
-              ) : null}
-            </div>
-
-            <div style={S.currentSub}>
-              This workspace is currently setting the active <b>x-org-id</b> context.
-            </div>
-          </div>
+        {error ? (
+          <div style={styles.errorBanner}>{error}</div>
         ) : null}
 
-        <div style={S.twoCol}>
-          <Section title="Workspace Summary" subtitle="Overview">
-            {!loading && !orgs.length ? (
-              <div style={S.emptyBox}>
-                No workspaces found.
-                <div style={{ marginTop: 10 }}>
-                  <button
-                    onClick={() => setShowCreate(true)}
-                    style={S.primaryBtn}
-                    type="button"
-                  >
-                    Create Your First Workspace
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div style={S.summaryList}>
-                <div style={S.summaryItem}>
-                  Atlas is currently tracking <b>{stats.total}</b> workspace environments
-                  for this user.
-                </div>
-                <div style={S.summaryItem}>
-                  Access distribution includes <b>{stats.owners}</b> owner roles,{" "}
-                  <b>0</b> admin roles, and <b>0</b> manager roles.
-                </div>
-                <div style={S.summaryItem}>
-                  <b>{stats.healthy}</b> workspaces currently look healthy, while{" "}
-                  <b>{stats.needsAttention}</b> need closer review.
-                </div>
-                <div style={S.summaryItem}>
-                  Switching here updates the active workspace and the platform’s effective
-                  operating scope.
-                </div>
-              </div>
-            )}
-          </Section>
+        <div className="global-hq-stats">
+          <StatCard
+            label="Workspaces"
+            value={stats.total}
+            description="Companies and operating environments available to you."
+            accent="rgba(56,189,248,0.28)"
+          />
 
-          <Section title="Highest Access Workspaces" subtitle="Priority">
-            {topAccessOrgs.length ? (
-              <div style={S.leaderList}>
-                {topAccessOrgs.map((o, idx) => {
-                  const isActive = String(o.orgId) === String(activeOrgId);
+          <StatCard
+            label="Access Available"
+            value={stats.accessible}
+            description="Workspaces you can currently enter."
+            accent="rgba(34,197,94,0.28)"
+          />
 
-                  return (
-                    <div key={o.orgId || idx} style={S.leaderCard}>
-                      <div style={S.leaderTop}>
-                        <div>
-                          <div style={S.leaderName}>{o.orgName || "Workspace"}</div>
-                          <div style={S.leaderMeta}>
-                            {o.orgSlug || "No slug"} • {o.status || "active"}
-                            {o.plan ? ` • ${o.plan}` : ""}
-                          </div>
-                        </div>
+          <StatCard
+            label="Owner Access"
+            value={stats.ownerAccess}
+            description="Workspaces where you have owner-level control."
+            accent="rgba(167,139,250,0.28)"
+          />
 
-                        <div style={scorePill(o.role)}>
-                          {String(o.role || "member").toUpperCase()}
-                        </div>
-                      </div>
-
-                      <div style={S.leaderBottom}>
-                        <div style={S.tag}>
-                          {isActive ? "Active Workspace" : "Available Workspace"}
-                        </div>
-                        <div style={healthPill(o.health)}>
-                          {getWorkspaceHealthTone(o.health).label}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div style={S.emptyBox}>No workspace access data available yet.</div>
-            )}
-          </Section>
+          <StatCard
+            label="Needs Review"
+            value={stats.needsReview}
+            description="Workspaces with an access or billing issue."
+            accent={
+              stats.needsReview
+                ? "rgba(239,68,68,0.38)"
+                : "rgba(255,255,255,0.08)"
+            }
+          />
         </div>
 
-        <Section
-          title="Create Workspace"
-          subtitle="Provision New Environment"
-          rightSlot={
-            <button
-              onClick={() => setShowCreate((v) => !v)}
-              style={S.secondaryBtn}
-              type="button"
-            >
-              {showCreate ? "Close" : "New Workspace"}
-            </button>
-          }
-        >
-          {showCreate ? (
-            <form onSubmit={handleCreateWorkspace} style={S.formGrid}>
-              <div style={S.formGroup}>
-                <label style={S.label}>Workspace Name</label>
-                <input
-                  style={S.input}
-                  value={form.name}
-                  onChange={(e) => updateForm("name", e.target.value)}
-                  placeholder="Global Emerging Market Manager (GEMM)"
-                />
-              </div>
-
-              <div style={S.formGroup}>
-                <label style={S.label}>Custom Slug (optional)</label>
-                <input
-                  style={S.input}
-                  value={form.slug}
-                  onChange={(e) => updateForm("slug", e.target.value)}
-                  placeholder="gemm"
-                />
-              </div>
-
-              <div style={S.formRow}>
-                <div style={S.formGroup}>
-                  <label style={S.label}>Workspace Type</label>
-                  <select
-                    style={S.input}
-                    value={form.type}
-                    onChange={(e) => updateForm("type", e.target.value)}
-                  >
-                    <option value="client">client</option>
-                    <option value="agency">agency</option>
-                  </select>
+        {activeWorkspace ? (
+          <section style={styles.currentSection}>
+            <div style={styles.currentHeader}>
+              <div>
+                <div style={styles.eyebrow}>
+                  Current Workspace
                 </div>
 
-                <div style={S.formGroup}>
-                  <label style={S.label}>Plan</label>
-                  <select
-                    style={S.input}
-                    value={form.plan}
-                    onChange={(e) => updateForm("plan", e.target.value)}
-                  >
-                    <option value="SCALE">SCALE</option>
-                    <option value="GROWTH">GROWTH</option>
-                    <option value="ENTERPRISE">ENTERPRISE</option>
-                  </select>
+                <div style={styles.currentName}>
+                  {activeWorkspace.orgName ||
+                    activeOrgName ||
+                    "Workspace"}
+                </div>
+
+                <div style={styles.currentDescription}>
+                  Atlas is currently showing data and insights
+                  for this workspace.
                 </div>
               </div>
 
-              <div style={S.formGroup}>
-                <label style={S.label}>Company Website</label>
-                <input
-                  style={S.input}
-                  value={form.companyWebsite}
-                  onChange={(e) => updateForm("companyWebsite", e.target.value)}
-                  placeholder="https://example.com"
-                />
-              </div>
+              <div style={styles.pillRow}>
+                <Pill style={styles.activePill}>Active</Pill>
 
-              <div style={S.formGroup}>
-                <label style={S.label}>Industry</label>
-                <input
-                  style={S.input}
-                  value={form.industry}
-                  onChange={(e) => updateForm("industry", e.target.value)}
-                  placeholder="Finance"
-                />
-              </div>
-
-              <div style={S.formActions}>
-                <button
-                  type="submit"
-                  disabled={creating}
-                  style={{
-                    ...S.primaryBtn,
-                    opacity: creating ? 0.7 : 1,
-                    cursor: creating ? "not-allowed" : "pointer",
-                  }}
+                <Pill
+                  style={roleStyle(activeWorkspace.role)}
                 >
-                  {creating ? "Creating Workspace..." : "Create Workspace"}
-                </button>
+                  {titleCase(activeWorkspace.role)}
+                </Pill>
 
-                <button
-                  type="button"
-                  style={S.secondaryBtn}
-                  onClick={() =>
-                    setForm({
-                      name: "",
-                      slug: "",
-                      type: "client",
-                      plan: "ENTERPRISE",
-                      companyWebsite: "",
-                      industry: "",
-                    })
+                <Pill
+                  style={
+                    getWorkspaceState(activeWorkspace).style
                   }
                 >
-                  Clear
-                </button>
+                  {
+                    getWorkspaceState(activeWorkspace)
+                      .label
+                  }
+                </Pill>
               </div>
-            </form>
-          ) : (
-            <div style={S.emptyBox}>
-              Create additional environments for clients, business units, or internal
-              operating scopes.
             </div>
-          )}
-        </Section>
 
-        <Section
-          title="Workspace Directory"
-          subtitle="Organization List"
-          rightSlot={
-            <div style={S.toolbar}>
+            <div className="global-hq-details">
+              <div style={styles.currentDetail}>
+                <div style={styles.detailLabel}>
+                  Workspace Type
+                </div>
+                <div style={styles.currentDetailValue}>
+                  {titleCase(activeWorkspace.type)}
+                </div>
+              </div>
+
+              <div style={styles.currentDetail}>
+                <div style={styles.detailLabel}>
+                  Current Plan
+                </div>
+                <div style={styles.currentDetailValue}>
+                  {titleCase(activeWorkspace.plan)}
+                </div>
+              </div>
+
+              <div style={styles.currentDetail}>
+                <div style={styles.detailLabel}>
+                  Your Access
+                </div>
+                <div style={styles.currentDetailValue}>
+                  {titleCase(activeWorkspace.role)}
+                </div>
+              </div>
+            </div>
+          </section>
+        ) : null}
+
+        <section style={styles.directory}>
+          <div style={styles.directoryHeader}>
+            <div>
+              <div style={styles.eyebrow}>
+                Workspace Directory
+              </div>
+              <h2 style={styles.sectionTitle}>
+                Your Workspaces
+              </h2>
+              <div style={styles.sectionSubtitle}>
+                Select a workspace to change the company Atlas
+                is currently analyzing.
+              </div>
+            </div>
+
+            <div style={styles.filters}>
               <input
+                className="global-hq-input"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search workspaces"
-                style={S.toolbarInput}
+                onChange={(event) =>
+                  setSearch(event.target.value)
+                }
+                placeholder="Search workspaces..."
+                style={styles.searchInput}
               />
 
               <select
-                value={sortMode}
-                onChange={(e) => setSortMode(e.target.value)}
-                style={S.toolbarSelect}
+                className="global-hq-input"
+                value={stateFilter}
+                onChange={(event) =>
+                  setStateFilter(event.target.value)
+                }
+                style={styles.filterSelect}
               >
-                <option value="active_first">Active First</option>
-                <option value="name_asc">Name A-Z</option>
-                <option value="name_desc">Name Z-A</option>
-                <option value="health_first">Health First</option>
-              </select>
-
-              <select
-                value={healthFilter}
-                onChange={(e) => setHealthFilter(e.target.value)}
-                style={S.toolbarSelect}
-              >
-                <option value="all">All Health</option>
-                <option value="healthy">Healthy</option>
-                <option value="monitor">Monitor</option>
-                <option value="needs_attention">Needs Attention</option>
+                <option value="all">All workspaces</option>
+                <option value="ready">Ready</option>
+                <option value="trial">Trial</option>
+                <option value="review">Needs review</option>
               </select>
             </div>
-          }
-        >
-          {!loading && !filteredOrgs.length ? (
-            <div style={S.emptyBox}>
-              No workspaces match your current filters.
-            </div>
-          ) : null}
-
-          <div style={S.list}>
-            {filteredOrgs.map((o) => {
-              const isActive = String(o.orgId) === String(activeOrgId);
-              const isSwitching = switchingId === o.orgId;
-              const isDeleting = deletingId === o.orgId;
-              const canDelete =
-                !isActive && String(o.role || "").toLowerCase() === "owner";
-
-              return (
-                <div
-                  key={o.orgId}
-                  style={{
-                    ...S.item,
-                    ...(isActive ? S.itemActive : null),
-                  }}
-                >
-                  <div style={S.itemTop}>
-                    <div style={S.itemLeft}>
-                      <div style={S.itemTitle}>{o.orgName || "Workspace"}</div>
-                      <div style={S.itemMeta}>
-                        Role: <b>{o.role || "member"}</b> • Status:{" "}
-                        <b>{o.status || "active"}</b>
-                        {o.orgSlug ? (
-                          <>
-                            {" • "}Slug: <b>{o.orgSlug}</b>
-                          </>
-                        ) : null}
-                        {o.plan ? (
-                          <>
-                            {" • "}Plan: <b>{o.plan}</b>
-                          </>
-                        ) : null}
-                        {o.type ? (
-                          <>
-                            {" • "}Type: <b>{o.type}</b>
-                          </>
-                        ) : null}
-                      </div>
-                    </div>
-
-                    <div style={S.itemRight}>
-                      <div style={scorePill(o.role)}>
-                        {String(o.role || "member").toUpperCase()}
-                      </div>
-                      <div style={S.tag}>
-                        {isActive ? "Active Workspace" : "Available Workspace"}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div style={S.healthRow}>
-                    {String(o.accessStatus || "").toLowerCase() === "active" ? (
-                      <div style={S.goodPill}>Access active</div>
-                    ) : (
-                      <div style={S.warnPill}>Access review</div>
-                    )}
-
-                    {["paid", "active", "trialing", "converted"].includes(
-                      String(o.billingStatus || o.paymentStatus || "").toLowerCase()
-                    ) ? (
-                      <div style={S.goodPill}>Billing paid</div>
-                    ) : (
-                      <div style={S.warnPill}>Billing review</div>
-                    )}
-
-                    <div style={healthPill(o.health)}>
-                      {getWorkspaceHealthTone(o.health).label}
-                    </div>
-                  </div>
-
-                  <div style={S.itemFoot}>
-                    {isActive
-                      ? "This workspace is currently selected in localStorage and used by the platform."
-                      : "Switch into this workspace or delete it if you own it and no longer need it."}
-                  </div>
-
-                  <div style={S.actionRow}>
-                    {!isActive ? (
-                      <button
-                        onClick={() => onSelect(o.orgId)}
-                        disabled={!!switchingId || !!deletingId}
-                        style={{
-                          ...S.primaryBtn,
-                          opacity: isSwitching ? 0.7 : 1,
-                          cursor:
-                            switchingId || deletingId ? "not-allowed" : "pointer",
-                        }}
-                      >
-                        {isSwitching ? "Switching..." : "Switch Workspace"}
-                      </button>
-                    ) : (
-                      <button style={S.activeBtn} disabled>
-                        Active Workspace
-                      </button>
-                    )}
-
-                    {canDelete ? (
-                      <button
-                        onClick={() => onDelete(o)}
-                        disabled={!!switchingId || !!deletingId}
-                        style={{
-                          ...S.dangerBtn,
-                          opacity: isDeleting ? 0.7 : 1,
-                          cursor:
-                            switchingId || deletingId ? "not-allowed" : "pointer",
-                        }}
-                      >
-                        {isDeleting ? "Deleting..." : "Delete"}
-                      </button>
-                    ) : null}
-                  </div>
-                </div>
-              );
-            })}
           </div>
-        </Section>
+
+          <div style={styles.directoryBody}>
+            {loading ? (
+              <div style={styles.emptyState}>
+                Loading workspaces...
+              </div>
+            ) : filteredWorkspaces.length === 0 ? (
+              <div style={styles.emptyState}>
+                {workspaces.length === 0
+                  ? "You do not have any workspaces yet."
+                  : "No workspaces match your search or filter."}
+              </div>
+            ) : (
+              <div style={styles.workspaceList}>
+                {filteredWorkspaces.map((workspace) => (
+                  <WorkspaceCard
+                    key={workspace.orgId}
+                    workspace={workspace}
+                    active={
+                      String(workspace.orgId) ===
+                      activeOrgId
+                    }
+                    switching={
+                      switchingId === workspace.orgId
+                    }
+                    actionsDisabled={Boolean(switchingId)}
+                    onSwitch={handleSwitch}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
       </div>
+
+      {showCreate ? (
+        <CreateWorkspaceModal
+          form={form}
+          creating={creating}
+          onChange={updateForm}
+          onClose={closeCreateModal}
+          onSubmit={handleCreate}
+        />
+      ) : null}
     </div>
   );
 }
 
-const S = {
+const basePill = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "6px 10px",
+  borderRadius: 999,
+  fontSize: 11,
+  lineHeight: 1,
+  fontWeight: 900,
+  whiteSpace: "nowrap",
+};
+
+const styles = {
   page: {
     minHeight: "100vh",
-    padding: "14px 16px 24px",
+    padding: "28px 16px 42px",
     color: "#EAF0FF",
     background:
-      "radial-gradient(900px 500px at 15% 0%, rgba(37,99,235,0.18), transparent 55%), radial-gradient(900px 500px at 85% 0%, rgba(124,92,255,0.14), transparent 55%), linear-gradient(180deg, #050814 0%, #070b18 100%)",
+      "radial-gradient(900px 480px at 8% 0%, rgba(37,99,235,0.16), transparent 58%), radial-gradient(900px 520px at 92% 5%, rgba(124,92,255,0.12), transparent 58%), #050814",
   },
-  bgGlow: {
-    position: "fixed",
-    inset: 0,
-    zIndex: -1,
-    background:
-      "radial-gradient(1200px 700px at 15% 15%, rgba(124,92,255,0.20), transparent 60%), radial-gradient(1000px 650px at 85% 30%, rgba(56,189,248,0.14), transparent 60%), radial-gradient(900px 650px at 50% 90%, rgba(34,197,94,0.08), transparent 60%)",
-  },
-  wrap: {
+
+  container: {
+    width: "100%",
     maxWidth: 1380,
     margin: "0 auto",
     display: "grid",
-    gap: 12,
+    gap: 14,
   },
+
   hero: {
-    border: "1px solid rgba(255,255,255,0.08)",
-    borderRadius: 20,
-    padding: "18px 20px",
+    padding: "24px 26px",
+    borderRadius: 22,
+    border: "1px solid rgba(125,160,255,0.14)",
     background:
-      "linear-gradient(135deg, rgba(30,64,175,0.18), rgba(37,99,235,0.10), rgba(255,255,255,0.02))",
-    boxShadow: "0 12px 30px rgba(0,0,0,0.18)",
+      "linear-gradient(135deg, rgba(24,71,190,0.22), rgba(68,55,160,0.14), rgba(10,16,35,0.82))",
+    boxShadow: "0 18px 45px rgba(0,0,0,0.2)",
   },
-  heroTop: {
+
+  heroContent: {
     display: "flex",
     justifyContent: "space-between",
-    gap: 12,
-    flexWrap: "wrap",
     alignItems: "flex-start",
-  },
-  eyebrow: {
-    fontSize: 10,
-    textTransform: "uppercase",
-    letterSpacing: "0.18em",
-    color: "rgba(125,211,252,0.9)",
-    fontWeight: 800,
-  },
-  title: {
-    margin: "6px 0 0",
-    fontSize: 28,
-    lineHeight: 1.05,
-    letterSpacing: -0.6,
-    fontWeight: 900,
-    color: "#fff",
-  },
-  sub: {
-    marginTop: 8,
-    maxWidth: 760,
-    fontSize: 14,
-    lineHeight: 1.55,
-    color: "rgba(226,232,240,0.88)",
-  },
-  headerControls: {
-    display: "flex",
-    justifyContent: "flex-end",
-    gap: 8,
+    gap: 20,
     flexWrap: "wrap",
-    alignItems: "center",
-    alignContent: "flex-start",
   },
-  badge: {
-    padding: "6px 10px",
-    borderRadius: 999,
-    border: "1px solid rgba(255,255,255,0.08)",
-    background: "rgba(255,255,255,0.05)",
-    fontSize: 11,
-    fontWeight: 700,
-    color: "#e2e8f0",
-    whiteSpace: "nowrap",
-  },
-  btn: {
-    borderRadius: 999,
-    padding: "10px 14px",
-    border: "1px solid rgba(255,255,255,0.12)",
-    background: "rgba(255,255,255,0.06)",
-    color: "#EAF0FF",
-    fontWeight: 900,
-    fontSize: 12,
-  },
-  briefingCard: {
-    borderRadius: 18,
-    padding: 16,
-    border: "1px solid rgba(255,255,255,0.08)",
-    background:
-      "linear-gradient(135deg, rgba(124,92,255,0.14), rgba(56,189,248,0.09), rgba(255,255,255,0.02))",
-  },
-  briefingEyebrow: {
+
+  eyebrow: {
+    color: "#7DD3FC",
     fontSize: 10,
+    fontWeight: 900,
+    letterSpacing: "0.17em",
     textTransform: "uppercase",
-    letterSpacing: "0.16em",
-    color: "rgba(148,163,184,0.78)",
-    fontWeight: 800,
-    marginBottom: 8,
   },
-  briefingBody: {
+
+  title: {
+    margin: "7px 0 0",
+    color: "#FFFFFF",
+    fontSize: "clamp(28px, 4vw, 38px)",
+    lineHeight: 1.05,
+    letterSpacing: "-0.04em",
+  },
+
+  subtitle: {
+    maxWidth: 720,
+    margin: "10px 0 0",
+    color: "rgba(226,232,240,0.82)",
     fontSize: 14,
-    opacity: 0.92,
     lineHeight: 1.65,
   },
+
+  heroActions: {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    flexWrap: "wrap",
+  },
+
   statsGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-    gap: 10,
+    gap: 12,
   },
+
   statCard: {
-    borderRadius: 16,
-    padding: "14px 14px 13px",
-    boxShadow: "0 10px 24px rgba(0,0,0,0.14)",
-    minHeight: 126,
+    minHeight: 124,
+    padding: 17,
+    borderRadius: 17,
+    border: "1px solid rgba(255,255,255,0.08)",
+    background: "rgba(10,16,35,0.72)",
+    boxShadow: "0 12px 30px rgba(0,0,0,0.15)",
   },
+
   statLabel: {
+    color: "rgba(148,163,184,0.9)",
     fontSize: 10,
-    textTransform: "uppercase",
+    fontWeight: 900,
     letterSpacing: "0.14em",
-    color: "rgba(148,163,184,0.88)",
-    fontWeight: 800,
+    textTransform: "uppercase",
   },
+
   statValue: {
     marginTop: 10,
-    fontSize: 26,
+    color: "#FFFFFF",
+    fontSize: 28,
+    lineHeight: 1,
     fontWeight: 900,
-    color: "#fff",
-    lineHeight: 1.05,
   },
-  statNote: {
-    marginTop: 7,
+
+  statDescription: {
+    marginTop: 9,
+    color: "rgba(203,213,225,0.7)",
     fontSize: 12,
-    opacity: 0.78,
-    lineHeight: 1.45,
+    lineHeight: 1.5,
   },
-  currentCard: {
-    padding: 14,
-    borderRadius: 16,
-    border: "1px solid rgba(140,170,255,0.18)",
-    background: "rgba(120,160,255,0.10)",
+
+  currentSection: {
+    padding: 20,
+    borderRadius: 19,
+    border: "1px solid rgba(56,189,248,0.24)",
+    background:
+      "linear-gradient(135deg, rgba(14,116,144,0.12), rgba(37,99,235,0.1), rgba(10,16,35,0.74))",
+    boxShadow: "0 14px 34px rgba(0,0,0,0.16)",
   },
-  currentEyebrow: {
-    fontSize: 10,
-    textTransform: "uppercase",
-    letterSpacing: "0.14em",
-    color: "rgba(191,219,254,0.86)",
-    fontWeight: 800,
+
+  currentHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 16,
+    flexWrap: "wrap",
   },
-  currentTitle: {
-    marginTop: 8,
-    fontSize: 20,
+
+  currentName: {
+    marginTop: 7,
+    color: "#FFFFFF",
+    fontSize: 23,
     fontWeight: 900,
-    color: "#fff",
+    letterSpacing: "-0.025em",
   },
-  currentMeta: {
-    marginTop: 8,
-    opacity: 0.92,
+
+  currentDescription: {
+    marginTop: 7,
+    color: "rgba(203,213,225,0.76)",
     fontSize: 13,
     lineHeight: 1.5,
   },
-  currentSub: {
-    marginTop: 8,
-    opacity: 0.78,
-    fontSize: 12,
+
+  currentDetail: {
+    marginTop: 17,
+    padding: "12px 13px",
+    borderRadius: 13,
+    border: "1px solid rgba(255,255,255,0.07)",
+    background: "rgba(3,8,22,0.34)",
   },
-  currentHealthRow: {
-    marginTop: 12,
-    display: "flex",
-    gap: 10,
-    flexWrap: "wrap",
-    alignItems: "center",
+
+  currentDetailValue: {
+    marginTop: 5,
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: 800,
   },
-  error: {
-    padding: 12,
-    borderRadius: 12,
-    border: "1px solid rgba(255,120,120,0.35)",
-    background: "rgba(255,120,120,0.10)",
-    color: "#FFD7D7",
-  },
-  success: {
-    padding: 12,
-    borderRadius: 12,
-    border: "1px solid rgba(34,197,94,0.35)",
-    background: "rgba(34,197,94,0.10)",
-    color: "#DCFCE7",
-  },
-  twoCol: {
-    display: "grid",
-    gridTemplateColumns: "1.08fr 0.92fr",
-    gap: 12,
-  },
-  section: {
-    border: "1px solid rgba(255,255,255,0.08)",
-    borderRadius: 18,
-    background: "rgba(255,255,255,0.03)",
+
+  directory: {
     overflow: "hidden",
-    boxShadow: "0 10px 24px rgba(0,0,0,0.14)",
+    borderRadius: 20,
+    border: "1px solid rgba(255,255,255,0.08)",
+    background: "rgba(8,13,29,0.76)",
+    boxShadow: "0 16px 38px rgba(0,0,0,0.18)",
   },
-  sectionHead: {
-    padding: "12px 14px",
+
+  directoryHeader: {
+    padding: "18px 20px",
     borderBottom: "1px solid rgba(255,255,255,0.08)",
     display: "flex",
-    alignItems: "center",
     justifyContent: "space-between",
-    gap: 12,
+    alignItems: "flex-end",
+    gap: 16,
     flexWrap: "wrap",
   },
+
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: 800,
-    letterSpacing: -0.35,
-    color: "#fff",
+    margin: "5px 0 0",
+    color: "#FFFFFF",
+    fontSize: 21,
+    letterSpacing: "-0.025em",
   },
-  sectionSub: {
-    fontSize: 10,
-    textTransform: "uppercase",
-    letterSpacing: "0.16em",
-    color: "rgba(148,163,184,0.75)",
-    fontWeight: 700,
-    marginBottom: 4,
-  },
-  sectionBody: {
-    padding: 14,
-  },
-  summaryList: {
-    display: "grid",
-    gap: 8,
-  },
-  summaryItem: {
-    border: "1px solid rgba(255,255,255,0.07)",
-    background: "rgba(4,10,24,0.34)",
-    borderRadius: 14,
-    padding: "12px 13px",
-    fontSize: 13,
-    lineHeight: 1.55,
-    color: "#dbe4f0",
-  },
-  leaderList: {
-    display: "grid",
-    gap: 10,
-  },
-  leaderCard: {
-    border: "1px solid rgba(255,255,255,0.08)",
-    borderRadius: 16,
-    padding: 13,
-    background: "rgba(4,10,24,0.34)",
-  },
-  leaderTop: {
-    display: "flex",
-    justifyContent: "space-between",
-    gap: 10,
-    alignItems: "flex-start",
-    flexWrap: "wrap",
-  },
-  leaderName: {
-    fontSize: 16,
-    fontWeight: 800,
-    color: "#fff",
-  },
-  leaderMeta: {
-    marginTop: 4,
+
+  sectionSubtitle: {
+    marginTop: 5,
+    color: "rgba(203,213,225,0.7)",
     fontSize: 12,
     lineHeight: 1.5,
-    color: "rgba(203,213,225,0.78)",
   },
-  leaderBottom: {
-    marginTop: 12,
+
+  directoryBody: {
+    padding: 14,
+  },
+
+  filters: {
     display: "flex",
-    justifyContent: "flex-start",
-    gap: 8,
+    alignItems: "center",
+    gap: 9,
     flexWrap: "wrap",
   },
-  formGrid: {
-    display: "grid",
-    gap: 12,
+
+  searchInput: {
+    minWidth: 235,
+    padding: "11px 13px",
+    borderRadius: 11,
+    border: "1px solid rgba(255,255,255,0.12)",
+    background: "rgba(255,255,255,0.045)",
+    color: "#FFFFFF",
+    outline: "none",
   },
-  formRow: {
+
+  filterSelect: {
+    padding: "11px 13px",
+    borderRadius: 11,
+    border: "1px solid rgba(255,255,255,0.12)",
+    background: "#0D1426",
+    color: "#FFFFFF",
+    outline: "none",
+  },
+
+  workspaceList: {
+    display: "grid",
+    gap: 10,
+  },
+
+  workspaceCard: {
+    padding: 16,
+    borderRadius: 16,
+    border: "1px solid rgba(255,255,255,0.08)",
+    background: "rgba(255,255,255,0.025)",
+  },
+
+  activeWorkspaceCard: {
+    border: "1px solid rgba(56,189,248,0.34)",
+    background:
+      "linear-gradient(135deg, rgba(37,99,235,0.13), rgba(56,189,248,0.06))",
+    boxShadow: "0 10px 28px rgba(37,99,235,0.12)",
+  },
+
+  workspaceTop: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 14,
+    flexWrap: "wrap",
+  },
+
+  workspaceIdentity: {
+    minWidth: 0,
+  },
+
+  workspaceName: {
+    color: "#FFFFFF",
+    fontSize: 17,
+    fontWeight: 900,
+    lineHeight: 1.25,
+  },
+
+  workspaceMetadata: {
+    marginTop: 5,
+    color: "rgba(203,213,225,0.68)",
+    fontSize: 12,
+    lineHeight: 1.5,
+  },
+
+  workspaceDetails: {
+    marginTop: 14,
+    display: "flex",
+    gap: 10,
+    flexWrap: "wrap",
+  },
+
+  detail: {
+    minWidth: 145,
+    padding: "9px 11px",
+    borderRadius: 11,
+    border: "1px solid rgba(255,255,255,0.065)",
+    background: "rgba(3,8,22,0.3)",
+    display: "grid",
+    gap: 4,
+  },
+
+  detailLabel: {
+    color: "rgba(148,163,184,0.72)",
+    fontSize: 9,
+    fontWeight: 900,
+    letterSpacing: "0.12em",
+    textTransform: "uppercase",
+  },
+
+  detailValue: {
+    color: "#E2E8F0",
+    fontSize: 12,
+    fontWeight: 800,
+  },
+
+  website: {
+    marginTop: 11,
+    color: "#7DD3FC",
+    fontSize: 12,
+    wordBreak: "break-word",
+  },
+
+  workspaceActions: {
+    marginTop: 15,
+    display: "flex",
+    gap: 10,
+    flexWrap: "wrap",
+  },
+
+  pillRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: 7,
+    flexWrap: "wrap",
+  },
+
+  ownerPill: {
+    ...basePill,
+    color: "#86EFAC",
+    border: "1px solid rgba(34,197,94,0.25)",
+    background: "rgba(34,197,94,0.1)",
+  },
+
+  adminPill: {
+    ...basePill,
+    color: "#7DD3FC",
+    border: "1px solid rgba(56,189,248,0.25)",
+    background: "rgba(56,189,248,0.1)",
+  },
+
+  managerPill: {
+    ...basePill,
+    color: "#FDE68A",
+    border: "1px solid rgba(245,158,11,0.25)",
+    background: "rgba(245,158,11,0.1)",
+  },
+
+  neutralPill: {
+    ...basePill,
+    color: "#C4B5FD",
+    border: "1px solid rgba(167,139,250,0.25)",
+    background: "rgba(167,139,250,0.1)",
+  },
+
+  activePill: {
+    ...basePill,
+    color: "#BAE6FD",
+    border: "1px solid rgba(56,189,248,0.3)",
+    background: "rgba(14,165,233,0.12)",
+  },
+
+  successPill: {
+    ...basePill,
+    color: "#86EFAC",
+    border: "1px solid rgba(34,197,94,0.25)",
+    background: "rgba(34,197,94,0.1)",
+  },
+
+  warningPill: {
+    ...basePill,
+    color: "#FDE68A",
+    border: "1px solid rgba(245,158,11,0.25)",
+    background: "rgba(245,158,11,0.1)",
+  },
+
+  dangerPill: {
+    ...basePill,
+    color: "#FCA5A5",
+    border: "1px solid rgba(239,68,68,0.26)",
+    background: "rgba(239,68,68,0.1)",
+  },
+
+  primaryButton: {
+    padding: "11px 15px",
+    border: 0,
+    borderRadius: 11,
+    background:
+      "linear-gradient(90deg, #2563EB, #0EA5E9)",
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: 900,
+    cursor: "pointer",
+    boxShadow: "0 8px 20px rgba(37,99,235,0.2)",
+  },
+
+  secondaryButton: {
+    padding: "11px 15px",
+    borderRadius: 11,
+    border: "1px solid rgba(255,255,255,0.12)",
+    background: "rgba(255,255,255,0.055)",
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: 800,
+    cursor: "pointer",
+  },
+
+  currentButton: {
+    padding: "11px 15px",
+    borderRadius: 11,
+    border: "1px solid rgba(34,197,94,0.24)",
+    background: "rgba(34,197,94,0.1)",
+    color: "#86EFAC",
+    fontSize: 12,
+    fontWeight: 900,
+  },
+
+  emptyState: {
+    padding: "34px 18px",
+    borderRadius: 14,
+    border: "1px dashed rgba(255,255,255,0.12)",
+    color: "rgba(203,213,225,0.72)",
+    textAlign: "center",
+    fontSize: 13,
+  },
+
+  errorBanner: {
+    padding: "12px 14px",
+    borderRadius: 13,
+    border: "1px solid rgba(239,68,68,0.3)",
+    background: "rgba(239,68,68,0.1)",
+    color: "#FECACA",
+    fontSize: 13,
+    lineHeight: 1.5,
+  },
+
+  modalBackdrop: {
+    position: "fixed",
+    inset: 0,
+    zIndex: 1000,
+    padding: 18,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    background: "rgba(1,4,13,0.8)",
+    backdropFilter: "blur(8px)",
+  },
+
+  modal: {
+    width: "100%",
+    maxWidth: 620,
+    maxHeight: "calc(100vh - 36px)",
+    overflowY: "auto",
+    borderRadius: 20,
+    border: "1px solid rgba(125,160,255,0.2)",
+    background: "#0A1020",
+    boxShadow: "0 30px 90px rgba(0,0,0,0.5)",
+  },
+
+  modalHeader: {
+    padding: "20px 21px",
+    borderBottom: "1px solid rgba(255,255,255,0.08)",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 16,
+  },
+
+  modalTitle: {
+    margin: "6px 0 0",
+    color: "#FFFFFF",
+    fontSize: 23,
+    letterSpacing: "-0.025em",
+  },
+
+  modalSubtitle: {
+    marginTop: 7,
+    color: "rgba(203,213,225,0.72)",
+    fontSize: 13,
+    lineHeight: 1.5,
+  },
+
+  closeButton: {
+    width: 36,
+    height: 36,
+    flex: "0 0 auto",
+    borderRadius: 10,
+    border: "1px solid rgba(255,255,255,0.1)",
+    background: "rgba(255,255,255,0.05)",
+    color: "#FFFFFF",
+    fontSize: 22,
+    cursor: "pointer",
+  },
+
+  form: {
+    padding: 21,
+    display: "grid",
+    gap: 14,
+  },
+
+  formGrid: {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
     gap: 12,
   },
+
   formGroup: {
     display: "grid",
-    gap: 6,
+    gap: 7,
   },
+
   label: {
+    color: "#CBD5E1",
     fontSize: 12,
     fontWeight: 800,
-    color: "rgba(226,232,240,0.82)",
   },
+
   input: {
     width: "100%",
-    padding: "12px 14px",
-    borderRadius: 12,
-    border: "1px solid rgba(255,255,255,0.14)",
-    background: "rgba(255,255,255,0.05)",
-    color: "#fff",
-    outline: "none",
-  },
-  formActions: {
-    display: "flex",
-    gap: 10,
-    marginTop: 6,
-    flexWrap: "wrap",
-  },
-  primaryBtn: {
-    borderRadius: 10,
-    padding: "12px 16px",
-    fontWeight: 900,
-    border: "none",
-    background: "linear-gradient(90deg,#2563eb,#38bdf8)",
-    color: "#fff",
-    cursor: "pointer",
-  },
-  secondaryBtn: {
-    borderRadius: 10,
-    padding: "12px 16px",
-    fontWeight: 800,
+    boxSizing: "border-box",
+    padding: "12px 13px",
+    borderRadius: 11,
     border: "1px solid rgba(255,255,255,0.12)",
-    background: "rgba(255,255,255,0.06)",
-    color: "#fff",
-    cursor: "pointer",
-  },
-  dangerBtn: {
-    borderRadius: 10,
-    padding: "12px 16px",
-    fontWeight: 900,
-    border: "1px solid rgba(239,68,68,0.35)",
-    background: "rgba(239,68,68,0.10)",
-    color: "#fff",
-    cursor: "pointer",
-  },
-  activeBtn: {
-    borderRadius: 10,
-    padding: "12px 16px",
-    fontWeight: 900,
-    border: "1px solid rgba(34,197,94,0.35)",
-    background: "linear-gradient(90deg,#22c55e,#16a34a)",
-    color: "#fff",
-  },
-  toolbar: {
-    display: "flex",
-    gap: 10,
-    flexWrap: "wrap",
-    alignItems: "center",
-  },
-  toolbarInput: {
-    minWidth: 220,
-    padding: "12px 14px",
-    borderRadius: 12,
-    border: "1px solid rgba(255,255,255,0.14)",
-    background: "rgba(255,255,255,0.05)",
-    color: "#fff",
+    background: "#0D1426",
+    color: "#FFFFFF",
     outline: "none",
   },
-  toolbarSelect: {
-    padding: "12px 14px",
-    borderRadius: 12,
-    border: "1px solid rgba(255,255,255,0.14)",
-    background: "rgba(255,255,255,0.05)",
-    color: "#fff",
-    outline: "none",
-  },
-  list: {
-    display: "grid",
-    gap: 10,
-  },
-  item: {
-    textAlign: "left",
-    padding: 14,
-    borderRadius: 14,
-    border: "1px solid rgba(140,170,255,0.18)",
-    background: "rgba(10,14,28,0.35)",
-    color: "rgba(234,240,255,0.92)",
-    transition: "all 0.2s ease",
-  },
-  itemActive: {
-    background: "rgba(120,160,255,0.18)",
-    border: "1px solid rgba(140,170,255,0.35)",
-    boxShadow:
-      "0 0 0 1px rgba(140,170,255,0.25), 0 8px 30px rgba(37,99,235,0.25)",
-  },
-  itemTop: {
-    display: "flex",
-    justifyContent: "space-between",
-    gap: 12,
-    alignItems: "flex-start",
-    flexWrap: "wrap",
-  },
-  itemLeft: {
-    minWidth: 0,
-  },
-  itemRight: {
-    display: "flex",
-    gap: 8,
-    alignItems: "center",
-    flexWrap: "wrap",
-    justifyContent: "flex-end",
-  },
-  itemTitle: {
-    fontWeight: 900,
-    fontSize: 15,
-    color: "#fff",
-  },
-  itemMeta: {
-    marginTop: 8,
-    opacity: 0.84,
-    fontSize: 13,
-    lineHeight: 1.5,
-  },
-  itemFoot: {
-    marginTop: 10,
-    opacity: 0.75,
+
+  formNotice: {
+    padding: "11px 12px",
+    borderRadius: 11,
+    border: "1px solid rgba(56,189,248,0.15)",
+    background: "rgba(56,189,248,0.06)",
+    color: "rgba(186,230,253,0.82)",
     fontSize: 12,
-    lineHeight: 1.45,
+    lineHeight: 1.55,
   },
-  actionRow: {
+
+  modalActions: {
+    marginTop: 3,
+    paddingTop: 14,
+    borderTop: "1px solid rgba(255,255,255,0.07)",
     display: "flex",
+    justifyContent: "flex-end",
     gap: 10,
-    marginTop: 14,
     flexWrap: "wrap",
-  },
-  healthRow: {
-    display: "flex",
-    gap: 8,
-    flexWrap: "wrap",
-    marginTop: 12,
-  },
-  tag: {
-    fontSize: 11,
-    fontWeight: 900,
-    padding: "6px 10px",
-    borderRadius: 999,
-    background: "rgba(255,255,255,0.05)",
-    border: "1px solid rgba(255,255,255,0.10)",
-    display: "inline-flex",
-    alignItems: "center",
-    gap: 8,
-  },
-  goodPill: {
-    fontSize: 11,
-    fontWeight: 900,
-    padding: "6px 10px",
-    borderRadius: 999,
-    border: "1px solid rgba(34,197,94,0.30)",
-    background: "rgba(34,197,94,0.12)",
-    color: "#DCFCE7",
-    display: "inline-flex",
-    alignItems: "center",
-    gap: 8,
-  },
-  warnPill: {
-    fontSize: 11,
-    fontWeight: 900,
-    padding: "6px 10px",
-    borderRadius: 999,
-    border: "1px solid rgba(245,158,11,0.30)",
-    background: "rgba(245,158,11,0.12)",
-    color: "#FEF3C7",
-    display: "inline-flex",
-    alignItems: "center",
-    gap: 8,
-  },
-  emptyBox: {
-    border: "1px solid rgba(255,255,255,0.08)",
-    background: "rgba(4,10,24,0.30)",
-    borderRadius: 14,
-    padding: 14,
-    fontSize: 13,
-    lineHeight: 1.6,
-    color: "#dbe4f0",
-    opacity: 0.9,
   },
 };
