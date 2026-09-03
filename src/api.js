@@ -712,6 +712,17 @@ export const resetMemberPassword = (membershipId, newPassword) =>
 export const deleteMember = (membershipId) =>
   apiDelete(`/members/${membershipId}`);
 
+// -------------------- Partners (CRUD) --------------------
+export const getPartners = () => apiGet("/partners");
+
+export const createPartner = (payload) =>
+  apiPost("/partners", payload);
+
+export const updatePartner = (partnerId, payload) =>
+  apiPatch(`/partners/${partnerId}`, payload);
+
+export const archivePartner = (partnerId) =>
+  apiDelete(`/partners/${partnerId}`);
 // -------------------- Clients (CRUD) --------------------
 export const getClients = () => apiGet("/clients");
 export const getClient = (id) => apiGet(`/clients/${id}`);
