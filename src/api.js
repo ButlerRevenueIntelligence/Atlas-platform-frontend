@@ -1,4 +1,4 @@
-// frontend/src/api.js
+/ frontend/src/api.js
 import { setPlan } from "./utils/perms";
 
 // Build a safe API base that ALWAYS ends with /api
@@ -691,6 +691,13 @@ export const createInvite = (email, role = "analyst") =>
   apiPost("/invites", { email, role });
 
 export const listInvites = () => apiGet("/invites");
+
+export const resendInvite = (inviteId) =>
+  apiPost(`/invites/${inviteId}/resend`, {});
+
+export const revokeInvite = (inviteId) =>
+  apiPatch(`/invites/${inviteId}/revoke`, {});
+
 export const getInvite = (token) =>
   apiGet(`/invites/${encodeURIComponent(token)}`);
 
