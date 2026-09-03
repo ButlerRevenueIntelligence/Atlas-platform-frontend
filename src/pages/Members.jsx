@@ -461,7 +461,6 @@ export default function Members() {
             onChange={setEditForm}
             onSave={saveAccess}
             onRemove={() =>
- =>
               removeAccess(editingMember)
             }
             onClose={closeEdit}
