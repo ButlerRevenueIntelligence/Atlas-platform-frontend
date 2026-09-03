@@ -1,62 +1,153 @@
 import React, { useMemo } from "react";
 
-const money = (n) =>
-  Number(n || 0).toLocaleString(undefined, {
+const safeNum = (value) => {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : 0;
+};
+
+const money = (value) =>
+  safeNum(value).toLocaleString("en-US", {
     style: "currency",
     currency: "USD",
     maximumFractionDigits: 0,
   });
 
-export default function OpportunityRadar({ pipeline, revenue }) {
-
+export default function OpportunityRadar({
+  openPipeline = 0,
+  weightedPipeline = 0,
+  revenue = 0,
+  spend = 0,
+  coverage = 0,
+}) {
   const opportunities = useMemo(() => {
-
-    const pipelineValue = pipeline?.pipelineValue || 0;
-    const rev = revenue || 0;
+    const pipeline = safeNum(openPipeline);
+    const weighted = safeNum(weightedPipeline);
+    const currentRevenue = safeNum(revenue);
+    const marketingSpend = safeNum(spend);
+    const pipelineCoverage = safeNum(coverage);
 
     const items = [];
 
-    if (pipelineValue > 0) {
+    if (pipeline > 0) {
       items.push({
-        title: "Pipeline Conversion Lift",
-        impact: money(pipelineValue * 0.05),
-        desc: "Improving close rate by 5% unlocks additional revenue without increasing spend."
+        title: "Pipeline Conversion Upside",
+        impact: money(pipeline * 0.05),
+        label: "Scenario value",
+        description:
+          "A five-percentage-point improvement in pipeline conversion would create this estimated upside.",
       });
     }
 
-    if (rev > 0) {
+    if (marketingSpend > 0) {
       items.push({
-        title: "Marketing Efficiency Recovery",
-        impact: money(rev * 0.1),
-        desc: "Reducing wasted spend by 10% increases margin and reinvestment potential."
+        title: "Marketing Efficiency Opportunity",
+        impact: money(marketingSpend * 0.1),
+        label: "Recoverable spend",
+        description:
+          "Reducing inefficient marketing spend by 10% would recover this estimated amount for reinvestment.",
       });
     }
 
-    if (pipelineValue < rev * 2) {
+    if (
+      currentRevenue > 0 &&
+      pipelineCoverage > 0 &&
+      pipelineCoverage < 3
+    ) {
+      const requiredPipeline = Math.max(
+        0,
+        currentRevenue * 3 - pipeline
+      );
+
       items.push({
-        title: "Pipeline Expansion Needed",
-        impact: money(rev * 3),
-        desc: "Pipeline coverage below 3x suggests expansion opportunities in lead generation."
+        title: "Pipeline Coverage Gap",
+        impact: money(requiredPipeline),
+        label: "Additional pipeline needed",
+        description:
+          "This is the estimated pipeline required to reach 3x coverage against current revenue.",
       });
     }
 
-    return items;
+    if (weighted > 0 && pipeline > weighted) {
+      items.push({
+        title: "Forecast Qualification Gap",
+        impact: money(pipeline - weighted),
+        label: "Unweighted exposure",
+        description:
+          "This portion of open pipeline is not currently supported by deal-stage probability.",
+      });
+    }
 
-  }, [pipeline, revenue]);
+    return items.slice(0, 3);
+  }, [
+    openPipeline,
+    weightedPipeline,
+    revenue,
+    spend,
+    coverage,
+  ]);
+
+  if (!opportunities.length) {
+    return (
+      <div
+        style={{
+          minHeight: 180,
+          display: "grid",
+          placeItems: "center",
+          padding: 20,
+          border: "1px dashed rgba(255,255,255,0.12)",
+          borderRadius: 14,
+          color: "rgba(203,213,225,0.72)",
+          textAlign: "center",
+        }}
+      >
+        No measurable strategic opportunities are available from the
+        current workspace data.
+      </div>
+    );
+  }
 
   return (
-    <div style={{ display: "grid", gap: 12 }}>
-      {opportunities.map((o, i) => (
-        <div key={i} style={{
-          padding: 14,
-          borderRadius: 12,
-          border: "1px solid rgba(255,255,255,0.08)",
-          background: "rgba(255,255,255,0.03)"
-        }}>
-          <div style={{ fontWeight: 900 }}>{o.title}</div>
-          <div style={{ marginTop: 6 }}>{o.desc}</div>
-          <div style={{ marginTop: 6, fontWeight: 900, color:"#38BDF8" }}>
-            Potential Value: {o.impact}
+    <div style={{ display: "grid", gap: 10 }}>
+      {opportunities.map((opportunity) => (
+        <div
+          key={opportunity.title}
+          style={{
+            padding: 14,
+            borderRadius: 13,
+            border: "1px solid rgba(255,255,255,0.08)",
+            background: "rgba(255,255,255,0.03)",
+          }}
+        >
+          <div
+            style={{
+              color: "#ffffff",
+              fontSize: 15,
+              fontWeight: 900,
+            }}
+          >
+            {opportunity.title}
+          </div>
+
+          <div
+            style={{
+              marginTop: 6,
+              color: "rgba(203,213,225,0.82)",
+              fontSize: 13,
+              lineHeight: 1.55,
+            }}
+          >
+            {opportunity.description}
+          </div>
+
+          <div
+            style={{
+              marginTop: 9,
+              color: "#7dd3fc",
+              fontSize: 13,
+              fontWeight: 900,
+            }}
+          >
+            {opportunity.label}: {opportunity.impact}
           </div>
         </div>
       ))}
