@@ -1,4 +1,4 @@
-/ frontend/src/api.js
+// frontend/src/api.js
 import { setPlan } from "./utils/perms";
 
 // Build a safe API base that ALWAYS ends with /api
