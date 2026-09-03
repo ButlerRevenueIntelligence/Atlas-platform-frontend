@@ -477,11 +477,15 @@ export const resetPassword = (token, password) =>
 
 export const serverLogout = () => request("/auth/logout", { method: "POST" });
 
-export const createCheckoutSession = (payload) =>
-  apiPost("/stripe/create-checkout-session", payload);
+// -------------------- Billing --------------------
+export const getBillingSummary = () =>
+  apiGet("/stripe/summary");
 
-export const createPortalSession = (payload) =>
-  apiPost("/stripe/create-portal-session", payload);
+export const createCheckoutSession = (plan) =>
+  apiPost("/stripe/create-checkout-session", { plan });
+
+export const createPortalSession = () =>
+  apiPost("/stripe/create-portal-session", {});
 
 export const startFreeTrial = (payload = {}) =>
   apiPost("/trial/start", payload);
