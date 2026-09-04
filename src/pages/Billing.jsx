@@ -20,10 +20,10 @@ const PLANS = [
       "The essential revenue operating system for growing teams.",
     badge: "Foundation",
     features: [
-      "Revenue overview",
-      "Command Center",
-      "Deal visibility",
-      "Account and partner management",
+      "Overview and Command Center",
+      "Deal War Room and Data Connectors",
+      "Accounts and Partner Management",
+      "Members and Invites",
     ],
   },
   {
@@ -36,9 +36,10 @@ const PLANS = [
     featured: true,
     features: [
       "Everything in Atlas Core",
-      "Advanced forecasting",
-      "AI revenue analysis",
-      "Executive reports",
+      "Growth Engine and Forecasting",
+      "Account Intelligence and Market Signals",
+      "Atlas AI Operator and Global HQ",
+      "Reports and Global Revenue Map",
     ],
   },
   {
@@ -50,9 +51,10 @@ const PLANS = [
     badge: "Full Platform",
     features: [
       "Everything in Atlas Growth",
-      "Atlas AI Operator",
       "Executive Board Mode",
-      "Enterprise operating visibility",
+      "Advanced Multi-Workspace Oversight",
+      "Custom Integration Support",
+      "Priority Onboarding and Support",
     ],
   },
 ];
@@ -77,6 +79,19 @@ function planName(value) {
     PLANS.find((item) => item.key === plan)?.name ||
     "Atlas Core"
   );
+}
+
+function planRank(value) {
+  const plan = normalizePlan(value);
+  if (plan === "ENTERPRISE") return 3;
+  if (plan === "GROWTH") return 2;
+  return 1;
+}
+
+function changeType(currentPlan, targetPlan) {
+  return planRank(targetPlan) > planRank(currentPlan)
+    ? "upgrade"
+    : "downgrade";
 }
 
 function normalizeStatus(value) {
@@ -275,8 +290,7 @@ function PlanCard({
   currentPlan,
   summary,
   loadingAction,
-  onCheckout,
-  onPortal,
+  onSelect,
 }) {
   const isCurrent = currentPlan === plan.key;
   const hasSubscription = Boolean(
@@ -295,9 +309,14 @@ function PlanCard({
   const changingPlan =
     loadingAction === `plan:${plan.key}`;
 
-  let buttonLabel = `Choose ${plan.name}`;
+  const direction = changeType(currentPlan, plan.key);
+
+  let buttonLabel =
+    direction === "upgrade"
+      ? `Upgrade to ${plan.name}`
+      : `Downgrade to ${plan.name}`;
   let disabled = false;
-  let action = () => onCheckout(plan.key);
+  let action = () => onSelect(plan);
 
   if (!canManage) {
     buttonLabel = "Owner or Admin Required";
@@ -305,18 +324,22 @@ function PlanCard({
   } else if (managedAccess) {
     buttonLabel = isCurrent
       ? "Current Plan"
-      : "Managed by Atlas";
-    disabled = true;
+      : direction === "upgrade"
+      ? `Preview Upgrade`
+      : `Preview Downgrade`;
+    disabled = isCurrent;
   } else if (
     hasSubscription &&
     hasStripeCustomer
   ) {
     buttonLabel = isCurrent
       ? "Current Plan"
-      : "Change in Billing Portal";
+      : direction === "upgrade"
+      ? `Upgrade to ${plan.name}`
+      : `Downgrade to ${plan.name}`;
 
     disabled = isCurrent;
-    action = onPortal;
+    action = () => onSelect(plan);
   } else if (isCurrent && billingState.key === "active") {
     buttonLabel = "Current Plan";
     disabled = true;
@@ -425,6 +448,107 @@ function PlanCard({
   );
 }
 
+function PlanChangeModal({
+  selectedPlan,
+  currentPlan,
+  summary,
+  loading,
+  onClose,
+  onConfirm,
+}) {
+  if (!selectedPlan) return null;
+
+  const direction = changeType(currentPlan, selectedPlan.key);
+  const managedAccess = getBillingState(summary).key === "managed";
+  const isUpgrade = direction === "upgrade";
+
+  return (
+    <div
+      style={styles.modalBackdrop}
+      onMouseDown={onClose}
+      role="presentation"
+    >
+      <div
+        style={styles.modal}
+        onMouseDown={(event) => event.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="plan-change-title"
+      >
+        <div style={styles.modalHeader}>
+          <div>
+            <div style={styles.eyebrow}>
+              {isUpgrade ? "Plan Upgrade" : "Plan Downgrade"}
+            </div>
+            <h2 id="plan-change-title" style={styles.modalTitle}>
+              {isUpgrade ? "Upgrade" : "Downgrade"} to {selectedPlan.name}?
+            </h2>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={loading}
+            style={styles.closeButton}
+            aria-label="Close"
+          >
+            ×
+          </button>
+        </div>
+
+        <div style={styles.modalBody}>
+          <div style={styles.changeSummary}>
+            <div>
+              <div style={styles.changeLabel}>Current</div>
+              <div style={styles.changeValue}>{planName(currentPlan)}</div>
+            </div>
+            <div style={styles.changeArrow}>→</div>
+            <div>
+              <div style={styles.changeLabel}>New plan</div>
+              <div style={styles.changeValue}>{selectedPlan.name}</div>
+            </div>
+          </div>
+
+          <div style={styles.modalMessage}>
+            {managedAccess
+              ? "This is an Atlas-managed demo workspace. The controls are shown for demonstration, but no charge or plan change will be made. Paying customers can complete this change through their secure billing portal."
+              : isUpgrade
+              ? "Stripe will display the exact prorated amount before you approve the upgrade. Your upgraded access begins after Stripe confirms the change."
+              : "Stripe will show when the downgrade takes effect and any billing adjustment before you approve it. Your current access remains available according to the billing portal settings."}
+          </div>
+
+          <div style={styles.modalActions}>
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={loading}
+              style={styles.secondaryButton}
+            >
+              Cancel
+            </button>
+
+            <button
+              type="button"
+              onClick={onConfirm}
+              disabled={loading}
+              style={{
+                ...styles.primaryButton,
+                opacity: loading ? 0.68 : 1,
+              }}
+            >
+              {managedAccess
+                ? "Close Demo Preview"
+                : loading
+                ? "Opening Secure Billing..."
+                : `Continue to ${isUpgrade ? "Upgrade" : "Downgrade"}`}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Billing() {
   const [summary, setSummary] = useState(null);
   const [loadingSummary, setLoadingSummary] =
@@ -435,6 +559,7 @@ export default function Billing() {
 
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [selectedPlan, setSelectedPlan] = useState(null);
 
   async function loadSummary() {
     try {
@@ -575,6 +700,34 @@ export default function Billing() {
       );
       setLoadingAction("");
     }
+  }
+
+  function selectPlan(plan) {
+    if (!summary?.canManage) return;
+    if (normalizePlan(plan?.key) === currentPlan) return;
+
+    setError("");
+    setNotice("");
+    setSelectedPlan(plan);
+  }
+
+  async function confirmPlanChange() {
+    if (!selectedPlan) return;
+
+    if (billingState.key === "managed") {
+      setSelectedPlan(null);
+      setNotice(
+        "Demo preview complete. No billing or plan changes were made."
+      );
+      return;
+    }
+
+    if (summary?.hasStripeCustomer && summary?.hasSubscription) {
+      await openPortal();
+      return;
+    }
+
+    await startCheckout(selectedPlan.key);
   }
 
   if (loadingSummary) {
@@ -770,13 +923,23 @@ export default function Billing() {
                 currentPlan={currentPlan}
                 summary={summary}
                 loadingAction={loadingAction}
-                onCheckout={startCheckout}
-                onPortal={openPortal}
+                onSelect={selectPlan}
               />
             ))}
           </div>
         </section>
       </div>
+
+      <PlanChangeModal
+        selectedPlan={selectedPlan}
+        currentPlan={currentPlan}
+        summary={summary}
+        loading={Boolean(loadingAction)}
+        onClose={() => {
+          if (!loadingAction) setSelectedPlan(null);
+        }}
+        onConfirm={confirmPlanChange}
+      />
     </div>
   );
 }
@@ -1220,5 +1383,109 @@ const styles = {
     fontSize: 12,
     fontWeight: 800,
     cursor: "pointer",
+  },
+
+  modalBackdrop: {
+    position: "fixed",
+    inset: 0,
+    zIndex: 1200,
+    padding: 18,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    background: "rgba(1,4,13,0.82)",
+    backdropFilter: "blur(8px)",
+  },
+
+  modal: {
+    width: "100%",
+    maxWidth: 610,
+    borderRadius: 20,
+    border: "1px solid rgba(125,160,255,0.20)",
+    background: "#0A1020",
+    boxShadow: "0 30px 90px rgba(0,0,0,0.52)",
+    overflow: "hidden",
+  },
+
+  modalHeader: {
+    padding: "19px 20px",
+    borderBottom: "1px solid rgba(255,255,255,0.08)",
+    display: "flex",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 14,
+  },
+
+  modalTitle: {
+    margin: "7px 0 0",
+    color: "#FFFFFF",
+    fontSize: 22,
+    lineHeight: 1.25,
+    letterSpacing: "-0.025em",
+  },
+
+  closeButton: {
+    width: 36,
+    height: 36,
+    flex: "0 0 auto",
+    borderRadius: 10,
+    border: "1px solid rgba(255,255,255,0.10)",
+    background: "rgba(255,255,255,0.05)",
+    color: "#FFFFFF",
+    fontSize: 22,
+    cursor: "pointer",
+  },
+
+  modalBody: {
+    padding: 20,
+  },
+
+  changeSummary: {
+    padding: 14,
+    borderRadius: 14,
+    border: "1px solid rgba(255,255,255,0.08)",
+    background: "rgba(255,255,255,0.03)",
+    display: "grid",
+    gridTemplateColumns: "1fr auto 1fr",
+    alignItems: "center",
+    gap: 14,
+  },
+
+  changeLabel: {
+    color: "rgba(148,163,184,0.76)",
+    fontSize: 9,
+    fontWeight: 900,
+    letterSpacing: "0.13em",
+    textTransform: "uppercase",
+  },
+
+  changeValue: {
+    marginTop: 6,
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: 900,
+  },
+
+  changeArrow: {
+    color: "#38BDF8",
+    fontSize: 20,
+    fontWeight: 900,
+  },
+
+  modalMessage: {
+    marginTop: 14,
+    color: "rgba(226,232,240,0.80)",
+    fontSize: 13,
+    lineHeight: 1.65,
+  },
+
+  modalActions: {
+    marginTop: 18,
+    paddingTop: 15,
+    borderTop: "1px solid rgba(255,255,255,0.08)",
+    display: "flex",
+    justifyContent: "flex-end",
+    gap: 10,
+    flexWrap: "wrap",
   },
 };
