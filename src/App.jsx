@@ -35,6 +35,7 @@ import BoardMode from "./pages/BoardMode.jsx";
 
 import AppLayout from "./components/AppLayout.jsx";
 import RequirePerm from "./components/RequirePerm.jsx";
+import RequirePlan from "./components/RequirePlan.jsx";
 import BillingSuccess from "./pages/BillingSuccess.jsx";
 
 function isAuthenticated() {
@@ -443,7 +444,9 @@ export default function App() {
         element={
           <RequireAuth>
             <RequireBilling>
-              <AppLayout />
+              <RequirePlan>
+                <AppLayout />
+              </RequirePlan>
             </RequireBilling>
           </RequireAuth>
         }
