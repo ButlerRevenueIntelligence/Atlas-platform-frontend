@@ -1,44 +1,39 @@
+// frontend/src/components/RequirePlan.jsx
 import React from "react";
-import { Navigate } from "react-router-dom";
-import { getPlan } from "../utils/perms";
-import UpgradeBanner from "./UpgradeBanner";
+import {
+  Navigate,
+  useLocation,
+} from "react-router-dom";
 
-const PLAN_ORDER = {
-  CORE: 1,
-  GROWTH: 2,
-  ENTERPRISE: 3,
-};
-
-function hasAccess(userPlan, requiredPlan) {
-  return PLAN_ORDER[userPlan] >= PLAN_ORDER[requiredPlan];
-}
+import {
+  getPlan,
+  getPlanLabel,
+  hasPlan,
+  normalizePlan,
+} from "../utils/perms";
 
 export default function RequirePlan({
-  plan = "CORE",
+  plan,
   children,
-  fallback = "banner", // "banner" or "redirect"
 }) {
-  const userPlan = (getPlan() || "CORE").toUpperCase();
+  const location = useLocation();
+  const currentPlan = getPlan();
+  const requiredPlan = normalizePlan(plan);
 
-  // ADMIN / OWNER OVERRIDE
-  const user = JSON.parse(localStorage.getItem("butler_user") || "{}");
-  const role = (user?.role || "").toLowerCase();
-  const email = (user?.email || "").toLowerCase();
-
-  if (
-    role === "admin" ||
-    role === "owner" ||
-    email === "butlercomarketingagency@gmail.com"
-  ) {
-    return children;
-  }
-
-  if (!hasAccess(userPlan, plan)) {
-    if (fallback === "redirect") {
-      return <Navigate to="/overview" replace />;
-    }
-
-    return <UpgradeBanner missingPerm={plan} />;
+  if (!hasPlan(requiredPlan, currentPlan)) {
+    return (
+      <Navigate
+        to="/billing"
+        replace
+        state={{
+          upgradeRequired: true,
+          requiredPlan,
+          requiredPlanLabel:
+            getPlanLabel(requiredPlan),
+          from: location.pathname,
+        }}
+      />
+    );
   }
 
   return children;
