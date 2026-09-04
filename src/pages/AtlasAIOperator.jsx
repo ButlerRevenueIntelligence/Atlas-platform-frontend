@@ -202,6 +202,89 @@ const styles = {
     background: "rgba(4,10,24,0.72)",
     padding: 10,
   },
+  signalMixShell: {
+    minHeight: 260,
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))",
+    gap: 14,
+    alignItems: "center",
+    border: "1px solid rgba(255,255,255,0.08)",
+    borderRadius: 16,
+    background: "rgba(4,10,24,0.72)",
+    padding: 14,
+  },
+  signalChart: {
+    height: 220,
+    minWidth: 0,
+    position: "relative",
+  },
+  signalCenter: {
+    position: "absolute",
+    inset: 0,
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    pointerEvents: "none",
+  },
+  signalCenterValue: {
+    fontSize: 23,
+    lineHeight: 1,
+    fontWeight: 900,
+    color: "#fff",
+  },
+  signalCenterLabel: {
+    marginTop: 5,
+    fontSize: 9,
+    textTransform: "uppercase",
+    letterSpacing: "0.13em",
+    color: "#94a3b8",
+    fontWeight: 800,
+  },
+  signalLegend: {
+    display: "grid",
+    gap: 8,
+  },
+  signalLegendItem: {
+    display: "grid",
+    gridTemplateColumns: "10px minmax(0, 1fr) auto",
+    gap: 9,
+    alignItems: "start",
+    border: "1px solid rgba(255,255,255,0.06)",
+    borderRadius: 11,
+    padding: "9px 10px",
+    background: "rgba(255,255,255,0.025)",
+  },
+  signalDot: {
+    width: 9,
+    height: 9,
+    borderRadius: 999,
+    marginTop: 4,
+  },
+  signalLegendName: {
+    fontSize: 12,
+    fontWeight: 900,
+    color: "#f8fafc",
+  },
+  signalLegendDesc: {
+    marginTop: 2,
+    fontSize: 10,
+    lineHeight: 1.4,
+    color: "#94a3b8",
+  },
+  signalPercent: {
+    fontSize: 13,
+    fontWeight: 900,
+    color: "#dbeafe",
+  },
+  signalTakeaway: {
+    gridColumn: "1 / -1",
+    borderTop: "1px solid rgba(255,255,255,0.07)",
+    paddingTop: 11,
+    fontSize: 11,
+    lineHeight: 1.55,
+    color: "#bfdbfe",
+  },
   promptGrid: { display: "grid", gap: 10 },
   feedGrid: { display: "grid", gap: 10 },
   feedCard: {
@@ -679,20 +762,61 @@ export default function AtlasAIOperator() {
   const operatorMix = useMemo(() => {
     if (isDemo) {
       return [
-        { label: "Forecast", value: 34 },
-        { label: "Pipeline", value: 28 },
-        { label: "Growth", value: 22 },
-        { label: "Expansion", value: 16 },
+        {
+          label: "Forecast",
+          value: 34,
+          description: "Close timing, probability, and forecast exposure",
+        },
+        {
+          label: "Pipeline",
+          value: 28,
+          description: "Deal movement, coverage, and stage progression",
+        },
+        {
+          label: "Growth",
+          value: 22,
+          description: "Revenue momentum and channel efficiency",
+        },
+        {
+          label: "Expansion",
+          value: 16,
+          description: "Account engagement and expansion potential",
+        },
       ];
     }
 
     return [
-      { label: "Forecast", value: 30 },
-      { label: "Pipeline", value: 32 },
-      { label: "Growth", value: 22 },
-      { label: "Expansion", value: 16 },
+      {
+        label: "Forecast",
+        value: 30,
+        description: "Close timing, probability, and forecast exposure",
+      },
+      {
+        label: "Pipeline",
+        value: 32,
+        description: "Deal movement, coverage, and stage progression",
+      },
+      {
+        label: "Growth",
+        value: 22,
+        description: "Revenue momentum and channel efficiency",
+      },
+      {
+        label: "Expansion",
+        value: 16,
+        description: "Account engagement and expansion potential",
+      },
     ];
   }, [isDemo]);
+
+  const dominantSignal = useMemo(
+    () =>
+      operatorMix.reduce(
+        (highest, item) => (item.value > highest.value ? item : highest),
+        operatorMix[0] || { label: "None", value: 0 }
+      ),
+    [operatorMix]
+  );
 
   const operatorFeed = useMemo(() => {
     if (isDemo) {
@@ -1254,37 +1378,75 @@ export default function AtlasAIOperator() {
             </div>
           </Section>
 
-          <Section title="Operator Signal Distribution" subtitle="Signal Mix">
-            <div style={styles.chartShell}>
+          <Section title="Intelligence Signal Mix" subtitle="What Atlas Is Monitoring">
+            <div style={styles.signalMixShell}>
               {!isDemo && !hasLiveData ? (
                 <EmptyState text="No live operator signal mix yet." />
               ) : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={operatorMix}
-                      dataKey="value"
-                      nameKey="label"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={82}
-                      innerRadius={48}
-                      paddingAngle={3}
-                      animationBegin={0}
-                      animationDuration={1500}
-                      animationEasing="ease-out"
-                    >
-                      {operatorMix.map((entry, index) => (
-                        <Cell key={entry.label} fill={pieColors[index % pieColors.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      formatter={(value) => [`${value}%`, "Signal Share"]}
-                      contentStyle={tooltipStyle}
-                      labelStyle={{ color: "#fff" }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+                <>
+                  <div style={styles.signalChart}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={operatorMix}
+                          dataKey="value"
+                          nameKey="label"
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={88}
+                          innerRadius={58}
+                          paddingAngle={3}
+                          animationBegin={0}
+                          animationDuration={1500}
+                          animationEasing="ease-out"
+                        >
+                          {operatorMix.map((entry, index) => (
+                            <Cell
+                              key={entry.label}
+                              fill={pieColors[index % pieColors.length]}
+                            />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          formatter={(value, name) => [`${value}%`, name]}
+                          contentStyle={tooltipStyle}
+                          labelStyle={{ color: "#fff" }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+
+                    <div style={styles.signalCenter}>
+                      <div style={styles.signalCenterValue}>{operatorMix.length}</div>
+                      <div style={styles.signalCenterLabel}>Signal Areas</div>
+                    </div>
+                  </div>
+
+                  <div style={styles.signalLegend}>
+                    {operatorMix.map((item, index) => (
+                      <div key={item.label} style={styles.signalLegendItem}>
+                        <div
+                          style={{
+                            ...styles.signalDot,
+                            background: pieColors[index % pieColors.length],
+                            boxShadow: `0 0 8px ${pieColors[index % pieColors.length]}`,
+                          }}
+                        />
+                        <div>
+                          <div style={styles.signalLegendName}>{item.label}</div>
+                          <div style={styles.signalLegendDesc}>{item.description}</div>
+                        </div>
+                        <div style={styles.signalPercent}>{item.value}%</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={styles.signalTakeaway}>
+                    <b>Current read:</b> {dominantSignal.label} is the strongest
+                    signal category at {dominantSignal.value}%, so Atlas is placing
+                    the greatest leadership attention on{" "}
+                    {dominantSignal.label.toLowerCase()} conditions right now.
+                  </div>
+                </>
               )}
             </div>
           </Section>
