@@ -8,6 +8,7 @@ import {
 import {
   getPlan,
   getPlanLabel,
+  getRequiredPlanForPath,
   hasPlan,
   normalizePlan,
 } from "../utils/perms";
@@ -18,7 +19,11 @@ export default function RequirePlan({
 }) {
   const location = useLocation();
   const currentPlan = getPlan();
-  const requiredPlan = normalizePlan(plan);
+
+  const requiredPlan = normalizePlan(
+    plan ||
+      getRequiredPlanForPath(location.pathname)
+  );
 
   if (!hasPlan(requiredPlan, currentPlan)) {
     return (
@@ -27,6 +32,7 @@ export default function RequirePlan({
         replace
         state={{
           upgradeRequired: true,
+          currentPlan,
           requiredPlan,
           requiredPlanLabel:
             getPlanLabel(requiredPlan),
