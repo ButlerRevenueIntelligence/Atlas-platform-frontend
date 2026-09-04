@@ -297,6 +297,116 @@ const styles = {
     color: "#e7f1fb",
     whiteSpace: "pre-wrap",
   },
+  dealAnswerIntro: {
+    fontSize: 16,
+    lineHeight: 1.55,
+    color: "#f8fafc",
+    fontWeight: 800,
+    marginBottom: 12,
+  },
+  dealCards: {
+    display: "grid",
+    gap: 10,
+  },
+  dealCard: {
+    border: "1px solid rgba(255,255,255,0.09)",
+    borderRadius: 15,
+    padding: 14,
+    background: "rgba(3,8,22,0.48)",
+  },
+  dealCardTop: {
+    display: "flex",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 12,
+    flexWrap: "wrap",
+  },
+  dealRank: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: 28,
+    height: 28,
+    borderRadius: 9,
+    background: "linear-gradient(135deg, #2563eb, #38bdf8)",
+    color: "#fff",
+    fontWeight: 900,
+    fontSize: 13,
+    flex: "0 0 auto",
+  },
+  dealHeading: {
+    display: "flex",
+    gap: 10,
+    alignItems: "flex-start",
+    flex: "1 1 320px",
+  },
+  dealName: {
+    fontSize: 15,
+    fontWeight: 900,
+    color: "#fff",
+    lineHeight: 1.4,
+  },
+  dealMeta: {
+    marginTop: 4,
+    color: "#a5d8ff",
+    fontSize: 12,
+    fontWeight: 800,
+  },
+  dealDetailGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+    gap: 8,
+    marginTop: 12,
+  },
+  dealDetail: {
+    border: "1px solid rgba(255,255,255,0.06)",
+    borderRadius: 11,
+    padding: "9px 10px",
+    background: "rgba(255,255,255,0.025)",
+  },
+  dealDetailLabel: {
+    fontSize: 9,
+    textTransform: "uppercase",
+    letterSpacing: "0.12em",
+    color: "#94a3b8",
+    fontWeight: 900,
+  },
+  dealDetailValue: {
+    marginTop: 4,
+    fontSize: 12,
+    lineHeight: 1.5,
+    color: "#e2e8f0",
+  },
+  dealRisk: {
+    marginTop: 10,
+    borderLeft: "3px solid #f59e0b",
+    borderRadius: 10,
+    padding: "9px 11px",
+    background: "rgba(245,158,11,0.07)",
+    color: "#fde7b0",
+    fontSize: 12,
+    lineHeight: 1.55,
+  },
+  dealAction: {
+    marginTop: 8,
+    borderLeft: "3px solid #22c55e",
+    borderRadius: 10,
+    padding: "9px 11px",
+    background: "rgba(34,197,94,0.07)",
+    color: "#c8f7d5",
+    fontSize: 12,
+    lineHeight: 1.55,
+  },
+  leadershipTakeaway: {
+    marginTop: 12,
+    border: "1px solid rgba(56,189,248,0.22)",
+    borderRadius: 14,
+    padding: 13,
+    background: "rgba(56,189,248,0.08)",
+    color: "#dff6ff",
+    fontSize: 13,
+    lineHeight: 1.65,
+  },
   askPromptButton: {
     width: "100%",
     textAlign: "left",
@@ -359,6 +469,109 @@ function SmallStat({ label, value, note }) {
 
 function EmptyState({ text }) {
   return <div style={styles.emptyState}>{text}</div>;
+}
+
+function valueAfterLabel(block, label) {
+  const match = block.match(new RegExp(`^${label}:\\s*(.+)$`, "im"));
+  return match?.[1]?.trim() || "";
+}
+
+function parseDealPriorityResponse(response) {
+  const text = String(response || "").trim();
+  if (!/^\s*(?:Demo analysis\s*[—-]\s*)?Focus leadership attention/im.test(text)) {
+    return null;
+  }
+
+  const takeawayMatch = text.match(/Leadership takeaway:\s*([\s\S]+)$/i);
+  const takeaway = takeawayMatch?.[1]?.trim() || "";
+  const withoutTakeaway = text.replace(/Leadership takeaway:[\s\S]+$/i, "").trim();
+  const firstDealIndex = withoutTakeaway.search(/^1\.\s/m);
+  if (firstDealIndex < 0) return null;
+
+  const intro = withoutTakeaway.slice(0, firstDealIndex).trim();
+  const dealText = withoutTakeaway.slice(firstDealIndex);
+  const blocks = dealText.split(/\n\s*(?=\d+\.\s)/g);
+
+  const deals = blocks
+    .map((block) => {
+      const firstLine = block.split("\n")[0]?.trim() || "";
+      const headline = firstLine.match(
+        /^(\d+)\.\s*(.*?)\s+[—-]\s+(\$[\d,]+)\s*\|\s*([^|]+?)\s*\|\s*([\d.]+)%\s+probability$/i
+      );
+      if (!headline) return null;
+
+      return {
+        rank: headline[1],
+        name: headline[2].trim(),
+        amount: headline[3].trim(),
+        stage: headline[4].trim(),
+        probability: `${headline[5]}%`,
+        account: valueAfterLabel(block, "Account"),
+        owner: valueAfterLabel(block, "Owner"),
+        why: valueAfterLabel(block, "Why it matters"),
+        risk: valueAfterLabel(block, "Risk"),
+        action: valueAfterLabel(block, "Next action"),
+      };
+    })
+    .filter(Boolean);
+
+  return deals.length ? { intro, deals, takeaway } : null;
+}
+
+function DealPriorityResponse({ response }) {
+  const parsed = useMemo(() => parseDealPriorityResponse(response), [response]);
+  if (!parsed) return null;
+
+  return (
+    <div>
+      <div style={styles.dealAnswerIntro}>{parsed.intro}</div>
+      <div style={styles.dealCards}>
+        {parsed.deals.map((deal) => (
+          <div key={`${deal.rank}-${deal.name}`} style={styles.dealCard}>
+            <div style={styles.dealCardTop}>
+              <div style={styles.dealHeading}>
+                <div style={styles.dealRank}>{deal.rank}</div>
+                <div>
+                  <div style={styles.dealName}>{deal.name}</div>
+                  <div style={styles.dealMeta}>
+                    {deal.amount} · {deal.stage} · {deal.probability} probability
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style={styles.dealDetailGrid}>
+              <div style={styles.dealDetail}>
+                <div style={styles.dealDetailLabel}>Account</div>
+                <div style={styles.dealDetailValue}>{deal.account}</div>
+              </div>
+              <div style={styles.dealDetail}>
+                <div style={styles.dealDetailLabel}>Owner</div>
+                <div style={styles.dealDetailValue}>{deal.owner}</div>
+              </div>
+              <div style={styles.dealDetail}>
+                <div style={styles.dealDetailLabel}>Why it matters</div>
+                <div style={styles.dealDetailValue}>{deal.why}</div>
+              </div>
+            </div>
+
+            <div style={styles.dealRisk}>
+              <b>Risk:</b> {deal.risk}
+            </div>
+            <div style={styles.dealAction}>
+              <b>Next action:</b> {deal.action}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {parsed.takeaway ? (
+        <div style={styles.leadershipTakeaway}>
+          <b>Leadership takeaway:</b> {parsed.takeaway}
+        </div>
+      ) : null}
+    </div>
+  );
 }
 
 export default function AtlasAIOperator() {
@@ -545,6 +758,7 @@ export default function AtlasAIOperator() {
   }, [isDemo, hasLiveData, forecast90d, pipelineValue, revenue30, openDeals, wonDeals, lostDeals]);
 
   const strategicPrompts = [
+    "What deals should we focus on right now?",
     "What is the highest-risk forecast scenario right now?",
     "Which accounts should leadership prioritize this week?",
     "Find companies that provide revenue intelligence software.",
@@ -1185,7 +1399,11 @@ export default function AtlasAIOperator() {
               {atlasResponse ? (
                 <div style={styles.askResponse}>
                   <div style={styles.askResponseTitle}>Atlas Response</div>
-                  <div style={styles.askResponseBody}>{atlasResponse}</div>
+                  {parseDealPriorityResponse(atlasResponse) ? (
+                    <DealPriorityResponse response={atlasResponse} />
+                  ) : (
+                    <div style={styles.askResponseBody}>{atlasResponse}</div>
+                  )}
                 </div>
               ) : null}
             </div>
