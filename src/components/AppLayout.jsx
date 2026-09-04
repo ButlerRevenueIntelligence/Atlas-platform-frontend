@@ -1,17 +1,21 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   logout,
   getActiveOrgId,
   getActiveOrgName,
-  getUser,
   getWorkspaces,
   getActiveWorkspace,
   switchWorkspace,
   getMyOrgs,
   apiGet,
 } from "../api";
-import { hasPerm } from "../utils/permissions";
+import {
+  getPermissions,
+  getPlan,
+  hasPerm,
+  hasPlan,
+} from "../utils/perms";
 import TrialBanner from "./TrialBanner";
 import PaywallModal from "./PaywallModal";
 
@@ -189,16 +193,17 @@ function getPaywallCopy(state) {
 
 export default function AppLayout() {
   const nav = useNavigate();
+  const location = useLocation();
+  const isBillingPage = location.pathname === "/billing";
 
-  const [permissions, setPermissions] = useState(() => {
-    const u = getUser();
-    return u?.permissions || u?.perms || [];
-  });
+  const [permissions, setPermissions] = useState(() => getPermissions());
+  const [activePlan, setActivePlan] = useState(() => getPlan());
 
   const [paywallData, setPaywallData] = useState(null);
   const [workspaceBlocked, setWorkspaceBlocked] = useState(false);
 
-  const can = (perm) => !permissions?.length || hasPerm(permissions, perm);
+  const can = (perm) => hasPerm(permissions, perm);
+  const canUsePlan = (requiredPlan) => hasPlan(requiredPlan, activePlan);
 
   const initialOrgId = getActiveOrgId();
   const initialWorkspace = getActiveWorkspace();
@@ -220,13 +225,13 @@ export default function AppLayout() {
 
   useEffect(() => {
     const sync = () => {
-      const u = getUser();
       const activeOrgIdValue = getActiveOrgId();
       const activeOrgName = getActiveOrgName();
       const activeWorkspace = getActiveWorkspace();
       const storedWorkspaces = getWorkspaces();
 
-      setPermissions(u?.permissions || u?.perms || []);
+      setPermissions(getPermissions());
+      setActivePlan(getPlan());
       setWorkspaceLabel(
         activeOrgName || activeWorkspace?.name || activeOrgIdValue || "—"
       );
@@ -371,6 +376,7 @@ export default function AppLayout() {
 
       const membershipPerms = res?.membership?.permissions || [];
       setPermissions(membershipPerms);
+      setActivePlan(getPlan());
       setWorkspaceLabel(nextName);
 
       nav("/command-center", { replace: true });
@@ -564,8 +570,8 @@ export default function AppLayout() {
               background:
                 "linear-gradient(180deg, rgba(255,255,255,0.022), rgba(255,255,255,0.012))",
               boxShadow: "0 8px 22px rgba(0,0,0,0.14)",
-              opacity: workspaceBlocked ? 0.55 : 1,
-              pointerEvents: workspaceBlocked ? "none" : "auto",
+              opacity: workspaceBlocked && !isBillingPage ? 0.55 : 1,
+              pointerEvents: workspaceBlocked && !isBillingPage ? "none" : "auto",
             }}
           >
             <NavRow title="CORE">
@@ -584,27 +590,14 @@ export default function AppLayout() {
                   Deal War Room
                 </NavLink>
               )}
-              {can("market_signals.view") && (
-                <NavLink to="/growth-engine" style={navLinkStyle}>
-                  Growth Engine
-                </NavLink>
-              )}
-              {can("clients.view") && (
-                <NavLink to="/account-intelligence" style={navLinkStyle}>
-                  Account Intelligence
-                </NavLink>
-              )}
-            </NavRow>
-
-            <NavRow title="INTELLIGENCE">
               {can("dashboard.view") && (
                 <NavLink to="/data-connectors" style={navLinkStyle}>
                   Data Connectors
                 </NavLink>
               )}
-              {can("market_signals.view") && (
-                <NavLink to="/market-signals" style={navLinkStyle}>
-                  Market Signals
+              {can("clients.view") && (
+                <NavLink to="/accounts" style={navLinkStyle}>
+                  Accounts
                 </NavLink>
               )}
               {can("partners.manage") && (
@@ -612,30 +605,53 @@ export default function AppLayout() {
                   Partners
                 </NavLink>
               )}
-              {can("admin.audit") && (
-                <NavLink to="/global-revenue-map" style={navLinkStyle}>
-                  Global Revenue Map
-                </NavLink>
-              )}
-              {can("dashboard.view") && (
-                <NavLink to="/atlas-ai-operator" style={navLinkStyle}>
-                  Atlas AI Operator
-                </NavLink>
-              )}
-              {can("dashboard.view") && (
-                <NavLink to="/reports" style={navLinkStyle}>
-                  Reports
-                </NavLink>
-              )}
-              {can("dashboard.view") && (
+            </NavRow>
+
+            {canUsePlan("GROWTH") ? (
+              <NavRow title="GROWTH">
+                {can("market_signals.view") && (
+                  <NavLink to="/growth-engine" style={navLinkStyle}>
+                    Growth Engine
+                  </NavLink>
+                )}
+                {can("clients.view") && (
+                  <NavLink to="/account-intelligence" style={navLinkStyle}>
+                    Account Intelligence
+                  </NavLink>
+                )}
+                {can("market_signals.view") && (
+                  <NavLink to="/market-signals" style={navLinkStyle}>
+                    Market Signals
+                  </NavLink>
+                )}
+                {can("admin.audit") && (
+                  <NavLink to="/global-revenue-map" style={navLinkStyle}>
+                    Global Revenue Map
+                  </NavLink>
+                )}
+                {can("dashboard.view") && (
+                  <NavLink to="/atlas-ai-operator" style={navLinkStyle}>
+                    Atlas AI Operator
+                  </NavLink>
+                )}
+                {can("dashboard.view") && (
+                  <NavLink to="/reports" style={navLinkStyle}>
+                    Reports
+                  </NavLink>
+                )}
+              </NavRow>
+            ) : null}
+
+            {canUsePlan("ENTERPRISE") && can("dashboard.view") ? (
+              <NavRow title="EXECUTIVE">
                 <NavLink to="/board-mode" style={navLinkStyle}>
                   Board Mode
                 </NavLink>
-              )}
-            </NavRow>
+              </NavRow>
+            ) : null}
 
             <NavRow title="ADMIN">
-              {can("admin.audit") && (
+              {canUsePlan("GROWTH") && can("admin.audit") && (
                 <NavLink to="/global-hq" style={navLinkStyle}>
                   Global HQ
                 </NavLink>
@@ -656,19 +672,6 @@ export default function AppLayout() {
                 </NavLink>
               )}
             </NavRow>
-
-            <NavRow title="LEGACY">
-              {can("deal_room.view") && (
-                <NavLink to="/deal-room" style={navLinkStyle}>
-                  Deal Room
-                </NavLink>
-              )}
-              {can("clients.view") && (
-                <NavLink to="/accounts" style={navLinkStyle}>
-                  Accounts
-                </NavLink>
-              )}
-            </NavRow>
           </div>
         </div>
       </div>
@@ -678,15 +681,15 @@ export default function AppLayout() {
           maxWidth: 1440,
           margin: "0 auto",
           padding: "14px 18px 32px",
-          opacity: workspaceBlocked ? 0.55 : 1,
-          pointerEvents: workspaceBlocked ? "none" : "auto",
-          filter: workspaceBlocked ? "blur(1px)" : "none",
+          opacity: workspaceBlocked && !isBillingPage ? 0.55 : 1,
+          pointerEvents: workspaceBlocked && !isBillingPage ? "none" : "auto",
+          filter: workspaceBlocked && !isBillingPage ? "blur(1px)" : "none",
         }}
       >
         <Outlet />
       </div>
 
-      {paywallData ? (
+      {paywallData && !isBillingPage ? (
         <PaywallModal
           open={!!paywallData}
           title={paywallData?.title}
