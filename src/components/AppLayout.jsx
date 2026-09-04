@@ -590,6 +590,11 @@ export default function AppLayout() {
                   Deal War Room
                 </NavLink>
               )}
+              {can("deal_room.view") && (
+                <NavLink to="/deal-room" style={navLinkStyle}>
+                  Deal Room
+                </NavLink>
+              )}
               {can("dashboard.view") && (
                 <NavLink to="/data-connectors" style={navLinkStyle}>
                   Data Connectors
