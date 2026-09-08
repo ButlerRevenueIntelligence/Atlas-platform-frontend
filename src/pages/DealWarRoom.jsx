@@ -413,10 +413,31 @@ export default function DealWarRoom() {
     };
   }, []);
 
-  const workspaceMode = String(dashboard?.workspaceMode || "live").toLowerCase();
-  const isDemo = workspaceMode === "demo";
-  const orgName = dashboard?.activeWorkspace?.name || "Workspace";
-  const deals = Array.isArray(dashboard?.deals) ? dashboard.deals : [];
+ const workspaceMode = String(
+  dashboard?.workspaceMode || "live"
+).toLowerCase();
+
+const orgName =
+  dashboard?.activeWorkspace?.name || "Workspace";
+
+const deals =
+  Array.isArray(dashboard?.deals)
+    ? dashboard.deals
+    : [];
+
+const hasRealDeals = deals.some((deal) => {
+  const source = String(
+    deal?.externalSource ||
+    deal?.source ||
+    ""
+  ).toLowerCase();
+
+  return source && source !== "demo";
+});
+
+const isDemo =
+  workspaceMode === "demo" &&
+  !hasRealDeals;
 
   const liveDeals = useMemo(() => {
     return deals.map((deal, idx) => {
