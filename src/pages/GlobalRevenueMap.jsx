@@ -34,8 +34,25 @@ const moneyCompact = (num) => {
   return `$${n}`;
 };
 
+const REGION_META = {
+  "North America": { x: 205, y: 185, color: "#67e8f9" },
+  "Latin America": { x: 300, y: 335, color: "#34d399" },
+  Europe: { x: 505, y: 165, color: "#a7f3d0" },
+  Africa: { x: 515, y: 285, color: "#fbbf24" },
+  "Middle East": { x: 610, y: 235, color: "#fb923c" },
+  Asia: { x: 730, y: 205, color: "#fde047" },
+  Oceania: { x: 825, y: 355, color: "#c4b5fd" },
+};
+
+const regionDataKey = (name) =>
+  String(name || "region")
+    .replace(/[^a-zA-Z0-9]+(.)/g, (_, character) => character.toUpperCase())
+    .replace(/^[A-Z]/, (character) => character.toLowerCase());
+
 function parseRegionFromText(value = "") {
   const s = String(value || "").toLowerCase();
+
+  if (!s.trim()) return null;
 
   if (
     s.includes("united states") ||
@@ -45,6 +62,18 @@ function parseRegionFromText(value = "") {
     s.includes("mexico")
   ) {
     return "North America";
+  }
+
+  if (
+    s.includes("brazil") ||
+    s.includes("argentina") ||
+    s.includes("colombia") ||
+    s.includes("chile") ||
+    s.includes("peru") ||
+    s.includes("latin america") ||
+    s.includes("south america")
+  ) {
+    return "Latin America";
   }
 
   if (
@@ -61,6 +90,28 @@ function parseRegionFromText(value = "") {
   }
 
   if (
+    s.includes("united arab emirates") ||
+    s.includes("uae") ||
+    s.includes("saudi arabia") ||
+    s.includes("israel") ||
+    s.includes("qatar") ||
+    s.includes("middle east")
+  ) {
+    return "Middle East";
+  }
+
+  if (
+    s.includes("south africa") ||
+    s.includes("nigeria") ||
+    s.includes("kenya") ||
+    s.includes("egypt") ||
+    s.includes("ghana") ||
+    s.includes("africa")
+  ) {
+    return "Africa";
+  }
+
+  if (
     s.includes("singapore") ||
     s.includes("japan") ||
     s.includes("india") ||
@@ -71,7 +122,45 @@ function parseRegionFromText(value = "") {
     return "Asia";
   }
 
-  return "North America";
+  if (
+    s.includes("australia") ||
+    s.includes("new zealand") ||
+    s.includes("oceania")
+  ) {
+    return "Oceania";
+  }
+
+  return null;
+}
+
+function getDealRegion(deal = {}) {
+  const source = deal?.sourcePayload || {};
+  const address =
+    source?.billing_address ||
+    source?.shipping_address ||
+    source?.customer?.default_address ||
+    source?.default_address ||
+    {};
+
+  return parseRegionFromText(
+    [
+      deal?.region,
+      deal?.country,
+      deal?.location,
+      deal?.territory,
+      source?.region,
+      source?.country,
+      source?.country_code,
+      source?.billing_country,
+      source?.shipping_country,
+      address?.country,
+      address?.country_code,
+      address?.province,
+      address?.city,
+    ]
+      .filter(Boolean)
+      .join(" ")
+  );
 }
 
 function toneStyle(tone) {
@@ -131,10 +220,187 @@ function EmptyState({ text }) {
   return <div style={styles.emptyState}>{text}</div>;
 }
 
+function InteractiveWorldMap({ regions, selectedRegion, onSelect }) {
+  const active =
+    regions.find((region) => region.name === selectedRegion) || regions[0];
+  const maxValue = Math.max(
+    1,
+    ...regions.map(
+      (region) => safeNum(region.revenueNum) + safeNum(region.pipelineNum)
+    )
+  );
+
+  return (
+    <div style={styles.worldMapPanel}>
+      <div style={styles.mapHeaderRow}>
+        <div>
+          <div style={styles.demoMapTitle}>Global Revenue Command View</div>
+          <div style={styles.mapInstruction}>
+            Select a highlighted region to inspect its revenue concentration.
+          </div>
+        </div>
+        <div style={styles.mapLegend}>
+          <span style={styles.legendDot} /> Revenue and pipeline activity
+        </div>
+      </div>
+
+      <div style={styles.worldMapCanvas}>
+        <svg
+          viewBox="0 0 1000 500"
+          role="img"
+          aria-label="Interactive global revenue map"
+          style={styles.worldMapSvg}
+        >
+          <defs>
+            <linearGradient id="atlasOcean" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#071226" />
+              <stop offset="100%" stopColor="#050916" />
+            </linearGradient>
+            <filter id="atlasGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="7" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          <rect width="1000" height="500" rx="22" fill="url(#atlasOcean)" />
+
+          {[100, 200, 300, 400].map((y) => (
+            <line
+              key={`latitude-${y}`}
+              x1="24"
+              x2="976"
+              y1={y}
+              y2={y}
+              stroke="rgba(148,163,184,0.10)"
+              strokeDasharray="5 8"
+            />
+          ))}
+          {[170, 340, 510, 680, 850].map((x) => (
+            <line
+              key={`longitude-${x}`}
+              x1={x}
+              x2={x}
+              y1="24"
+              y2="476"
+              stroke="rgba(148,163,184,0.08)"
+              strokeDasharray="5 8"
+            />
+          ))}
+
+          <g fill="#14233c" stroke="#29405f" strokeWidth="2">
+            <path d="M72 120 L116 73 190 58 254 82 304 130 278 169 231 174 205 221 153 237 112 203 82 166Z" />
+            <path d="M228 246 L278 255 320 302 338 354 310 431 273 459 254 396 231 338 207 288Z" />
+            <path d="M426 111 L474 79 538 91 564 125 542 161 498 169 466 151 437 153Z" />
+            <path d="M455 193 L522 177 574 219 583 289 548 373 506 423 474 363 445 284Z" />
+            <path d="M555 121 L638 78 746 78 829 119 905 157 891 217 826 231 770 276 710 255 668 214 601 201 563 165Z" />
+            <path d="M775 332 L824 305 884 326 915 374 883 415 821 408 784 379Z" />
+            <path d="M919 234 L937 227 949 241 938 257 920 252Z" />
+          </g>
+
+          {regions.map((region) => {
+            const meta = REGION_META[region.name] || REGION_META["North America"];
+            const total = safeNum(region.revenueNum) + safeNum(region.pipelineNum);
+            const radius = 10 + Math.sqrt(total / maxValue) * 18;
+            const selected = active?.name === region.name;
+
+            return (
+              <g
+                key={region.name}
+                role="button"
+                tabIndex="0"
+                aria-label={`View ${region.name}`}
+                onClick={() => onSelect(region.name)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    onSelect(region.name);
+                  }
+                }}
+                style={{ cursor: "pointer", outline: "none" }}
+              >
+                <circle
+                  cx={meta.x}
+                  cy={meta.y}
+                  r={radius + (selected ? 14 : 8)}
+                  fill={meta.color}
+                  opacity={selected ? 0.18 : 0.09}
+                />
+                {selected ? (
+                  <circle
+                    cx={meta.x}
+                    cy={meta.y}
+                    r={radius + 7}
+                    fill="none"
+                    stroke={meta.color}
+                    strokeWidth="2"
+                    opacity="0.75"
+                    strokeDasharray="5 5"
+                  />
+                ) : null}
+                <circle
+                  cx={meta.x}
+                  cy={meta.y}
+                  r={radius}
+                  fill={meta.color}
+                  opacity={selected ? 1 : 0.82}
+                  filter="url(#atlasGlow)"
+                />
+                <circle cx={meta.x} cy={meta.y} r="4" fill="#ffffff" />
+                <text
+                  x={meta.x}
+                  y={meta.y + radius + 22}
+                  textAnchor="middle"
+                  fill={selected ? "#ffffff" : "#cbd5e1"}
+                  fontSize="15"
+                  fontWeight={selected ? "800" : "650"}
+                >
+                  {region.name}
+                </text>
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+
+      {active ? (
+        <div style={styles.mapDetailCard}>
+            <div style={styles.mapDetailTop}>
+              <div>
+                <div style={styles.mapDetailEyebrow}>Selected territory</div>
+                <div style={styles.mapDetailName}>{active.name}</div>
+              </div>
+              <div style={toneStyle(active.tone)}>{active.tone}</div>
+            </div>
+            <div style={styles.mapDetailMetrics}>
+              <div style={styles.mapMetric}>
+                <span style={styles.mapMetricLabel}>Revenue</span>
+                <strong style={styles.mapMetricValue}>{active.revenue}</strong>
+              </div>
+              <div style={styles.mapMetric}>
+                <span style={styles.mapMetricLabel}>Pipeline</span>
+                <strong style={styles.mapMetricValue}>{active.pipeline}</strong>
+              </div>
+              <div style={styles.mapMetric}>
+                <span style={styles.mapMetricLabel}>Close rate</span>
+                <strong style={styles.mapMetricValue}>{active.closeRate}</strong>
+              </div>
+            </div>
+            <div style={styles.mapDetailAccounts}>
+              Top accounts: {active.accounts.slice(0, 3).join(", ") || "None recorded"}
+            </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export default function GlobalRevenueMap() {
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selectedRegion, setSelectedRegion] = useState("North America");
 
   useEffect(() => {
     let mounted = true;
@@ -167,13 +433,13 @@ export default function GlobalRevenueMap() {
   const deals = Array.isArray(dashboard?.deals) ? dashboard.deals : [];
   const revenue = safeNum(dashboard?.summary?.revenue, 0);
   const pipelineValue = safeNum(dashboard?.summary?.pipelineValue, 0);
-  const metrics = Array.isArray(dashboard?.metrics) ? dashboard.metrics : [];
 
   const mapRegions = useMemo(() => {
     if (isDemo) {
       return [
         {
           name: "North America",
+          key: regionDataKey("North America"),
           revenue: "$3.8M",
           pipeline: "$9.2M",
           closeRate: "36%",
@@ -184,6 +450,7 @@ export default function GlobalRevenueMap() {
         },
         {
           name: "Europe",
+          key: regionDataKey("Europe"),
           revenue: "$1.4M",
           pipeline: "$4.7M",
           closeRate: "29%",
@@ -194,6 +461,7 @@ export default function GlobalRevenueMap() {
         },
         {
           name: "Asia",
+          key: regionDataKey("Asia"),
           revenue: "$600K",
           pipeline: "$2.1M",
           closeRate: "22%",
@@ -208,9 +476,8 @@ export default function GlobalRevenueMap() {
     const grouped = new Map();
 
     deals.forEach((deal) => {
-      const regionName = parseRegionFromText(
-        deal?.region || deal?.country || deal?.location || deal?.territory || ""
-      );
+      const regionName = getDealRegion(deal);
+      if (!regionName) return;
 
       if (!grouped.has(regionName)) {
         grouped.set(regionName, {
@@ -229,13 +496,13 @@ export default function GlobalRevenueMap() {
         safeNum(deal?.value, 0) ||
         safeNum(deal?.pipelineValue, 0);
 
-      const stage = String(deal?.stage || "");
+      const stage = String(deal?.stage || "").toLowerCase();
       row.dealCount += 1;
 
-      if (stage === "Closed Won") {
+      if (stage === "closed won") {
         row.revenueNum += amount;
         row.wonCount += 1;
-      } else if (stage !== "Closed Lost") {
+      } else if (stage !== "closed lost") {
         row.pipelineNum += amount;
       }
 
@@ -257,6 +524,7 @@ export default function GlobalRevenueMap() {
 
       return {
         ...row,
+        key: regionDataKey(row.name),
         revenue: moneyCompact(row.revenueNum),
         pipeline: moneyCompact(row.pipelineNum),
         closeRate,
@@ -359,14 +627,52 @@ export default function GlobalRevenueMap() {
       ];
     }
 
-    const monthly = metrics.slice(-4);
-    return monthly.map((m, idx) => ({
-      quarter: m?.date ? m.date.slice(5) : `P${idx + 1}`,
-      northAmerica: Math.round(safeNum(m?.revenue, 0) * 0.5),
-      europe: Math.round(safeNum(m?.revenue, 0) * 0.3),
-      asia: Math.round(safeNum(m?.revenue, 0) * 0.2),
-    }));
-  }, [isDemo, metrics]);
+    const periods = [];
+    const now = new Date();
+
+    for (let offset = 3; offset >= 0; offset -= 1) {
+      const date = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - offset, 1));
+      const monthId = date.toISOString().slice(0, 7);
+      const row = {
+        monthId,
+        quarter: date.toLocaleDateString("en-US", {
+          month: "short",
+          timeZone: "UTC",
+        }),
+      };
+      mapRegions.forEach((region) => {
+        row[region.key] = 0;
+      });
+      periods.push(row);
+    }
+
+    const byMonth = new Map(periods.map((row) => [row.monthId, row]));
+
+    deals.forEach((deal) => {
+      if (String(deal?.stage || "").toLowerCase() !== "closed won") return;
+      const regionName = getDealRegion(deal);
+      if (!regionName) return;
+      const closedDate = new Date(
+        deal?.closedAt || deal?.closeDate || deal?.updatedAt || deal?.createdAt
+      );
+      if (Number.isNaN(closedDate.getTime())) return;
+      const row = byMonth.get(closedDate.toISOString().slice(0, 7));
+      if (!row) return;
+      const key = regionDataKey(regionName);
+      row[key] = safeNum(row[key]) + safeNum(deal?.amount || deal?.value);
+    });
+
+    return periods;
+  }, [isDemo, deals, mapRegions]);
+
+  const hasTrendData = useMemo(
+    () =>
+      isDemo ||
+      trendData.some((row) =>
+        mapRegions.some((region) => safeNum(row[region.key]) > 0)
+      ),
+    [isDemo, trendData, mapRegions]
+  );
 
   if (loading) {
     return (
@@ -427,7 +733,7 @@ export default function GlobalRevenueMap() {
           ))}
         </div>
 
-        <div style={styles.twoCol}>
+        <div style={styles.mapRow}>
           <Section title="Regional Summary" subtitle="Overview">
             <div style={styles.summaryList}>
               {summaryPoints.map((point) => (
@@ -443,27 +749,11 @@ export default function GlobalRevenueMap() {
               {noLiveGeoData ? (
                 <EmptyState text="No live geographic opportunity data yet. Add region, country, location, or territory fields to live deals to activate the map." />
               ) : (
-                <div style={styles.demoMapPanel}>
-                  <div style={styles.demoMapTitle}>Territory Command View</div>
-                  <div style={styles.demoMapTopRegion}>
-                    Top Region: <strong>{topRegion?.name || "North America"}</strong>
-                  </div>
-                  <div style={styles.demoMapGrid}>
-                    {mapRegions.map((region) => (
-                      <div key={region.name} style={styles.demoMapRegionCard}>
-                        <div style={styles.demoMapRegionTop}>
-                          <div style={styles.demoMapRegionName}>{region.name}</div>
-                          <div style={toneStyle(region.tone)}>{region.tone}</div>
-                        </div>
-                        <div style={styles.demoMapRegionStats}>
-                          <div>Revenue {region.revenue}</div>
-                          <div>Pipeline {region.pipeline}</div>
-                          <div>Close Rate {region.closeRate}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <InteractiveWorldMap
+                  regions={mapRegions}
+                  selectedRegion={selectedRegion}
+                  onSelect={setSelectedRegion}
+                />
               )}
             </div>
           </Section>
@@ -538,7 +828,7 @@ export default function GlobalRevenueMap() {
         <div style={styles.twoCol}>
           <Section title="Regional Revenue Trend" subtitle="Momentum">
             <div style={styles.chartShell}>
-              {!trendData.length ? (
+              {!hasTrendData ? (
                 <EmptyState text="No live revenue trend data yet." />
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
@@ -555,33 +845,23 @@ export default function GlobalRevenueMap() {
                       contentStyle={tooltipStyle}
                       labelStyle={{ color: "#fff" }}
                     />
-                    <Line
-                      type="monotone"
-                      dataKey="northAmerica"
-                      stroke="#c4fbff"
-                      strokeWidth={3.5}
-                      dot={{ r: 3, fill: "#c4fbff" }}
-                      activeDot={{ r: 6 }}
-                      animationDuration={1500}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="europe"
-                      stroke="#a7f3d0"
-                      strokeWidth={3}
-                      dot={{ r: 3, fill: "#a7f3d0" }}
-                      activeDot={{ r: 6 }}
-                      animationDuration={1700}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="asia"
-                      stroke="#fde047"
-                      strokeWidth={3}
-                      dot={{ r: 3, fill: "#fde047" }}
-                      activeDot={{ r: 6 }}
-                      animationDuration={1900}
-                    />
+                    {mapRegions.map((region, index) => {
+                      const color =
+                        REGION_META[region.name]?.color || "#8bf3ff";
+                      return (
+                        <Line
+                          key={region.name}
+                          type="monotone"
+                          dataKey={region.key}
+                          name={region.name}
+                          stroke={color}
+                          strokeWidth={3}
+                          dot={{ r: 3, fill: color }}
+                          activeDot={{ r: 6 }}
+                          animationDuration={1400 + index * 180}
+                        />
+                      );
+                    })}
                   </LineChart>
                 </ResponsiveContainer>
               )}
@@ -728,6 +1008,11 @@ const styles = {
     gridTemplateColumns: "1.08fr 0.92fr",
     gap: 12,
   },
+  mapRow: {
+    display: "grid",
+    gridTemplateColumns: "0.68fr 1.32fr",
+    gap: 12,
+  },
   section: {
     border: "1px solid rgba(255,255,255,0.08)",
     borderRadius: 18,
@@ -777,62 +1062,123 @@ const styles = {
     padding: 10,
   },
   mapShell: {
-    height: 390,
+    height: 470,
     border: "1px solid rgba(255,255,255,0.08)",
     borderRadius: 16,
     overflow: "hidden",
     background: "rgba(4,10,24,0.72)",
     position: "relative",
-    padding: 18,
+    padding: 0,
   },
-  demoMapPanel: {
+  worldMapPanel: {
     height: "100%",
-    borderRadius: 14,
-    border: "1px solid rgba(255,255,255,0.08)",
     background:
-      "radial-gradient(circle at top, rgba(56,189,248,0.12), transparent 45%), rgba(255,255,255,0.02)",
-    padding: 16,
-    display: "grid",
-    gap: 12,
-    alignContent: "start",
+      "radial-gradient(circle at 50% 10%, rgba(56,189,248,0.10), transparent 42%), rgba(2,6,18,0.75)",
+    display: "flex",
+    flexDirection: "column",
   },
   demoMapTitle: {
     fontSize: 18,
     fontWeight: 900,
     color: "#fff",
   },
-  demoMapTopRegion: {
-    fontSize: 13,
-    color: "rgba(226,232,240,0.88)",
+  mapHeaderRow: {
+    minHeight: 68,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 14,
+    padding: "13px 16px",
+    borderBottom: "1px solid rgba(255,255,255,0.08)",
   },
-  demoMapGrid: {
+  mapInstruction: {
+    marginTop: 4,
+    fontSize: 12,
+    color: "rgba(203,213,225,0.72)",
+  },
+  mapLegend: {
+    display: "flex",
+    alignItems: "center",
+    gap: 7,
+    fontSize: 11,
+    color: "rgba(203,213,225,0.72)",
+    whiteSpace: "nowrap",
+  },
+  legendDot: {
+    width: 9,
+    height: 9,
+    borderRadius: "50%",
+    background: "#67e8f9",
+    boxShadow: "0 0 14px rgba(103,232,249,0.85)",
+  },
+  worldMapCanvas: {
+    flex: 1,
+    position: "relative",
+    minHeight: 0,
+  },
+  worldMapSvg: {
+    display: "block",
+    width: "100%",
+    height: "100%",
+  },
+  mapDetailCard: {
+    minHeight: 104,
+    borderTop: "1px solid rgba(103,232,249,0.18)",
+    padding: "11px 16px",
+    background: "rgba(5,10,24,0.91)",
     display: "grid",
-    gap: 10,
+    gridTemplateColumns: "0.8fr 1.15fr 1.15fr",
+    alignItems: "center",
+    gap: 14,
   },
-  demoMapRegionCard: {
-    border: "1px solid rgba(255,255,255,0.08)",
-    borderRadius: 14,
-    background: "rgba(255,255,255,0.03)",
-    padding: 12,
-  },
-  demoMapRegionTop: {
+  mapDetailTop: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    gap: 8,
-    flexWrap: "wrap",
+    gap: 10,
   },
-  demoMapRegionName: {
-    fontSize: 15,
+  mapDetailEyebrow: {
+    fontSize: 9,
+    textTransform: "uppercase",
+    letterSpacing: "0.15em",
+    color: "rgba(125,211,252,0.78)",
     fontWeight: 800,
-    color: "#fff",
   },
-  demoMapRegionStats: {
-    marginTop: 8,
+  mapDetailName: {
+    marginTop: 3,
+    fontSize: 17,
+    fontWeight: 900,
+  },
+  mapDetailMetrics: {
     display: "grid",
-    gap: 5,
-    fontSize: 12,
-    color: "rgba(226,232,240,0.86)",
+    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+    gap: 7,
+    marginTop: 0,
+  },
+  mapMetric: {
+    minWidth: 0,
+    border: "1px solid rgba(255,255,255,0.07)",
+    borderRadius: 10,
+    padding: "8px 7px",
+    background: "rgba(255,255,255,0.035)",
+    display: "grid",
+    gap: 4,
+  },
+  mapMetricLabel: {
+    fontSize: 9,
+    textTransform: "uppercase",
+    letterSpacing: "0.09em",
+    color: "rgba(148,163,184,0.78)",
+  },
+  mapMetricValue: {
+    fontSize: 13,
+    color: "#ffffff",
+  },
+  mapDetailAccounts: {
+    marginTop: 0,
+    fontSize: 11,
+    lineHeight: 1.45,
+    color: "rgba(203,213,225,0.72)",
   },
   radarList: {
     display: "grid",
