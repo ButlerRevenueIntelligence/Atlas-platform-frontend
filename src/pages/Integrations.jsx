@@ -761,26 +761,7 @@ export default function Integrations() {
           const isStripeLive = c.id === "stripe" && live?.mode === "live";
           const isShopifyLive = c.id === "shopify" && live?.mode === "live";
           const isSalesforceLive = c.id === "salesforce" && live?.mode === "live";
-        const isMetaAdsLive = c.id === "meta_ads" && live?.mode === "live";
-        {isMetaAdsLive ? (
-  <button
-    onClick={handleMetaAdsSync}
-    disabled={!!busyId || uploading}
-    style={{
-      padding: "8px 12px",
-      borderRadius: 10,
-      border: "1px solid rgba(255,255,255,0.08)",
-      background: "rgba(255,255,255,0.05)",
-      color: "#fff",
-      fontWeight: 700,
-      fontSize: 12,
-      cursor: !!busyId || uploading ? "not-allowed" : "pointer",
-      opacity: !!busyId || uploading ? 0.7 : 1,
-    }}
-  >
-    {busyId === "meta_ads_sync" ? "Syncing..." : "Run Sync"}
-  </button>
-) : null}
+          const isMetaAdsLive = c.id === "meta_ads" && live?.mode === "live";
           const isLinkedInAdsLive = c.id === "linkedin_ads" && live?.mode === "live";
           const isGoogleAds = c.id === "google_ads";
           const isGA4 = c.id === "ga4";
@@ -1346,6 +1327,25 @@ export default function Integrations() {
                       </button>
                     ) : null}
 
+                    {isMetaAdsLive ? (
+  <button
+    onClick={handleMetaAdsSync}
+    disabled={!!busyId || uploading}
+    style={{
+      padding: "8px 12px",
+      borderRadius: 10,
+      border: "1px solid rgba(255,255,255,0.08)",
+      background: "rgba(255,255,255,0.05)",
+      color: "#fff",
+      fontWeight: 700,
+      fontSize: 12,
+      cursor: !!busyId || uploading ? "not-allowed" : "pointer",
+      opacity: !!busyId || uploading ? 0.7 : 1,
+    }}
+  >
+    {busyId === "meta_ads_sync" ? "Syncing..." : "Run Sync"}
+  </button>
+) : null}
                     {isLinkedInAdsLive ? (
                       <button
                         onClick={handleLinkedInAdsSync}
