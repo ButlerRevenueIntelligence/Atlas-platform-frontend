@@ -9,47 +9,9 @@ import {
   XAxis,
   YAxis,
   Tooltip,
+  Legend,
 } from "recharts";
 import { getDashboard } from "../api";
-import mapboxgl from "mapbox-gl";
-import Map, { Marker, NavigationControl } from "react-map-gl/mapbox";
-import "mapbox-gl/dist/mapbox-gl.css";
-
-const rawMapToken = import.meta.env.VITE_MAPBOX_TOKEN || "";
-const GLOBAL_MAPBOX_TOKEN =
-  rawMapToken && rawMapToken !== "YOUR_MAPBOX_PUBLIC_TOKEN" ? rawMapToken : "";
-
-if (GLOBAL_MAPBOX_TOKEN) {
-  mapboxgl.accessToken = GLOBAL_MAPBOX_TOKEN;
-}
-
-const hasGlobalMapToken = Boolean(GLOBAL_MAPBOX_TOKEN);
-
-const fallbackMapStyle = {
-  version: 8,
-  sources: {
-    "carto-dark": {
-      type: "raster",
-      tiles: [
-        "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
-        "https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
-        "https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
-        "https://d.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
-      ],
-      tileSize: 256,
-      attribution: "&copy; OpenStreetMap contributors &copy; CARTO",
-    },
-  },
-  layers: [
-    {
-      id: "carto-dark-layer",
-      type: "raster",
-      source: "carto-dark",
-      minzoom: 0,
-      maxzoom: 22,
-    },
-  ],
-};
 
 const axisTick = { fill: "#9fb0d0", fontSize: 11 };
 
@@ -259,159 +221,10 @@ function EmptyState({ text }) {
   return <div style={styles.emptyState}>{text}</div>;
 }
 
-function RegionMarker({ region, selected, maxValue, onSelect }) {
-  const meta = REGION_META[region.name] || REGION_META["North America"];
-  const total = safeNum(region.revenueNum) + safeNum(region.pipelineNum);
-  const size = 16 + Math.sqrt(total / maxValue) * 16;
-
-  return (
-    <Marker longitude={meta.lng} latitude={meta.lat} anchor="center">
-      <button
-        type="button"
-        title={`View ${region.name}`}
-        aria-label={`View ${region.name}`}
-        onClick={(event) => {
-          event.stopPropagation();
-          onSelect(region.name);
-        }}
-        style={{
-          ...styles.regionMarker,
-          width: size,
-          height: size,
-          borderColor: selected ? "#ffffff" : "rgba(255,255,255,0.82)",
-          background: `radial-gradient(circle at 35% 35%, #ffffff, ${meta.color} 48%, rgba(8,145,178,0.95) 100%)`,
-          boxShadow: selected
-            ? `0 0 0 9px ${meta.color}24, 0 0 30px ${meta.color}b8`
-            : `0 0 0 6px ${meta.color}18, 0 0 20px ${meta.color}85`,
-          transform: selected ? "scale(1.12)" : "scale(1)",
-        }}
-      />
-    </Marker>
-  );
-}
-
-function InteractiveWorldMap({ regions, selectedRegion, onSelect }) {
-  const active =
-    regions.find((region) => region.name === selectedRegion) || regions[0];
-  const [viewState, setViewState] = useState({
-    longitude: 8,
-    latitude: 18,
-    zoom: 0.8,
-  });
-  const maxValue = Math.max(
-    1,
-    ...regions.map(
-      (region) => safeNum(region.revenueNum) + safeNum(region.pipelineNum)
-    )
-  );
-
-  return (
-    <div style={styles.worldMapPanel}>
-      <div style={styles.mapStage}>
-        <Map
-          {...viewState}
-          onMove={(event) => setViewState(event.viewState)}
-          mapboxAccessToken={GLOBAL_MAPBOX_TOKEN || undefined}
-          mapStyle={
-            hasGlobalMapToken
-              ? "mapbox://styles/mapbox/dark-v11"
-              : fallbackMapStyle
-          }
-          projection={hasGlobalMapToken ? "globe" : "mercator"}
-          attributionControl
-          style={{ width: "100%", height: "100%" }}
-          onLoad={(event) => {
-            const map = event.target;
-            if (hasGlobalMapToken) {
-              try {
-                map.setFog({
-                  color: "rgb(10, 15, 35)",
-                  "high-color": "rgb(36, 92, 223)",
-                  "horizon-blend": 0.08,
-                  "space-color": "rgb(3, 7, 18)",
-                  "star-intensity": 0.25,
-                });
-              } catch {}
-            }
-            map.resize();
-          }}
-        >
-          <NavigationControl position="top-right" />
-          {regions.map((region) => (
-            <RegionMarker
-              key={region.name}
-              region={region}
-              selected={active?.name === region.name}
-              maxValue={maxValue}
-              onSelect={onSelect}
-            />
-          ))}
-        </Map>
-
-        <div style={styles.mapHud}>
-          <div style={styles.mapHudEyebrow}>Atlas Live Region Monitor</div>
-          <div style={styles.mapHudTitle}>{active?.name || "Global view"}</div>
-          <div style={styles.mapHudText}>
-            Select a revenue marker or rotate the globe to inspect territory performance.
-          </div>
-          {active ? (
-            <div style={styles.mapHudMetrics}>
-              <div style={styles.mapHudMetric}>
-                <span style={styles.mapHudMetricLabel}>Revenue</span>
-                <strong style={styles.mapHudMetricValue}>{active.revenue}</strong>
-              </div>
-              <div style={styles.mapHudMetric}>
-                <span style={styles.mapHudMetricLabel}>Pipeline</span>
-                <strong style={styles.mapHudMetricValue}>{active.pipeline}</strong>
-              </div>
-            </div>
-          ) : null}
-        </div>
-
-        {!hasGlobalMapToken ? (
-          <div style={styles.mapStatus}>
-            Fallback map active — add VITE_MAPBOX_TOKEN for the 3D globe
-          </div>
-        ) : null}
-      </div>
-
-      {active ? (
-        <div style={styles.mapDetailCard}>
-            <div style={styles.mapDetailTop}>
-              <div>
-                <div style={styles.mapDetailEyebrow}>Selected territory</div>
-                <div style={styles.mapDetailName}>{active.name}</div>
-              </div>
-              <div style={toneStyle(active.tone)}>{active.tone}</div>
-            </div>
-            <div style={styles.mapDetailMetrics}>
-              <div style={styles.mapMetric}>
-                <span style={styles.mapMetricLabel}>Revenue</span>
-                <strong style={styles.mapMetricValue}>{active.revenue}</strong>
-              </div>
-              <div style={styles.mapMetric}>
-                <span style={styles.mapMetricLabel}>Pipeline</span>
-                <strong style={styles.mapMetricValue}>{active.pipeline}</strong>
-              </div>
-              <div style={styles.mapMetric}>
-                <span style={styles.mapMetricLabel}>Close rate</span>
-                <strong style={styles.mapMetricValue}>{active.closeRate}</strong>
-              </div>
-            </div>
-            <div style={styles.mapDetailAccounts}>
-              Top accounts: {active.accounts.slice(0, 3).join(", ") || "None recorded"}
-            </div>
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
 export default function GlobalRevenueMap() {
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [selectedRegion, setSelectedRegion] = useState("North America");
 
   useEffect(() => {
     let mounted = true;
@@ -585,35 +398,6 @@ export default function GlobalRevenueMap() {
     ];
   }, [isDemo, mapRegions.length, revenue, pipelineValue, topRegion]);
 
-  const summaryPoints = useMemo(() => {
-    if (isDemo) {
-      return [
-        "North America remains the strongest current revenue and pipeline concentration zone.",
-        "Europe has healthy pipeline depth but still needs stronger close efficiency.",
-        "Asia is earlier-stage, but emerging opportunity flow supports long-term expansion interest.",
-        "Regional execution should remain concentrated where near-term close probability is strongest.",
-      ];
-    }
-
-    if (!mapRegions.length) {
-      return [
-        "No live regional revenue map data is available for this workspace yet.",
-        "Atlas will populate territory intelligence once deals begin carrying region, country, location, or territory data.",
-        "This live workspace is no longer using hardcoded demo regional numbers.",
-        "Once opportunities are distributed by geography, leadership will see real territory performance here.",
-      ];
-    }
-
-    return [
-      `${topRegion?.name || "A leading region"} is currently the strongest live concentration zone.`,
-      `${moneyCompact(revenue)} in revenue and ${moneyCompact(
-        pipelineValue
-      )} in pipeline are being tracked across ${mapRegions.length} live regions.`,
-      "Regional execution should remain concentrated where live opportunity density and close performance are strongest.",
-      "Atlas is using workspace deal distribution to map territory-level revenue and pipeline concentration.",
-    ];
-  }, [isDemo, mapRegions.length, topRegion, revenue, pipelineValue]);
-
   const revenueByRegion = useMemo(() => {
     return mapRegions.map((r) => ({
       name: r.name,
@@ -625,6 +409,15 @@ export default function GlobalRevenueMap() {
     return mapRegions.map((r) => ({
       name: r.name,
       pipeline: safeNum(r.pipelineNum, 0),
+    }));
+  }, [mapRegions]);
+
+  const regionalPerformance = useMemo(() => {
+    return mapRegions.map((region) => ({
+      name: region.name,
+      revenue: safeNum(region.revenueNum, 0),
+      pipeline: safeNum(region.pipelineNum, 0),
+      closeRate: safeNum(String(region.closeRate || "0").replace("%", ""), 0),
     }));
   }, [mapRegions]);
 
@@ -744,28 +537,94 @@ export default function GlobalRevenueMap() {
           ))}
         </div>
 
-        <Section title="Global Revenue Intelligence Map" subtitle="Live Territory View">
-          <div style={styles.mapShell}>
-            {noLiveGeoData ? (
-              <EmptyState text="No live geographic opportunity data yet. Add region, country, location, or territory fields to live deals to activate the map." />
-            ) : (
-              <InteractiveWorldMap
-                regions={mapRegions}
-                selectedRegion={selectedRegion}
-                onSelect={setSelectedRegion}
-              />
-            )}
-          </div>
+        <div style={styles.performanceGrid}>
+          <Section title="Revenue vs. Pipeline" subtitle="Regional Performance">
+            <div style={styles.primaryChartShell}>
+              {noLiveGeoData ? (
+                <EmptyState text="No live regional performance data yet." />
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={regionalPerformance}
+                    margin={{ top: 14, right: 18, bottom: 4, left: 4 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+                    <XAxis dataKey="name" tick={axisTick} stroke="#94a3b8" />
+                    <YAxis
+                      tick={axisTick}
+                      stroke="#94a3b8"
+                      tickFormatter={(value) => moneyCompact(value)}
+                    />
+                    <Tooltip
+                      formatter={(value, name) => [moneyCompact(value), name]}
+                      contentStyle={tooltipStyle}
+                      labelStyle={{ color: "#fff" }}
+                    />
+                    <Legend wrapperStyle={{ color: "#cbd5e1", fontSize: 12 }} />
+                    <Bar
+                      dataKey="revenue"
+                      name="Revenue"
+                      fill="#67e8f9"
+                      radius={[8, 8, 0, 0]}
+                      animationDuration={1200}
+                    />
+                    <Bar
+                      dataKey="pipeline"
+                      name="Pipeline"
+                      fill="#6366f1"
+                      radius={[8, 8, 0, 0]}
+                      animationDuration={1450}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          </Section>
 
-          <div style={styles.summaryStrip}>
-            {summaryPoints.slice(0, 4).map((point, index) => (
-              <div key={point} style={styles.summarySignal}>
-                <span style={styles.summaryNumber}>{String(index + 1).padStart(2, "0")}</span>
-                <span>{point}</span>
-              </div>
-            ))}
-          </div>
-        </Section>
+          <Section title="Close Rate by Region" subtitle="Conversion Efficiency">
+            <div style={styles.primaryChartShell}>
+              {noLiveGeoData ? (
+                <EmptyState text="No live regional close-rate data yet." />
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={regionalPerformance}
+                    layout="vertical"
+                    margin={{ top: 14, right: 24, bottom: 4, left: 18 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+                    <XAxis
+                      type="number"
+                      domain={[0, 100]}
+                      tick={axisTick}
+                      stroke="#94a3b8"
+                      tickFormatter={(value) => `${value}%`}
+                    />
+                    <YAxis
+                      type="category"
+                      dataKey="name"
+                      width={96}
+                      tick={axisTick}
+                      stroke="#94a3b8"
+                    />
+                    <Tooltip
+                      formatter={(value) => [`${value}%`, "Close Rate"]}
+                      contentStyle={tooltipStyle}
+                      labelStyle={{ color: "#fff" }}
+                    />
+                    <Bar
+                      dataKey="closeRate"
+                      name="Close Rate"
+                      fill="#34d399"
+                      radius={[0, 9, 9, 0]}
+                      animationDuration={1350}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          </Section>
+        </div>
 
         <div style={styles.twoCol}>
           <Section title="Revenue by Region" subtitle="Performance">
@@ -1016,6 +875,12 @@ const styles = {
     gridTemplateColumns: "1.08fr 0.92fr",
     gap: 12,
   },
+  performanceGrid: {
+    display: "grid",
+    gridTemplateColumns: "1.35fr 0.65fr",
+    gap: 12,
+    alignItems: "stretch",
+  },
   section: {
     border: "1px solid rgba(255,255,255,0.08)",
     borderRadius: 18,
@@ -1063,6 +928,14 @@ const styles = {
     borderRadius: 16,
     background: "rgba(4,10,24,0.72)",
     padding: 10,
+  },
+  primaryChartShell: {
+    height: 330,
+    border: "1px solid rgba(255,255,255,0.08)",
+    borderRadius: 16,
+    background:
+      "linear-gradient(180deg, rgba(7,14,31,0.92), rgba(4,10,24,0.78))",
+    padding: 12,
   },
   mapShell: {
     height: 520,
