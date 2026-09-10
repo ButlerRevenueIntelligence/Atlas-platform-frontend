@@ -29,6 +29,7 @@ const connectorCatalog = [
   { id: "linkedin_ads", name: "LinkedIn Ads", category: "Advertising", supportsLive: true },
   { id: "ga4", name: "Google Analytics 4", category: "Analytics", supportsLive: true },
   { id: "stripe", name: "Stripe", category: "Payments", supportsLive: true },
+  { id: "quickbooks", name: "QuickBooks Online", category: "Accounting", supportsLive: true },
   { id: "shopify", name: "Shopify", category: "Commerce", supportsLive: true },
   {
     id: "excel_csv",
@@ -432,6 +433,23 @@ export default function Integrations() {
     }
   }
 
+  async function handleQuickBooksSync() {
+    try {
+      setBusyId("quickbooks_sync");
+      setError("");
+      setSuccess("");
+
+      await apiPost("/integrations/quickbooks/sync", {});
+      setSuccess("QuickBooks sync completed");
+      await load();
+    } catch (err) {
+      console.error(err);
+      setError(err?.message || "Failed to sync QuickBooks");
+    } finally {
+      setBusyId("");
+    }
+  }
+
   async function handleSalesforceSync() {
     try {
       setBusyId("salesforce_sync");
@@ -759,6 +777,7 @@ export default function Integrations() {
           const isPipedriveLive = c.id === "pipedrive" && live?.mode === "live";
           const isBitrix24Live = c.id === "bitrix24" && live?.mode === "live";
           const isStripeLive = c.id === "stripe" && live?.mode === "live";
+          const isQuickBooksLive = c.id === "quickbooks" && live?.mode === "live";
           const isShopifyLive = c.id === "shopify" && live?.mode === "live";
           const isSalesforceLive = c.id === "salesforce" && live?.mode === "live";
           const isMetaAdsLive = c.id === "meta_ads" && live?.mode === "live";
@@ -1304,6 +1323,26 @@ export default function Integrations() {
                         }}
                       >
                         {busyId === "shopify_sync" ? "Syncing..." : "Run Sync"}
+                      </button>
+                    ) : null}
+
+                    {isQuickBooksLive ? (
+                      <button
+                        onClick={handleQuickBooksSync}
+                        disabled={!!busyId || uploading}
+                        style={{
+                          padding: "8px 12px",
+                          borderRadius: 10,
+                          border: "1px solid rgba(255,255,255,0.08)",
+                          background: "rgba(255,255,255,0.05)",
+                          color: "#fff",
+                          fontWeight: 700,
+                          fontSize: 12,
+                          cursor: !!busyId || uploading ? "not-allowed" : "pointer",
+                          opacity: !!busyId || uploading ? 0.7 : 1,
+                        }}
+                      >
+                        {busyId === "quickbooks_sync" ? "Syncing..." : "Run Sync"}
                       </button>
                     ) : null}
 
