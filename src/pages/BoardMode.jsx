@@ -879,10 +879,10 @@ function PageMessage({ message, error, onRetry }) {
 const styles = {
   page: {
     minHeight: "100vh",
-    padding: "16px 16px 34px",
+    padding: "14px 16px 24px",
     color: "#eaf0ff",
     background:
-      "radial-gradient(900px 500px at 15% 0%, rgba(37,99,235,0.17), transparent 55%), radial-gradient(900px 500px at 85% 0%, rgba(124,92,255,0.11), transparent 55%), linear-gradient(180deg, #050814 0%, #070b18 100%)",
+      "radial-gradient(900px 500px at 15% 0%, rgba(37,99,235,0.18), transparent 55%), radial-gradient(900px 500px at 85% 0%, rgba(124,92,255,0.14), transparent 55%), linear-gradient(180deg, #050814 0%, #070b18 100%)",
   },
 
   presentationPage: {
@@ -897,7 +897,7 @@ const styles = {
     maxWidth: 1380,
     margin: "0 auto",
     display: "grid",
-    gap: 13,
+    gap: 12,
   },
 
   header: {
@@ -905,12 +905,13 @@ const styles = {
     justifyContent: "space-between",
     alignItems: "flex-start",
     flexWrap: "wrap",
-    gap: 20,
-    padding: "22px",
+    gap: 12,
+    padding: "18px 20px",
     borderRadius: 20,
     border: "1px solid rgba(255,255,255,0.09)",
     background:
-      "linear-gradient(135deg, rgba(30,64,175,0.20), rgba(79,70,229,0.10), rgba(255,255,255,0.02))",
+      "linear-gradient(135deg, rgba(30,64,175,0.18), rgba(37,99,235,0.10), rgba(255,255,255,0.02))",
+    boxShadow: "0 12px 30px rgba(0,0,0,0.18)",
   },
 
   eyebrow: {
@@ -932,8 +933,9 @@ const styles = {
   title: {
     margin: 0,
     color: "#ffffff",
-    fontSize: 29,
-    lineHeight: 1.1,
+    fontSize: 28,
+    lineHeight: 1.05,
+    letterSpacing: -0.6,
   },
 
   demoBadge: {
@@ -986,8 +988,8 @@ const styles = {
   primaryButton: {
     padding: "10px 14px",
     border: "1px solid rgba(96,165,250,0.48)",
-    borderRadius: 11,
-    background: "linear-gradient(135deg, #2563eb, #4f46e5)",
+    borderRadius: 10,
+    background: "#2563eb",
     color: "#ffffff",
     fontSize: 12,
     fontWeight: 850,
@@ -997,7 +999,7 @@ const styles = {
   secondaryButton: {
     padding: "10px 13px",
     border: "1px solid rgba(255,255,255,0.11)",
-    borderRadius: 11,
+    borderRadius: 10,
     background: "rgba(255,255,255,0.045)",
     color: "#eaf0ff",
     fontSize: 12,
@@ -1008,12 +1010,12 @@ const styles = {
   statGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-    gap: 11,
+    gap: 10,
   },
 
   statCard: {
     minHeight: 125,
-    padding: 16,
+    padding: "14px 14px 13px",
     borderRadius: 16,
     border: "1px solid rgba(255,255,255,0.08)",
     background: "rgba(255,255,255,0.03)",
@@ -1021,7 +1023,7 @@ const styles = {
 
   statLabel: {
     color: "rgba(148,163,184,0.85)",
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: 900,
     textTransform: "uppercase",
     letterSpacing: "0.14em",
@@ -1036,29 +1038,29 @@ const styles = {
   },
 
   statNote: {
-    marginTop: 8,
+    marginTop: 7,
     color: "rgba(203,213,225,0.69)",
-    fontSize: 11,
-    lineHeight: 1.5,
+    fontSize: 12,
+    lineHeight: 1.45,
   },
 
   section: {
-    padding: 17,
+    padding: 14,
     borderRadius: 18,
     border: "1px solid rgba(255,255,255,0.08)",
     background: "rgba(255,255,255,0.028)",
   },
 
   sectionHeading: {
-    marginBottom: 14,
+    marginBottom: 12,
   },
 
   sectionEyebrow: {
     color: "rgba(148,163,184,0.72)",
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: 900,
     textTransform: "uppercase",
-    letterSpacing: "0.15em",
+    letterSpacing: "0.16em",
   },
 
   sectionTitle: {
@@ -1071,18 +1073,18 @@ const styles = {
     maxWidth: 1120,
     margin: 0,
     color: "#e3ebf7",
-    fontSize: 14,
-    lineHeight: 1.75,
+    fontSize: 13,
+    lineHeight: 1.55,
   },
 
   riskCallout: {
     display: "grid",
     gridTemplateColumns: "minmax(150px, 0.3fr) minmax(260px, 1fr)",
     alignItems: "center",
-    gap: 18,
-    marginTop: 16,
-    padding: 13,
-    borderRadius: 13,
+    gap: 12,
+    marginTop: 12,
+    padding: "12px 13px",
+    borderRadius: 14,
     border: "1px solid rgba(245,158,11,0.17)",
     background: "rgba(245,158,11,0.055)",
   },
@@ -1111,7 +1113,7 @@ const styles = {
   twoColumn: {
     display: "grid",
     gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-    gap: 13,
+    gap: 12,
   },
 
   list: {
@@ -1120,8 +1122,8 @@ const styles = {
   },
 
   listItem: {
-    padding: 13,
-    borderRadius: 13,
+    padding: "12px 13px",
+    borderRadius: 14,
     border: "1px solid rgba(255,255,255,0.07)",
     background: "rgba(2,6,18,0.32)",
   },
