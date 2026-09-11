@@ -395,7 +395,7 @@ export default function Dashboard() {
       window.location.href = "/welcome";
     }
   }, []);
-   
+
    useEffect(() => {
   async function loadStripeRevenue() {
     try {
@@ -1387,54 +1387,61 @@ export default function Dashboard() {
 
   const S = useMemo(() => {
     const card = {
-      background: "rgba(10, 16, 35, 0.55)",
+      background: "rgba(255,255,255,0.03)",
       border: "1px solid rgba(255,255,255,0.08)",
       borderRadius: 18,
       padding: 16,
-      backdropFilter: "blur(10px)",
-      boxShadow: "0 12px 40px rgba(0,0,0,0.35)",
+      boxShadow: "0 10px 24px rgba(0,0,0,0.14)",
     };
 
     return {
-      page: { minHeight: "100vh", padding: "22px 22px 34px", color: "#EAF0FF" },
+      page: {
+        minHeight: "100vh",
+        padding: "14px 16px 28px",
+        maxWidth: 1512,
+        margin: "0 auto",
+        color: "#fff",
+        background:
+          "radial-gradient(900px 500px at 15% 0%, rgba(37,99,235,0.16), transparent 55%), radial-gradient(900px 500px at 85% 0%, rgba(124,92,255,0.11), transparent 55%), linear-gradient(180deg, #050814 0%, #070b18 100%)",
+      },
       bgGlow: {
         position: "fixed",
         inset: 0,
         zIndex: -1,
-        background: `
-          linear-gradient(#0a0f1f 1px, transparent 1px),
-          linear-gradient(90deg,#0a0f1f 1px, transparent 1px),
-          radial-gradient(circle at 20% 20%,rgba(124,92,255,.25),transparent),
-          radial-gradient(circle at 80% 30%,rgba(56,189,248,.15),transparent),
-          #05070f
-        `,
-        backgroundSize: "60px 60px,60px 60px,auto,auto",
+        background: "#050814",
       },
       topRow: {
         display: "flex",
         alignItems: "flex-start",
         justifyContent: "space-between",
         gap: 16,
-        marginBottom: 14,
+        maxWidth: 1480,
+        margin: "0 auto 12px",
         flexWrap: "wrap",
+        padding: "18px 20px",
+        border: "1px solid rgba(255,255,255,0.08)",
+        borderRadius: 20,
+        background:
+          "linear-gradient(135deg, rgba(30,64,175,0.16), rgba(37,99,235,0.08), rgba(255,255,255,0.02))",
+        boxShadow: "0 12px 30px rgba(0,0,0,0.18)",
       },
-      title: { margin: 0, fontSize: 30, fontWeight: 900, letterSpacing: 0.2 },
-      sub: { marginTop: 8, opacity: 0.85, fontSize: 13 },
-      org: { opacity: 0.9, fontSize: 13, marginTop: 8 },
+      title: { margin: 0, fontSize: 28, fontWeight: 900, lineHeight: 1.05, letterSpacing: -0.7 },
+      sub: { marginTop: 8, color: "rgba(203,213,225,0.78)", fontSize: 12, lineHeight: 1.5 },
+      org: { color: "rgba(226,232,240,0.90)", fontSize: 12, marginTop: 7 },
       badge: {
         display: "inline-flex",
         alignItems: "center",
         gap: 8,
-        padding: "8px 12px",
-        borderRadius: 999,
-        border: "1px solid rgba(255,255,255,0.10)",
-        background: "rgba(255,255,255,0.04)",
-        fontSize: 11,
-        opacity: 0.95,
+        padding: "6px 9px",
+        borderRadius: 8,
+        border: "1px solid rgba(255,255,255,0.08)",
+        background: "rgba(255,255,255,0.035)",
+        fontSize: 10,
         textDecoration: "none",
-        color: "#EAF0FF",
+        color: "#dbe4f0",
         cursor: "pointer",
-        fontWeight: 700,
+        fontWeight: 800,
+        letterSpacing: "0.04em",
       },
       simRow: {
         display: "flex",
@@ -1451,10 +1458,10 @@ export default function Dashboard() {
         marginBottom: 12,
       },
       navCard: {
-        borderRadius: 16,
+        borderRadius: 14,
         padding: 14,
         border: "1px solid rgba(255,255,255,0.08)",
-        background: "rgba(255,255,255,0.04)",
+        background: "rgba(4,10,24,0.34)",
         cursor: "pointer",
       },
       navTitle: { fontWeight: 900, fontSize: 14, marginBottom: 8 },
@@ -1469,8 +1476,8 @@ export default function Dashboard() {
       signalPill: {
         borderRadius: 14,
         padding: "12px 14px",
-        border: "1px solid rgba(255,255,255,0.08)",
-        background: "rgba(255,255,255,0.04)",
+        border: "1px solid rgba(255,255,255,0.07)",
+        background: "rgba(4,10,24,0.34)",
         fontSize: 12,
         lineHeight: 1.45,
         opacity: 0.92,
@@ -1483,20 +1490,22 @@ export default function Dashboard() {
       },
       card,
       kLabel: {
-        fontSize: 11,
-        opacity: 0.8,
-        letterSpacing: 0.8,
+        fontSize: 10,
+        color: "rgba(148,163,184,0.88)",
+        letterSpacing: "0.14em",
+        textTransform: "uppercase",
+        fontWeight: 800,
       },
       kValue: {
-        marginTop: 8,
-        fontSize: 28,
+        marginTop: 10,
+        fontSize: 26,
         fontWeight: 900,
         lineHeight: 1.08,
       },
       kSub: {
-        marginTop: 8,
+        marginTop: 7,
         fontSize: 12,
-        opacity: 0.85,
+        color: "rgba(203,213,225,0.76)",
         lineHeight: 1.45,
       },
       grid: {
@@ -1511,7 +1520,7 @@ export default function Dashboard() {
         gridTemplateColumns: "minmax(0, 2fr) minmax(0, 1.05fr)",
         gap: 12,
       },
-      sectionTitle: { fontSize: 16, fontWeight: 900, marginBottom: 10 },
+      sectionTitle: { fontSize: 17, fontWeight: 800, letterSpacing: -0.3, marginBottom: 10 },
       chartShell: {
         height: 260,
         border: "1px solid rgba(255,255,255,0.08)",
@@ -1545,11 +1554,10 @@ export default function Dashboard() {
         left: 12,
         zIndex: 5,
         width: 220,
-        borderRadius: 16,
+        borderRadius: 14,
         border: "1px solid rgba(255,255,255,0.10)",
         background: "linear-gradient(180deg, rgba(8,14,28,0.88), rgba(5,9,18,0.82))",
-        backdropFilter: "blur(10px)",
-        boxShadow: "0 18px 40px rgba(0,0,0,0.30)",
+        boxShadow: "0 12px 28px rgba(0,0,0,0.22)",
         overflow: "hidden",
       },
       miniMapHudHead: {
@@ -1640,8 +1648,8 @@ export default function Dashboard() {
       pillCard: {
         borderRadius: 14,
         padding: 12,
-        border: "1px solid rgba(255,255,255,0.08)",
-        background: "rgba(255,255,255,0.04)",
+        border: "1px solid rgba(255,255,255,0.07)",
+        background: "rgba(4,10,24,0.34)",
       },
       pillTitle: { fontWeight: 900, fontSize: 14, marginBottom: 6 },
       pillMeta: { opacity: 0.85, fontSize: 13, lineHeight: 1.35 },
@@ -1655,7 +1663,7 @@ export default function Dashboard() {
       progressBar: (pct) => ({
         height: "100%",
         width: `${clamp(pct, 0, 200)}%`,
-        background: "linear-gradient(90deg, rgba(56,189,248,0.9), rgba(124,92,255,0.9))",
+        background: "#60a5fa",
       }),
       insightWrap: { display: "grid", gap: 10 },
       insightItem: (type) => ({
@@ -1664,10 +1672,10 @@ export default function Dashboard() {
         border: "1px solid rgba(255,255,255,0.08)",
         background:
           type === "SUCCESS"
-            ? "linear-gradient(90deg, rgba(34,197,94,0.12), rgba(255,255,255,0.02))"
+            ? "rgba(34,197,94,0.07)"
             : type === "WARNING"
-            ? "linear-gradient(90deg, rgba(245,158,11,0.12), rgba(255,255,255,0.02))"
-            : "linear-gradient(90deg, rgba(56,189,248,0.12), rgba(255,255,255,0.02))",
+            ? "rgba(245,158,11,0.07)"
+            : "rgba(56,189,248,0.07)",
       }),
       insightTop: {
         display: "flex",
@@ -1706,12 +1714,12 @@ export default function Dashboard() {
         background: "rgba(255,0,0,0.10)",
       },
       actionBtn: {
-        borderRadius: 999,
+        borderRadius: 10,
         padding: "10px 14px",
-        border: "1px solid rgba(255,255,255,0.12)",
-        background: "rgba(255,255,255,0.06)",
-        color: "#EAF0FF",
-        fontWeight: 900,
+        border: "1px solid rgba(96,165,250,0.38)",
+        background: "#2563eb",
+        color: "#fff",
+        fontWeight: 800,
         fontSize: 12,
         cursor: "pointer",
         opacity: 0.98,
@@ -1727,7 +1735,7 @@ export default function Dashboard() {
         color: "rgba(234,240,255,0.95)",
       },
       secondaryBtn: {
-        borderRadius: 999,
+        borderRadius: 10,
         padding: "10px 14px",
         border: "1px solid rgba(255,255,255,0.10)",
         background: "rgba(255,255,255,0.035)",
@@ -1753,9 +1761,8 @@ export default function Dashboard() {
         overflowY: "auto",
         borderRadius: 18,
         border: "1px solid rgba(255,255,255,0.10)",
-        background:
-          "linear-gradient(180deg, rgba(8,14,28,0.98), rgba(5,9,18,0.96))",
-        boxShadow: "0 22px 60px rgba(0,0,0,0.45)",
+        background: "#0a1020",
+        boxShadow: "0 22px 60px rgba(0,0,0,0.38)",
         padding: 18,
       },
       modalHeaderRow: {
@@ -2816,7 +2823,7 @@ export default function Dashboard() {
           <RevenueTimeline forecast={kpis.forecast90} />
         </div>
       </div>
-      
+
       {showClientModal ? (
         <div style={S.modalOverlay} onClick={() => setShowClientModal(false)}>
           <div style={S.modalCard} onClick={(e) => e.stopPropagation()}>
