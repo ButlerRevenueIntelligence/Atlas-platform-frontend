@@ -573,10 +573,10 @@ export default function GrowthEngine() {
                 {attributionData.map((row) => (
                   <div
                     key={row.label}
-                    style={{
+                  style={{
                       border: "1px solid rgba(255,255,255,0.08)",
-                      borderRadius: 16,
-                      padding: 14,
+                      borderRadius: 14,
+                      padding: 12,
                       background: "rgba(4,10,24,0.34)",
                     }}
                   >
@@ -588,10 +588,10 @@ export default function GrowthEngine() {
                         alignItems: "center",
                       }}
                     >
-                      <div style={{ fontSize: 14, color: "#dbe4f0", fontWeight: 700 }}>
+                      <div style={{ fontSize: 13, color: "#dbe4f0", fontWeight: 700 }}>
                         {row.label}
                       </div>
-                      <div style={{ fontSize: 20, fontWeight: 800, color: "#fff" }}>
+                      <div style={{ fontSize: 18, fontWeight: 800, color: "#fff" }}>
                         {row.value}%
                       </div>
                     </div>
@@ -609,7 +609,7 @@ export default function GrowthEngine() {
                         style={{
                           height: "100%",
                           width: `${row.value}%`,
-                          background: "linear-gradient(90deg, #38bdf8, #6366f1)",
+                          background: "#60a5fa",
                           borderRadius: 999,
                         }}
                       />
@@ -666,47 +666,50 @@ const styles = {
   page: {
     minHeight: "100vh",
     color: "#fff",
+    padding: "14px 16px 24px",
+    background:
+      "radial-gradient(900px 500px at 15% 0%, rgba(37,99,235,0.18), transparent 55%), radial-gradient(900px 500px at 85% 0%, rgba(124,92,255,0.14), transparent 55%), linear-gradient(180deg, #050814 0%, #070b18 100%)",
   },
   wrap: {
     maxWidth: 1380,
     margin: "0 auto",
     display: "grid",
-    gap: 14,
+    gap: 12,
   },
   hero: {
     border: "1px solid rgba(255,255,255,0.08)",
     borderRadius: 20,
-    padding: 18,
+    padding: "18px 20px",
     background:
       "linear-gradient(135deg, rgba(30,64,175,0.18), rgba(37,99,235,0.11), rgba(255,255,255,0.02))",
     boxShadow: "0 12px 30px rgba(0,0,0,0.18)",
   },
   heroTop: {
     display: "grid",
-    gridTemplateColumns: "1.2fr 0.8fr",
+    gridTemplateColumns: "1.35fr 0.65fr",
     gap: 16,
     alignItems: "center",
   },
   eyebrow: {
-    fontSize: 11,
+    fontSize: 10,
     textTransform: "uppercase",
-    letterSpacing: "0.22em",
+    letterSpacing: "0.18em",
     color: "rgba(125,211,252,0.9)",
     fontWeight: 700,
   },
   h1: {
-    margin: "8px 0 0",
-    fontSize: 34,
-    lineHeight: 1.04,
+    margin: "6px 0 0",
+    fontSize: 28,
+    lineHeight: 1.05,
     letterSpacing: -0.7,
     fontWeight: 900,
     color: "#ffffff",
   },
   heroText: {
-    marginTop: 12,
+    marginTop: 8,
     maxWidth: 740,
-    fontSize: 15,
-    lineHeight: 1.7,
+    fontSize: 14,
+    lineHeight: 1.55,
     color: "rgba(226,232,240,0.9)",
   },
   badgeWrap: {
@@ -717,7 +720,7 @@ const styles = {
     alignContent: "flex-start",
   },
   badge: {
-    padding: "8px 12px",
+    padding: "6px 10px",
     borderRadius: 999,
     border: "1px solid rgba(255,255,255,0.08)",
     background: "rgba(255,255,255,0.05)",
@@ -729,12 +732,12 @@ const styles = {
   statsGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-    gap: 12,
+    gap: 10,
   },
   statCard: {
     border: "1px solid rgba(255,255,255,0.08)",
-    borderRadius: 18,
-    padding: 15,
+    borderRadius: 16,
+    padding: "14px 14px 13px",
     background: "rgba(255,255,255,0.032)",
     boxShadow: "0 8px 20px rgba(0,0,0,0.12)",
     minHeight: 110,
@@ -752,61 +755,61 @@ const styles = {
 },
   statValue: {
     marginTop: 10,
-    fontSize: 28,
-    fontWeight: 800,
+    fontSize: 26,
+    fontWeight: 900,
     color: "#fff",
     lineHeight: 1.05,
   },
   statNote: {
     marginTop: 7,
-    fontSize: 13,
+    fontSize: 12,
     lineHeight: 1.45,
     color: "rgba(203,213,225,0.76)",
   },
   twoCol: {
     display: "grid",
     gridTemplateColumns: "1.12fr 0.88fr",
-    gap: 14,
+    gap: 12,
   },
   section: {
     border: "1px solid rgba(255,255,255,0.08)",
-    borderRadius: 20,
+    borderRadius: 18,
     background: "rgba(255,255,255,0.03)",
     overflow: "hidden",
     boxShadow: "0 10px 24px rgba(0,0,0,0.14)",
   },
   sectionHead: {
-    padding: "14px 16px",
+    padding: "12px 14px",
     borderBottom: "1px solid rgba(255,255,255,0.08)",
   },
   sectionTitle: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: 800,
     letterSpacing: -0.35,
     color: "#fff",
   },
   sectionSub: {
-    fontSize: 11,
+    fontSize: 10,
     textTransform: "uppercase",
-    letterSpacing: "0.18em",
+    letterSpacing: "0.16em",
     color: "rgba(148,163,184,0.75)",
     fontWeight: 700,
     marginBottom: 4,
   },
   sectionBody: {
-    padding: 16,
+    padding: 14,
   },
   summaryList: {
     display: "grid",
-    gap: 10,
+    gap: 8,
   },
   summaryItem: {
     border: "1px solid rgba(255,255,255,0.07)",
     background: "rgba(4,10,24,0.34)",
     borderRadius: 14,
-    padding: "13px 14px",
-    fontSize: 14,
-    lineHeight: 1.6,
+    padding: "12px 13px",
+    fontSize: 13,
+    lineHeight: 1.55,
     color: "#dbe4f0",
   },
   funnelGrid: {
@@ -828,18 +831,18 @@ const styles = {
   textAlign: "center",
 },
   chartShell: {
-    height: 285,
+    height: 260,
     border: "1px solid rgba(255,255,255,0.08)",
     borderRadius: 16,
     background: "rgba(4,10,24,0.72)",
-    padding: 12,
+    padding: 10,
   },
   chartShellSmall: {
-    height: 265,
+    height: 250,
     border: "1px solid rgba(255,255,255,0.08)",
     borderRadius: 16,
     background: "rgba(4,10,24,0.72)",
-    padding: 12,
+    padding: 10,
   },
   campaignGrid: {
     display: "grid",
