@@ -609,10 +609,11 @@ export default function Integrations() {
   return (
     <div
       style={{
-        padding: 28,
-        maxWidth: 1300,
-        margin: "0 auto",
-        color: "#fff",
+        minHeight: "100vh",
+        padding: "14px 16px 24px",
+        color: "#EAF0FF",
+        background:
+          "radial-gradient(900px 500px at 15% 0%, rgba(37,99,235,0.18), transparent 55%), radial-gradient(900px 500px at 85% 0%, rgba(124,92,255,0.14), transparent 55%), linear-gradient(180deg, #050814 0%, #070b18 100%)",
       }}
     >
       <input
@@ -623,21 +624,32 @@ export default function Integrations() {
         style={{ display: "none" }}
       />
 
-      <div style={{ marginBottom: 24 }}>
+      <div
+        style={{
+          maxWidth: 1380,
+          margin: "0 auto 12px",
+          padding: "18px 20px",
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: 20,
+          background:
+            "linear-gradient(135deg, rgba(30,64,175,0.18), rgba(37,99,235,0.10), rgba(255,255,255,0.02))",
+          boxShadow: "0 12px 30px rgba(0,0,0,0.18)",
+        }}
+      >
         <div
           style={{
-            fontSize: 12,
+            fontSize: 10,
             fontWeight: 800,
-            letterSpacing: "0.12em",
+            letterSpacing: "0.18em",
             textTransform: "uppercase",
             color: "rgba(191,219,254,0.82)",
-            marginBottom: 8,
+            marginBottom: 6,
           }}
         >
           Data Infrastructure
         </div>
 
-        <h1 style={{ fontSize: 28, fontWeight: 900, margin: 0 }}>
+        <h1 style={{ fontSize: 28, lineHeight: 1.05, letterSpacing: -0.6, fontWeight: 900, margin: 0 }}>
           Atlas Data Connectors
         </h1>
 
@@ -646,7 +658,7 @@ export default function Integrations() {
             fontSize: 14,
             color: "rgba(226,232,240,0.7)",
             marginTop: 8,
-            lineHeight: 1.6,
+            lineHeight: 1.55,
             maxWidth: 900,
           }}
         >
@@ -656,7 +668,7 @@ export default function Integrations() {
 
         <div
           style={{
-            marginTop: 14,
+            marginTop: 12,
             display: "flex",
             gap: 10,
             flexWrap: "wrap",
@@ -664,11 +676,11 @@ export default function Integrations() {
         >
           <div
             style={{
-              padding: "8px 12px",
+              padding: "6px 10px",
               borderRadius: 999,
               border: "1px solid rgba(255,255,255,0.08)",
               background: "rgba(255,255,255,0.05)",
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: 700,
             }}
           >
@@ -677,11 +689,11 @@ export default function Integrations() {
 
           <div
             style={{
-              padding: "8px 12px",
+              padding: "6px 10px",
               borderRadius: 999,
               border: "1px solid rgba(255,255,255,0.08)",
               background: "rgba(255,255,255,0.05)",
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: 700,
               textTransform: "capitalize",
             }}
@@ -691,11 +703,11 @@ export default function Integrations() {
 
           <div
             style={{
-              padding: "8px 12px",
+              padding: "6px 10px",
               borderRadius: 999,
               border: "1px solid rgba(255,255,255,0.08)",
               background: "rgba(255,255,255,0.05)",
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: 700,
             }}
           >
@@ -722,6 +734,7 @@ export default function Integrations() {
         </div>
       </div>
 
+      <div style={{ maxWidth: 1380, margin: "0 auto" }}>
       {error ? (
         <div
           style={{
@@ -761,8 +774,8 @@ export default function Integrations() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(260px,1fr))",
-          gap: 20,
+          gridTemplateColumns: "repeat(auto-fit, minmax(280px,1fr))",
+          gap: 12,
         }}
       >
         {connectorCatalog.map((c) => {
@@ -825,13 +838,12 @@ export default function Integrations() {
               style={{
                 border: "1px solid rgba(255,255,255,0.08)",
                 borderRadius: 16,
-                padding: 20,
-                background:
-                  "linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015))",
-                boxShadow: "0 10px 20px rgba(0,0,0,0.18)",
+                padding: 14,
+                background: "rgba(10,16,35,0.40)",
+                boxShadow: "0 10px 24px rgba(0,0,0,0.14)",
               }}
             >
-              <div style={{ fontSize: 16, fontWeight: 800 }}>{c.name}</div>
+              <div style={{ fontSize: 17, fontWeight: 800 }}>{c.name}</div>
 
               <div
                 style={{
@@ -1177,8 +1189,8 @@ export default function Integrations() {
                     style={{
                       padding: "8px 12px",
                       borderRadius: 10,
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      background: "rgba(255,255,255,0.05)",
+                      border: "1px solid rgba(96,165,250,0.34)",
+                      background: "#2563eb",
                       color: "#fff",
                       fontWeight: 700,
                       fontSize: 12,
@@ -1428,6 +1440,7 @@ export default function Integrations() {
             </div>
           );
         })}
+      </div>
       </div>
     </div>
   );
