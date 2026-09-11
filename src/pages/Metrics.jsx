@@ -833,12 +833,12 @@ const S = {
     fontWeight: 700,
   },
   btn: {
-    borderRadius: 999,
+    borderRadius: 10,
     padding: "10px 14px",
-    border: "1px solid rgba(255,255,255,0.12)",
-    background: "rgba(255,255,255,0.06)",
-    color: "#EAF0FF",
-    fontWeight: 900,
+    border: "1px solid rgba(96,165,250,0.34)",
+    background: "#2563eb",
+    color: "#ffffff",
+    fontWeight: 800,
     fontSize: 12,
     cursor: "pointer",
   },
@@ -854,7 +854,7 @@ const S = {
   },
   briefingCard: {
     borderRadius: 18,
-    padding: 16,
+    padding: 14,
     border: "1px solid rgba(255,255,255,0.08)",
     background:
       "linear-gradient(135deg, rgba(124,92,255,0.14), rgba(56,189,248,0.09), rgba(255,255,255,0.02))",
@@ -953,14 +953,14 @@ const S = {
     gap: 12,
   },
   chartShell: {
-    height: 280,
+    height: 260,
     border: "1px solid rgba(255,255,255,0.08)",
     borderRadius: 16,
     background: "rgba(4,10,24,0.72)",
     padding: 10,
   },
   chartShellLg: {
-    height: 300,
+    height: 260,
     border: "1px solid rgba(255,255,255,0.08)",
     borderRadius: 16,
     background: "rgba(4,10,24,0.72)",
@@ -1017,11 +1017,10 @@ const S = {
     outline: "none",
   },
   searchButton: {
-    border: "1px solid rgba(125,211,252,0.3)",
-    borderRadius: 14,
+    border: "1px solid rgba(96,165,250,0.34)",
+    borderRadius: 10,
     padding: "13px 18px",
-    background:
-      "linear-gradient(135deg, rgba(37,99,235,0.95), rgba(14,165,233,0.88))",
+    background: "#2563eb",
     color: "#fff",
     fontSize: 13,
     fontWeight: 800,
