@@ -769,10 +769,10 @@ function getInitials(companyName) {
 const styles = {
   page: {
     minHeight: "100vh",
-    padding: "18px 16px 36px",
+    padding: "14px 16px 24px",
     color: "#eaf0ff",
     background:
-      "radial-gradient(900px 500px at 15% 0%, rgba(37,99,235,0.16), transparent 55%), linear-gradient(180deg, #050814 0%, #070b18 100%)",
+      "radial-gradient(900px 500px at 15% 0%, rgba(37,99,235,0.18), transparent 55%), radial-gradient(900px 500px at 85% 0%, rgba(124,92,255,0.14), transparent 55%), linear-gradient(180deg, #050814 0%, #070b18 100%)",
   },
 
   container: {
@@ -780,7 +780,7 @@ const styles = {
     maxWidth: 1380,
     margin: "0 auto",
     display: "grid",
-    gap: 14,
+    gap: 12,
   },
 
   hero: {
@@ -788,12 +788,13 @@ const styles = {
     justifyContent: "space-between",
     alignItems: "flex-start",
     flexWrap: "wrap",
-    gap: 18,
-    padding: "22px",
+    gap: 12,
+    padding: "18px 20px",
     borderRadius: 20,
     border: "1px solid rgba(255,255,255,0.08)",
     background:
-      "linear-gradient(135deg, rgba(30,64,175,0.18), rgba(124,92,255,0.08), rgba(255,255,255,0.02))",
+      "linear-gradient(135deg, rgba(30,64,175,0.18), rgba(37,99,235,0.10), rgba(255,255,255,0.02))",
+    boxShadow: "0 12px 30px rgba(0,0,0,0.18)",
   },
 
   eyebrow: {
@@ -805,9 +806,10 @@ const styles = {
   },
 
   title: {
-    margin: "7px 0 0",
-    fontSize: 30,
-    lineHeight: 1.1,
+    margin: "6px 0 0",
+    fontSize: 28,
+    lineHeight: 1.05,
+    letterSpacing: -0.6,
     color: "#ffffff",
   },
 
@@ -829,9 +831,8 @@ const styles = {
     minHeight: 41,
     padding: "10px 16px",
     border: "1px solid rgba(96,165,250,0.55)",
-    borderRadius: 11,
-    background:
-      "linear-gradient(135deg, #2563eb, #4f46e5)",
+    borderRadius: 10,
+    background: "#2563eb",
     color: "#ffffff",
     fontSize: 13,
     fontWeight: 800,
@@ -842,7 +843,7 @@ const styles = {
     minHeight: 41,
     padding: "10px 15px",
     border: "1px solid rgba(255,255,255,0.12)",
-    borderRadius: 11,
+    borderRadius: 10,
     background: "rgba(255,255,255,0.045)",
     color: "#eaf0ff",
     fontSize: 13,
@@ -863,15 +864,16 @@ const styles = {
   statsGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))",
-    gap: 11,
+    gap: 10,
   },
 
   metricCard: {
-    minHeight: 112,
-    padding: 16,
+    minHeight: 126,
+    padding: "14px 14px 13px",
     borderRadius: 16,
     border: "1px solid rgba(255,255,255,0.08)",
-    background: "rgba(255,255,255,0.032)",
+    background: "rgba(10,16,35,0.40)",
+    boxShadow: "0 10px 24px rgba(0,0,0,0.14)",
   },
 
   metricLabel: {
@@ -885,7 +887,7 @@ const styles = {
   metricValue: {
     marginTop: 10,
     color: "#ffffff",
-    fontSize: 25,
+    fontSize: 26,
     fontWeight: 900,
   },
 
@@ -908,15 +910,15 @@ const styles = {
     justifyContent: "space-between",
     alignItems: "center",
     flexWrap: "wrap",
-    gap: 14,
-    padding: "16px",
+    gap: 10,
+    padding: "12px 14px",
     borderBottom: "1px solid rgba(255,255,255,0.08)",
   },
 
   sectionEyebrow: {
     marginBottom: 4,
     color: "rgba(148,163,184,0.75)",
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: 800,
     textTransform: "uppercase",
     letterSpacing: "0.16em",
@@ -925,7 +927,7 @@ const styles = {
   sectionTitle: {
     margin: 0,
     color: "#ffffff",
-    fontSize: 20,
+    fontSize: 18,
   },
 
   filters: {
@@ -995,10 +997,10 @@ const styles = {
     display: "grid",
     gridTemplateColumns: "minmax(250px, 1.5fr) minmax(300px, 1fr) auto",
     alignItems: "center",
-    gap: 18,
-    padding: 15,
+    gap: 12,
+    padding: 14,
     border: "1px solid rgba(255,255,255,0.075)",
-    borderRadius: 15,
+    borderRadius: 14,
     background: "rgba(3,8,20,0.38)",
   },
 
@@ -1016,8 +1018,7 @@ const styles = {
     display: "grid",
     placeItems: "center",
     borderRadius: 12,
-    background:
-      "linear-gradient(135deg, rgba(37,99,235,0.28), rgba(79,70,229,0.22))",
+    background: "rgba(37,99,235,0.18)",
     color: "#bfdbfe",
     fontSize: 13,
     fontWeight: 900,
@@ -1172,7 +1173,7 @@ const styles = {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: "17px 19px",
+    padding: "14px 16px",
     borderBottom: "1px solid rgba(255,255,255,0.08)",
     background: "#0a0f1e",
   },
@@ -1180,7 +1181,7 @@ const styles = {
   modalTitle: {
     margin: 0,
     color: "#ffffff",
-    fontSize: 21,
+    fontSize: 18,
   },
 
   closeButton: {
@@ -1196,14 +1197,14 @@ const styles = {
 
   formBody: {
     display: "grid",
-    gap: 15,
-    padding: 19,
+    gap: 12,
+    padding: 16,
   },
 
   twoColumnForm: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(235px, 1fr))",
-    gap: 14,
+    gap: 12,
   },
 
   field: {
@@ -1236,7 +1237,7 @@ const styles = {
     display: "flex",
     justifyContent: "flex-end",
     gap: 9,
-    padding: "15px 19px",
+    padding: "13px 16px",
     borderTop: "1px solid rgba(255,255,255,0.08)",
     background: "#0a0f1e",
   },
