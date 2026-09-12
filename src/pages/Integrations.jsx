@@ -31,6 +31,7 @@ const connectorCatalog = [
   { id: "stripe", name: "Stripe", category: "Payments", supportsLive: true },
   { id: "quickbooks", name: "QuickBooks Online", category: "Accounting", supportsLive: true },
   { id: "shopify", name: "Shopify", category: "Commerce", supportsLive: true },
+  { id: "slack", name: "Slack", category: "Collaboration", supportsLive: true },
   {
     id: "excel_csv",
     name: "Excel / CSV Import",
@@ -501,6 +502,24 @@ export default function Integrations() {
     }
   }
 
+  async function handleSlackTest() {
+    try {
+      setBusyId("slack_test");
+      setError("");
+      setSuccess("");
+
+      const data = await apiPost("/integrations/slack/test", {});
+      setIntegrations(normalizeIntegrationMap(data?.integrations));
+      setSuccess(data?.message || "Slack test alert sent successfully");
+    } catch (err) {
+      console.error(err);
+      setError(err?.message || "Failed to send Slack test alert");
+      await load();
+    } finally {
+      setBusyId("");
+    }
+  }
+
   async function handleGoogleAdsSelectAccount() {
     try {
       const customerId = selectedGoogleAccounts.google_ads;
@@ -795,11 +814,13 @@ export default function Integrations() {
           const isSalesforceLive = c.id === "salesforce" && live?.mode === "live";
           const isMetaAdsLive = c.id === "meta_ads" && live?.mode === "live";
           const isLinkedInAdsLive = c.id === "linkedin_ads" && live?.mode === "live";
+          const isSlackLive = c.id === "slack" && live?.mode === "live";
           const isGoogleAds = c.id === "google_ads";
           const isGA4 = c.id === "ga4";
           const isStripe = c.id === "stripe";
           const isManualImport = c.id === "excel_csv";
           const isBitrix24 = c.id === "bitrix24";
+          const isSlack = c.id === "slack";
 
           const needsGoogleSelection =
             isGoogleAds &&
@@ -913,7 +934,9 @@ export default function Integrations() {
                     : "Ready to upload"
                   : isConnected
                   ? live?.mode === "live"
-                    ? needsGoogleSelection
+                    ? isSlack
+                      ? `Alerts enabled${live?.slackChannel ? ` for ${live.slackChannel}` : ""}`
+                      : needsGoogleSelection
                       ? "Select client account"
                       : needsGA4Selection
                       ? "Select property"
@@ -936,7 +959,7 @@ export default function Integrations() {
               >
                 {isManualImport ? "Upload Excel or CSV data into Atlas" : ""}
                 {!isManualImport && lastSyncTime
-                  ? `Last sync: ${formatDate(lastSyncTime)}`
+                  ? `${isSlack ? "Last delivery" : "Last sync"}: ${formatDate(lastSyncTime)}`
                   : ""}
               </div>
 
@@ -949,16 +972,20 @@ export default function Integrations() {
                   }}
                 >
                   {syncStatus === "success" ? (
-                    <span style={{ color: "#22c55e" }}>✅ Data synced successfully</span>
+                    <span style={{ color: "#22c55e" }}>
+                      {isSlack ? "✅ Alert delivered successfully" : "✅ Data synced successfully"}
+                    </span>
                   ) : null}
-                  {syncStatus === "error" ? (
+                  {syncStatus === "error" || syncStatus === "failed" ? (
                     <span style={{ color: "#fb7185" }}>❌ Sync failed</span>
                   ) : null}
                   {syncStatus === "syncing" ? (
                     <span style={{ color: "#facc15" }}>🔄 Syncing...</span>
                   ) : null}
                   {syncStatus === "never" ? (
-                    <span style={{ color: "rgba(226,232,240,0.6)" }}>Waiting for first sync</span>
+                    <span style={{ color: "rgba(226,232,240,0.6)" }}>
+                      {isSlack ? "Ready to send Atlas alerts" : "Waiting for first sync"}
+                    </span>
                   ) : null}
                 </div>
               ) : (
@@ -974,7 +1001,9 @@ export default function Integrations() {
                     minHeight: 16,
                   }}
                 >
-                  Live CRM data flowing into Atlas
+                  {isSlack
+                    ? "Atlas alerts and executive briefings flow into Slack"
+                    : "Live CRM data flowing into Atlas"}
                 </div>
               ) : (
                 <div style={{ minHeight: 16, marginBottom: 10 }} />
@@ -1414,6 +1443,26 @@ export default function Integrations() {
                         }}
                       >
                         {busyId === "linkedin_ads_sync" ? "Syncing..." : "Run Sync"}
+                      </button>
+                    ) : null}
+
+                    {isSlackLive ? (
+                      <button
+                        onClick={handleSlackTest}
+                        disabled={!!busyId || uploading}
+                        style={{
+                          padding: "8px 12px",
+                          borderRadius: 10,
+                          border: "1px solid rgba(255,255,255,0.08)",
+                          background: "rgba(255,255,255,0.05)",
+                          color: "#fff",
+                          fontWeight: 700,
+                          fontSize: 12,
+                          cursor: !!busyId || uploading ? "not-allowed" : "pointer",
+                          opacity: !!busyId || uploading ? 0.7 : 1,
+                        }}
+                      >
+                        {busyId === "slack_test" ? "Sending..." : "Send Test Alert"}
                       </button>
                     ) : null}
 
