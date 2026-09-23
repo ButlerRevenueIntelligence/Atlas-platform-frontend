@@ -35,8 +35,12 @@ const fallbackMapStyle = {
 
 const REGION_META = {
   "North America": { latitude: 39, longitude: -101, color: "#4f8cff" },
+  "Latin America": { latitude: -14, longitude: -60, color: "#c46ef0" },
   Europe: { latitude: 50, longitude: 11, color: "#54b89a" },
+  Africa: { latitude: 2, longitude: 21, color: "#ef8354" },
+  "Middle East": { latitude: 29, longitude: 45, color: "#e879a9" },
   Asia: { latitude: 34, longitude: 105, color: "#d7a84b" },
+  Oceania: { latitude: -25, longitude: 135, color: "#5cc8d7" },
 };
 
 const DEMO_REGIONS = [
@@ -79,12 +83,12 @@ const money = (value) => {
 };
 
 function regionFrom(value = "") {
-  const text = String(value).toLowerCase();
-  if (/germany|france|uk|united kingdom|europe|spain|italy|netherlands/.test(text)) {
-    return "Europe";
-  }
-  if (/singapore|japan|india|china|asia|hong kong|korea/.test(text)) return "Asia";
-  return "North America";
+  const text = String(value || "").trim().toLowerCase();
+  if (!text) return null;
+  return (
+    Object.keys(REGION_META).find((region) => region.toLowerCase() === text) ||
+    null
+  );
 }
 
 function statusFor(revenue, pipeline) {
@@ -94,32 +98,67 @@ function statusFor(revenue, pipeline) {
   return "Developing";
 }
 
-function buildRegions(dashboard) {
+function buildRegionView(dashboard) {
   const mode = String(dashboard?.workspaceMode || "demo").toLowerCase();
-  if (mode === "demo") return DEMO_REGIONS;
+  if (mode === "demo") {
+    return {
+      regions: DEMO_REGIONS,
+      coveragePct: 100,
+      mappedDeals: DEMO_REGIONS.reduce((sum, region) => sum + region.accounts.length, 0),
+      unmappedDeals: 0,
+      unmappedValue: 0,
+    };
+  }
 
   const deals = Array.isArray(dashboard?.deals) ? dashboard.deals : [];
   const grouped = new globalThis.Map();
+  const cutoff = new Date();
+  cutoff.setUTCDate(cutoff.getUTCDate() - 29);
+  cutoff.setUTCHours(0, 0, 0, 0);
+  let mappedDeals = 0;
+  let unmappedDeals = 0;
+  let mappedValue = 0;
+  let unmappedValue = 0;
 
   deals.forEach((deal) => {
-    const name = regionFrom(
-      deal?.region || deal?.country || deal?.location || deal?.territory || ""
-    );
+    const name = regionFrom(deal?.geo?.region || deal?.region);
+    const amount = safeNum(deal?.amount ?? deal?.value ?? deal?.pipelineValue);
+    const stage = String(deal?.stage || deal?.status || "").trim().toLowerCase();
+    const isWon = stage === "closed won";
+    const isLost = stage === "closed lost";
+    const closedDateValue = deal?.closedAt || deal?.closeDate || deal?.updatedAt || deal?.createdAt;
+    const closedDate = closedDateValue ? new Date(closedDateValue) : null;
+    const isRecentWon =
+      isWon && closedDate && !Number.isNaN(closedDate.getTime()) && closedDate >= cutoff;
+    const isOpen = !isWon && !isLost;
+    const attributableValue = isRecentWon || isOpen ? amount : 0;
+
+    if (!name || !REGION_META[name]) {
+      if (attributableValue > 0) {
+        unmappedDeals += 1;
+        unmappedValue += attributableValue;
+      }
+      return;
+    }
+
+    if (attributableValue > 0) {
+      mappedDeals += 1;
+      mappedValue += attributableValue;
+    }
     const row = grouped.get(name) || {
       name,
       revenueNum: 0,
       pipelineNum: 0,
       won: 0,
-      total: 0,
+      lost: 0,
       accounts: [],
     };
-    const amount = safeNum(deal?.amount || deal?.value || deal?.pipelineValue);
-    const stage = String(deal?.stage || deal?.status || "");
-    row.total += 1;
-    if (stage === "Closed Won") {
-      row.revenueNum += amount;
+    if (isWon) {
       row.won += 1;
-    } else if (stage !== "Closed Lost") {
+      if (isRecentWon) row.revenueNum += amount;
+    } else if (isLost) {
+      row.lost += 1;
+    } else if (isOpen) {
       row.pipelineNum += amount;
     }
     const account = deal?.accountName || deal?.company || deal?.clientName || deal?.name;
@@ -127,15 +166,26 @@ function buildRegions(dashboard) {
     grouped.set(name, row);
   });
 
-  return Array.from(grouped.values()).map((row) => ({
-    ...row,
-    closeRateNum: row.total ? Math.round((row.won / row.total) * 100) : 0,
-    status: statusFor(row.revenueNum, row.pipelineNum),
-  }));
+  const denominator = mappedValue + unmappedValue;
+  return {
+    regions: Array.from(grouped.values()).map((row) => ({
+      ...row,
+      closeRateNum:
+        row.won + row.lost
+          ? Math.round((row.won / (row.won + row.lost)) * 100)
+          : 0,
+      status: statusFor(row.revenueNum, row.pipelineNum),
+    })),
+    coveragePct: denominator ? Math.round((mappedValue / denominator) * 100) : 0,
+    mappedDeals,
+    unmappedDeals,
+    unmappedValue,
+  };
 }
 
 function RevenueMarker({ region, selected, onSelect }) {
-  const meta = REGION_META[region.name] || REGION_META["North America"];
+  const meta = REGION_META[region.name];
+  if (!meta) return null;
   const size = Math.max(14, Math.min(28, 12 + region.revenueNum / 350000));
 
   return (
@@ -210,7 +260,8 @@ export default function GlobalRevenueMap() {
     };
   }, []);
 
-  const regions = useMemo(() => buildRegions(dashboard), [dashboard]);
+  const regionView = useMemo(() => buildRegionView(dashboard), [dashboard]);
+  const regions = regionView.regions;
   const rankedRegions = useMemo(
     () => [...regions].sort((a, b) => b.revenueNum + b.pipelineNum - (a.revenueNum + a.pipelineNum)),
     [regions]
@@ -218,6 +269,7 @@ export default function GlobalRevenueMap() {
   const topRegion = rankedRegions[0];
   const totalRevenue = regions.reduce((sum, region) => sum + region.revenueNum, 0);
   const totalPipeline = regions.reduce((sum, region) => sum + region.pipelineNum, 0);
+  const isDemo = String(dashboard?.workspaceMode || "demo").toLowerCase() === "demo";
   const maxOpportunity = Math.max(
     ...regions.map((region) => region.revenueNum + region.pipelineNum),
     1
@@ -229,11 +281,12 @@ export default function GlobalRevenueMap() {
 
   const flowData = useMemo(() => {
     if (regions.length < 2) return { type: "FeatureCollection", features: [] };
-    const origin = REGION_META[regions[0]?.name] || REGION_META["North America"];
+    const origin = REGION_META[regions[0]?.name];
+    if (!origin) return { type: "FeatureCollection", features: [] };
     return {
       type: "FeatureCollection",
       features: regions.slice(1).map((region) => {
-        const destination = REGION_META[region.name] || REGION_META["North America"];
+        const destination = REGION_META[region.name];
         return {
           type: "Feature",
           properties: {},
@@ -266,18 +319,31 @@ export default function GlobalRevenueMap() {
         </div>
         <div className="grm-header-status">
           <span className="grm-status-dot" />
-          {String(dashboard?.workspaceMode || "demo").toLowerCase() === "demo"
-            ? "Demo data"
-            : "Live workspace data"}
+          {isDemo ? "Demo data" : "Live workspace data"}
         </div>
       </header>
 
       <section className="grm-metrics">
         <Metric label="Tracked regions" value={regions.length} detail="Active territories" />
-        <Metric label="Revenue" value={money(totalRevenue)} detail="Closed-won value" />
-        <Metric label="Open pipeline" value={money(totalPipeline)} detail="Current opportunity value" />
-        <Metric label="Leading region" value={topRegion?.name || "—"} detail="By total opportunity" />
+        <Metric label="Mapped revenue (30D)" value={money(totalRevenue)} detail="Recent closed-won value" />
+        <Metric label="Open pipeline" value={money(totalPipeline)} detail="Mapped opportunity value" />
+        <Metric
+          label="Geo coverage"
+          value={`${regionView.coveragePct}%`}
+          detail={`${regionView.mappedDeals} located · ${regionView.unmappedDeals} unassigned`}
+        />
       </section>
+
+      {!isDemo && regionView.unmappedDeals > 0 ? (
+        <section className="grm-notice" role="status">
+          <strong>{money(regionView.unmappedValue)} is not mapped.</strong>
+          <span>
+            {regionView.unmappedDeals} active or recently won deal
+            {regionView.unmappedDeals === 1 ? " is" : "s are"} missing a recognized account location.
+            Add a country to the CRM account and run a sync to place it on the map.
+          </span>
+        </section>
+      ) : null}
 
       <section className="grm-map-card">
         <div className="grm-map-heading">
@@ -286,9 +352,11 @@ export default function GlobalRevenueMap() {
             <h2>Regional portfolio</h2>
           </div>
           <div className="grm-legend">
-            <span><i className="na" /> North America</span>
-            <span><i className="eu" /> Europe</span>
-            <span><i className="as" /> Asia</span>
+            {regions.map((region) => (
+              <span key={region.name}>
+                <i style={{ background: REGION_META[region.name]?.color }} /> {region.name}
+              </span>
+            ))}
           </div>
         </div>
 
@@ -340,8 +408,8 @@ export default function GlobalRevenueMap() {
               ))}
               {selectedRegion ? (
                 <Popup
-                  latitude={(REGION_META[selectedRegion.name] || REGION_META["North America"]).latitude}
-                  longitude={(REGION_META[selectedRegion.name] || REGION_META["North America"]).longitude}
+                  latitude={REGION_META[selectedRegion.name].latitude}
+                  longitude={REGION_META[selectedRegion.name].longitude}
                   anchor="bottom"
                   offset={18}
                   closeButton={false}
@@ -357,6 +425,15 @@ export default function GlobalRevenueMap() {
                 </Popup>
               ) : null}
             </Map>
+            {!regions.length ? (
+              <div className="grm-empty">
+                <strong>No regional data yet</strong>
+                <span>
+                  Atlas found no recognized country on your synced deals or linked accounts.
+                  Add account locations in your CRM, then sync again.
+                </span>
+              </div>
+            ) : null}
           </div>
 
           <aside className="grm-ranking">
@@ -365,7 +442,7 @@ export default function GlobalRevenueMap() {
               <span>Revenue + pipeline</span>
             </div>
             {rankedRegions.map((region, index) => {
-              const meta = REGION_META[region.name] || REGION_META["North America"];
+              const meta = REGION_META[region.name];
               const total = region.revenueNum + region.pipelineNum;
               return (
                 <button
@@ -394,7 +471,7 @@ export default function GlobalRevenueMap() {
         <article className="grm-chart-card">
           <div className="grm-card-heading">
             <div><p className="grm-section-label">Performance</p><h2>Revenue and pipeline</h2></div>
-            <span>Current period</span>
+            <span>Revenue: trailing 30 days</span>
           </div>
           <div className="grm-chart">
             <ResponsiveContainer width="100%" height="100%">
@@ -424,7 +501,7 @@ export default function GlobalRevenueMap() {
                 <Tooltip content={<ChartTooltip suffix="%" />} cursor={{ fill: "rgba(255,255,255,.025)" }} />
                 <Bar dataKey="closeRateNum" name="Close rate" radius={[0, 3, 3, 0]} maxBarSize={24}>
                   {regions.map((region) => (
-                    <Cell key={region.name} fill={(REGION_META[region.name] || REGION_META["North America"]).color} />
+                    <Cell key={region.name} fill={REGION_META[region.name].color} />
                   ))}
                 </Bar>
               </BarChart>
@@ -473,6 +550,7 @@ const pageStyles = `
   .grm-metric span{display:block;color:#7f8b9f;font-size:10px;font-weight:700;letter-spacing:.11em;text-transform:uppercase}
   .grm-metric strong{display:block;margin-top:10px;color:#f7f9fc;font-size:24px;line-height:1.1;font-weight:700;letter-spacing:-.025em}
   .grm-metric small{display:block;margin-top:7px;color:#727f92;font-size:11px}
+  .grm-notice{display:flex;align-items:center;gap:10px;max-width:1384px;margin:0 auto 12px;padding:11px 17px;color:#cbd3de;background:#17130c;border:1px solid #493a1d;border-radius:10px;font-size:11px;line-height:1.45}.grm-notice strong{color:#e7bd6e;white-space:nowrap}.grm-notice span{color:#a99d86}
   .grm-map-card,.grm-chart-card,.grm-table-card{max-width:1420px;margin:0 auto 12px;border:1px solid #222b38;border-radius:12px;background:#0e141e;overflow:hidden}
   .grm-map-heading,.grm-card-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 18px;border-bottom:1px solid #222b38}
   .grm-map-heading h2,.grm-card-heading h2{margin:0;color:#edf1f7;font-size:16px;font-weight:650;letter-spacing:-.015em}
@@ -482,6 +560,7 @@ const pageStyles = `
   .grm-legend .na{background:#4f8cff}.grm-legend .eu{background:#54b89a}.grm-legend .as{background:#d7a84b}
   .grm-map-layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;min-height:490px}
   .grm-map-canvas{position:relative;min-height:490px;border-right:1px solid #222b38;background:#0a0f17}
+  .grm-empty{position:absolute;z-index:5;left:50%;top:50%;display:flex;flex-direction:column;gap:7px;width:min(360px,calc(100% - 36px));padding:18px;transform:translate(-50%,-50%);text-align:center;background:rgba(14,20,30,.94);border:1px solid #2c3747;border-radius:10px;box-shadow:0 18px 40px rgba(0,0,0,.35)}.grm-empty strong{font-size:14px}.grm-empty span{color:#8995a7;font-size:11px;line-height:1.55}
   .grm-marker{display:block;padding:0;border:2px solid rgba(255,255,255,.82);border-radius:50%;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.45);transition:transform .16s ease,border-color .16s ease}
   .grm-marker:hover,.grm-marker.is-selected{transform:scale(1.18);border-color:#fff}
   .grm-popup .mapboxgl-popup-content{padding:0!important;border:0!important;border-radius:8px!important;background:transparent!important;box-shadow:0 12px 30px rgba(0,0,0,.36)!important}
@@ -503,5 +582,5 @@ const pageStyles = `
   .grm-status{display:inline-flex;padding:4px 8px;border-radius:99px;font-size:9px;font-weight:700}.grm-strong{color:#88d8b8;background:rgba(70,185,133,.11)}.grm-stable{color:#8db4ff;background:rgba(79,140,255,.11)}.grm-developing{color:#dfbd78;background:rgba(215,168,75,.11)}
   .grm-state{min-height:55vh;display:grid;place-items:center;color:#9aa5b5;background:#080c13}.grm-error{color:#f3a4a4}
   @media(max-width:980px){.grm-map-layout{grid-template-columns:1fr}.grm-map-canvas{border-right:0;border-bottom:1px solid #222b38}.grm-chart-grid{grid-template-columns:1fr}.grm-metrics{grid-template-columns:repeat(2,1fr)}}
-  @media(max-width:620px){.grm-page{padding:14px}.grm-header{align-items:flex-start;flex-direction:column}.grm-header h1{font-size:25px}.grm-metrics{grid-template-columns:1fr 1fr}.grm-metric{min-height:90px;padding:14px}.grm-metric strong{font-size:19px}.grm-map-heading{align-items:flex-start;flex-direction:column}.grm-legend{flex-wrap:wrap}.grm-map-canvas{min-height:410px}.grm-map-layout{min-height:410px}}
+  @media(max-width:620px){.grm-page{padding:14px}.grm-header{align-items:flex-start;flex-direction:column}.grm-header h1{font-size:25px}.grm-metrics{grid-template-columns:1fr 1fr}.grm-metric{min-height:90px;padding:14px}.grm-metric strong{font-size:19px}.grm-notice{align-items:flex-start;flex-direction:column}.grm-map-heading{align-items:flex-start;flex-direction:column}.grm-legend{flex-wrap:wrap}.grm-map-canvas{min-height:410px}.grm-map-layout{min-height:410px}}
 `;
