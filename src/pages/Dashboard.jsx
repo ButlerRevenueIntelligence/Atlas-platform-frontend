@@ -992,7 +992,7 @@ export default function Dashboard() {
     const monthlyRevenueGoal =
       safeNum(dashboard?.targets?.monthlyRevenueGoal) ||
       safeNum(dashboard?.monthlyGoal) ||
-      0;
+      (isDemo ? 75000 : 0);
 
     const quarterlyRevenueGoal =
       safeNum(dashboard?.targets?.quarterlyRevenueGoal) ||
@@ -1009,12 +1009,13 @@ export default function Dashboard() {
     return {
       monthlyRevenueGoal,
       quarterlyRevenueGoal,
+      sampleGoals: isDemo && !safeNum(dashboard?.targets?.monthlyRevenueGoal) && !safeNum(dashboard?.monthlyGoal),
       currentMonthRevenue,
       currentQuarterForecast,
-      monthPct: clamp(monthPct, 0, 200),
-      quarterPct: clamp(quarterPct, 0, 200),
+      monthPct: Math.max(0, monthPct),
+      quarterPct: Math.max(0, quarterPct),
     };
-  }, [dashboard, kpis]);
+  }, [dashboard, kpis, isDemo]);
 
   const liveRevenueSnapshot = useMemo(() => {
     if (!hasLiveData) {
@@ -2662,9 +2663,10 @@ export default function Dashboard() {
 
           <div style={S.card}>
             <div style={S.sectionTitle}>Goal Tracking</div>
+            {targets.sampleGoals && <div style={{ fontSize: 11, opacity: 0.75, marginBottom: 12 }}>Sample planning targets · demo only</div>}
 
             <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 6 }}>Monthly Revenue Goal</div>
+              <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 6 }}>30-Day Revenue vs Goal</div>
               <div
                 style={{
                   display: "flex",
@@ -2674,15 +2676,18 @@ export default function Dashboard() {
                 }}
               >
                 <span>{money(targets.currentMonthRevenue)}</span>
-                <span>{money(targets.monthlyRevenueGoal)}</span>
+                <span>{targets.monthlyRevenueGoal > 0 ? `Goal: ${money(targets.monthlyRevenueGoal)}` : "Goal not set"}</span>
               </div>
-              <div style={S.progressWrap}>
-                <div style={S.progressBar(targets.monthPct)} />
-              </div>
+              {targets.monthlyRevenueGoal > 0 ? <>
+                <div role="progressbar" aria-label="30-day revenue goal progress" aria-valuenow={Math.min(100, targets.monthPct)} aria-valuemin={0} aria-valuemax={100} style={S.progressWrap}>
+                  <div style={S.progressBar(targets.monthPct)} />
+                </div>
+                <div style={{ fontSize: 11, opacity: 0.8, marginTop: 6 }}>{Math.round(targets.monthPct)}% achieved · {targets.currentMonthRevenue >= targets.monthlyRevenueGoal ? "Goal achieved" : `${money(targets.monthlyRevenueGoal - targets.currentMonthRevenue)} remaining`}</div>
+              </> : <div style={{ fontSize: 11, opacity: 0.75 }}>A revenue target is needed to measure progress.</div>}
             </div>
 
             <div>
-              <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 6 }}>Quarter Forecast Progress</div>
+              <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 6 }}>90-Day Forecast vs Goal</div>
               <div
                 style={{
                   display: "flex",
@@ -2692,11 +2697,15 @@ export default function Dashboard() {
                 }}
               >
                 <span>{money(targets.currentQuarterForecast)}</span>
-                <span>{money(targets.quarterlyRevenueGoal)}</span>
+                <span>{targets.quarterlyRevenueGoal > 0 ? `Goal: ${money(targets.quarterlyRevenueGoal)}` : "Goal not set"}</span>
               </div>
-              <div style={S.progressWrap}>
-                <div style={S.progressBar(targets.quarterPct)} />
-              </div>
+              {targets.quarterlyRevenueGoal > 0 ? <>
+                <div role="progressbar" aria-label="90-day forecast goal coverage" aria-valuenow={Math.min(100, targets.quarterPct)} aria-valuemin={0} aria-valuemax={100} style={S.progressWrap}>
+                  <div style={S.progressBar(targets.quarterPct)} />
+                </div>
+                <div style={{ fontSize: 11, opacity: 0.8, marginTop: 6 }}>{Math.round(targets.quarterPct)}% projected · {targets.currentQuarterForecast >= targets.quarterlyRevenueGoal ? "Forecast meets goal" : `${money(targets.quarterlyRevenueGoal - targets.currentQuarterForecast)} forecast gap`}</div>
+              </> : <div style={{ fontSize: 11, opacity: 0.75 }}>A forecast target is needed to measure coverage.</div>}
+              <div style={{ fontSize: 10, opacity: 0.65, marginTop: 8 }}>Rolling 90-day projection; this is not closed revenue or a calendar-quarter actual.</div>
             </div>
           </div>
 
