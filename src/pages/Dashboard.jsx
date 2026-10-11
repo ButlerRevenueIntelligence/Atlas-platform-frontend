@@ -972,10 +972,19 @@ export default function Dashboard() {
     ? dateLabel(metrics[metrics.length - 1].date, "date")
     : new Date().toLocaleDateString();
 
-  const isDemo =
-    dashboard?.org?.isDemo ||
-    dashboard?.org?.slug === "demo" ||
-    (dashboard?.org?.name || "").toLowerCase().includes("butler");
+  const isDemo = dashboard?.workspaceMode === "demo";
+
+  const weightedOpenPipeline = useMemo(() => {
+    const rows = Array.isArray(dashboard?.deals) ? dashboard.deals : deals;
+    const weighted = rows
+      .filter((deal) => !deal.archived && !["closed won", "closed lost"].includes(String(deal.stage || "").toLowerCase()))
+      .reduce((sum, deal) => {
+        const probability = safeNum(deal.probability);
+        const rate = clamp(probability > 1 ? probability / 100 : probability, 0, 1);
+        return sum + Math.max(0, safeNum(deal.amount ?? deal.value ?? deal.pipelineValue)) * rate;
+      }, 0);
+    return weighted * safeNum(activeScenario?.multipliers?.pipeline ?? 1);
+  }, [dashboard, deals, activeScenario]);
 
   const orgName = dashboard?.org?.name || dashboard?.orgName || "Atlas Workspace";
 
@@ -2817,12 +2826,24 @@ export default function Dashboard() {
       >
         <div style={S.card}>
           <div style={S.sectionTitle}>Opportunity Radar</div>
-          <OpportunityRadar pipeline={pipeline} revenue={kpis.revenue30} />
+          {isDemo && <div style={S.pillMeta}>Sample scenario · based on demo workspace data</div>}
+          <OpportunityRadar
+            openPipeline={kpis.pipelineValue}
+            weightedPipeline={weightedOpenPipeline}
+            revenue={kpis.revenue30}
+            spend={kpis.spend30}
+            coverage={kpis.coverage}
+          />
         </div>
 
         <div style={S.card}>
           <div style={S.sectionTitle}>Revenue Timeline Projection</div>
-          <RevenueTimeline forecast={kpis.forecast90} />
+          {isDemo && <div style={S.pillMeta}>Sample scenario · illustrative 78% confidence assumption</div>}
+          <RevenueTimeline
+            revenue30={kpis.revenue30}
+            weightedPipeline={weightedOpenPipeline}
+            confidence={dashboard?.forecastConfidence ?? (isDemo ? 78 : 0)}
+          />
         </div>
       </div>
 
