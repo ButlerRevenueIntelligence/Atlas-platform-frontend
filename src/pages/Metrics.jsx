@@ -1,11 +1,13 @@
 // frontend/src/pages/Metrics.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import {
+  getDashboard,
   getMetricsDaily,
   getMetricsSummary,
   searchGraphIQOrganizations,
   getSharedCompanyIntelligence,
 } from "../api";
+import { buildDemoMarketMetrics, demoMarketCompanies } from "../data/demoMarketSignals.js";
 import OpportunityRadar from "../components/atlas/OpportunityRadar";
 import RevenueTimeline from "../components/atlas/RevenueTimeline";
 import {
@@ -146,6 +148,7 @@ export default function Metrics() {
       const data = response.data;
       const rows = Array.isArray(data) ? data : data?.entities || data?.organizations || data?.results || data?.items || data?.data || [];
       setMarketResults(Array.isArray(rows) ? rows.slice(0, 10) : []);
+      setMarketTotal(safeNum(data?.total_count || data?.totalCount) || rows.length);
       setMarketQuery(response.query?.capabilities?.[0] || "");
     }).catch(() => {});
     return () => { active = false; };
@@ -154,6 +157,8 @@ export default function Metrics() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [days, setDays] = useState(30);
+  const [dashboard, setDashboard] = useState(null);
+  const isDemo = dashboard?.workspaceMode === "demo";
   const [summary, setSummary] = useState(null);
   const [series, setSeries] = useState([]);
 
@@ -168,15 +173,19 @@ export default function Metrics() {
       setLoading(true);
       setError("");
 
-      const [summaryResponse, dailyResponse] = await Promise.all([
-        getMetricsSummary(days),
-        getMetricsDaily(days),
-      ]);
-
-      setSummary(summaryResponse?.summary || null);
-      setSeries(
-        Array.isArray(dailyResponse?.days) ? dailyResponse.days : []
-      );
+      const workspace = await getDashboard();
+      setDashboard(workspace);
+      if (workspace?.workspaceMode === "demo") {
+        const demo = buildDemoMarketMetrics(workspace, days);
+        setSummary(demo.summary);
+        setSeries(demo.days);
+      } else {
+        const [summaryResponse, dailyResponse] = await Promise.all([
+          getMetricsSummary(days), getMetricsDaily(days),
+        ]);
+        setSummary(summaryResponse?.summary || null);
+        setSeries(Array.isArray(dailyResponse?.days) ? dailyResponse.days : []);
+      }
     } catch (loadError) {
       setError(loadError?.message || "Failed to load market signals");
     } finally {
@@ -242,10 +251,10 @@ export default function Metrics() {
 
   const organizations = useMemo(
     () =>
-      marketResults.map((organization, index) =>
+      (marketResults.length ? marketResults : isDemo ? demoMarketCompanies : []).map((organization, index) =>
         normalizeOrganization(organization, index)
       ),
-    [marketResults]
+    [marketResults, isDemo]
   );
 
   const totals = useMemo(() => {
@@ -361,13 +370,17 @@ export default function Metrics() {
       });
     }
 
+    if (isDemo) {
+      items.push({ title: "Prioritize expansion-ready accounts", body: "Start with healthcare and technology accounts where the example demand signals align with the active pipeline." });
+      items.push({ title: "Convert qualified demand", body: `Review ${money(current.weighted)} in weighted pipeline and assign a clear next action to the ${current.staleCount} sample stale opportunities.` });
+    }
     items.push({
       title: "Use external discovery with internal signals",
       body: "Search for companies in attractive markets, then compare those results against pipeline, account fit, and revenue priorities inside Atlas.",
     });
 
     return items.slice(0, 3);
-  }, [summary]);
+  }, [summary, isDemo]);
 
   const industryCounts = useMemo(() => {
     const counts = new Map();
@@ -389,6 +402,9 @@ export default function Metrics() {
   const executiveBriefing = useMemo(() => {
     const current = summary || {};
 
+    if (isDemo && !marketResults.length) {
+      return "Demo scenario: healthcare and technology expansion. Review sample company profiles, daily demand, conversion upside, and the 90-day revenue scenario. Search above to replace the example companies with GraphIQ results.";
+    }
     if (organizations.length) {
       return `Atlas found ${marketTotal || organizations.length} organizations connected to "${marketQuery}". The first ${organizations.length} results are shown below so leadership can quickly identify companies and markets worth deeper account research.`;
     }
@@ -396,7 +412,7 @@ export default function Metrics() {
     return `Atlas Market Signals combines external company discovery with internal demand, pipeline, and conversion intelligence. Search a product, service, or capability to find relevant companies, then use Atlas to decide where the strongest revenue opportunities may exist. Current close performance is ${pct(
       current.winRate ?? 0
     )} across the selected ${days}-day window.`;
-  }, [summary, days, organizations, marketTotal, marketQuery]);
+  }, [summary, days, organizations, marketTotal, marketQuery, isDemo, marketResults]);
 
   const axisTick = { fill: "#9fb0d0", fontSize: 11 };
 
@@ -439,7 +455,7 @@ export default function Metrics() {
 
             <div style={S.controlsWrap}>
               <div style={S.badge}>Powered by GraphIQ</div>
-              <div style={S.badge}>Signals Active</div>
+              <div style={S.badge}>{isDemo ? "Demo scenario · sample internal data" : "Workspace Signals"}</div>
               <div style={S.badge}>
                 {signalStrength >= 60
                   ? "Signal Strength Elevated"
@@ -477,7 +493,7 @@ export default function Metrics() {
 
         <Section
           title="External Opportunity Discovery"
-          subtitle="Powered by GraphIQ"
+          subtitle={isDemo && !marketResults.length ? "Fictional company examples · demo only" : "Powered by GraphIQ"}
           action={
             marketTotal > 0 ? (
               <div style={S.sectionTag}>
@@ -678,12 +694,15 @@ export default function Metrics() {
         <div style={S.twoCol}>
           <Section title="Revenue Opportunity Radar" subtitle="Growth Levers">
             <OpportunityRadar
-              pipeline={{ pipelineValue: summary?.raw ?? 0 }}
+              openPipeline={summary?.raw ?? 0}
+              weightedPipeline={summary?.weighted ?? 0}
+              spend={dashboard?.metrics?.reduce((sum, row) => sum + safeNum(row.spend), 0) || 0}
+              coverage={summary?.wonRevenue > 0 ? summary.raw / summary.wonRevenue : 0}
               revenue={summary?.wonRevenue ?? totals.wonRevenueTotal}
             />
           </Section>
 
-          <Section title="Industry Mix From Search" subtitle="External Results">
+          <Section title="Industry Mix From Search" subtitle={isDemo && !marketResults.length ? "Example companies · demo only" : "GraphIQ Results"}>
             {industryCounts.length ? (
               <div style={S.chartShell}>
                 <ResponsiveContainer width="100%" height="100%">
@@ -727,10 +746,9 @@ export default function Metrics() {
         <div style={S.twoCol}>
           <Section title="Revenue Timeline Projection" subtitle="Forward View">
             <RevenueTimeline
-              forecast={Math.max(
-                summary?.weighted ?? 0,
-                summary?.wonRevenue ?? 0
-              )}
+              revenue30={totals.avgDailyWon * 30}
+              weightedPipeline={summary?.weighted ?? 0}
+              confidence={signalStrength}
             />
           </Section>
 
