@@ -602,6 +602,58 @@ function parseDealPriorityResponse(response) {
   return deals.length ? { intro, deals, takeaway } : null;
 }
 
+function RevenueRiskResponse({ briefing }) {
+  return <div>
+    <div style={styles.askMuted}>{briefing.label}</div>
+    <div style={styles.leadershipTakeaway}><b>Executive decision</b><p>{briefing.summary}</p></div>
+    <h3>This week's priorities</h3>
+    <div style={styles.dealCards}>{briefing.risks.map((risk, index) => <div key={`${index}-${risk.name}`} style={styles.dealCard}>
+      <div style={styles.dealHeading}><div style={styles.dealRank}>{index + 1}</div><div>
+        <div style={styles.dealName}>{risk.name}</div>
+        <div style={styles.dealMeta}>{moneyCompact(risk.amount)} · {risk.stage} · {moneyCompact(risk.weightedValue)} weighted</div>
+      </div></div>
+      <div style={styles.dealDetailGrid}>
+        {[['Account', risk.account], ['Owner', risk.owner], ['Evidence', risk.evidence]].map(([label, value]) => <div key={label} style={styles.dealDetail}>
+          <div style={styles.dealDetailLabel}>{label}</div><div style={styles.dealDetailValue}>{value}</div>
+        </div>)}
+      </div>
+      <div style={styles.dealRisk}><b>Risk:</b> {risk.risk}</div>
+      <div style={styles.dealAction}><b>Next action:</b> {risk.action}<div style={{marginTop: 8}}><b>{risk.deadline}</b></div></div>
+    </div>)}</div>
+    {!briefing.risks.length && <p>Confirm owners, buyer actions, and close dates before ranking execution risks.</p>}
+    {briefing.opportunities.length > 0 && <div style={styles.leadershipTakeaway}><b>Build the next wave</b>{briefing.opportunities.map((item, i) => <p key={i}>{item}</p>)}</div>}
+    <div style={{...styles.askMuted, marginTop: 18}}><b>Evidence limits</b><ul>{briefing.caveats.map((item, i) => <li key={i} style={{marginBottom: 8}}>{item}</li>)}</ul></div>
+  </div>;
+}
+
+// React escapes all output; no generated HTML is executed.
+function FormattedResponse({ response }) {
+  const inline = (line) => line.split(/(\*\*[^*]+\*\*)/g).map((part, i) => part.startsWith('**') && part.endsWith('**')
+    ? <strong key={i}>{part.slice(2, -2)}</strong> : part);
+  const lines = String(response || '').split('\n');
+  const blocks = [];
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    if (/^[-*]\s+/.test(line) || /^\d+\.\s+/.test(line)) {
+      const ordered = /^\d+\.\s+/.test(line);
+      const items = [];
+      const pattern = ordered ? /^\d+\.\s+/ : /^[-*]\s+/;
+      while (i < lines.length && pattern.test(lines[i].trim())) {
+        items.push(<li key={i} style={{marginBottom: 8}}>{inline(lines[i].trim().replace(pattern, ''))}</li>);
+        i++;
+      }
+      i--;
+      blocks.push(ordered ? <ol key={i}>{items}</ol> : <ul key={i}>{items}</ul>);
+    } else if (/^#{1,6}\s+/.test(line) || /^\*\*[^*]+\*\*:?$/.test(line)) {
+      blocks.push(<h3 key={i} style={{marginTop: 20, marginBottom: 8}}>{inline(line.replace(/^#{1,6}\s+/, ''))}</h3>);
+    } else {
+      blocks.push(<p key={i} style={{margin: '0 0 12px'}}>{inline(line)}</p>);
+    }
+  }
+  return <div style={styles.askResponseBody}>{blocks}</div>;
+}
+
 function DealPriorityResponse({ response }) {
   const parsed = useMemo(() => parseDealPriorityResponse(response), [response]);
   if (!parsed) return null;
@@ -661,6 +713,7 @@ function DealPriorityResponse({ response }) {
 export default function AtlasAIOperator() {
   const [question, setQuestion] = useState("");
   const [atlasResponse, setAtlasResponse] = useState("");
+  const [riskBriefing, setRiskBriefing] = useState(null);
   const [asking, setAsking] = useState(false);
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -1149,6 +1202,7 @@ export default function AtlasAIOperator() {
 
     try {
       setAsking(true);
+      setRiskBriefing(null);
       setAtlasResponse("");
       setExternalIntelUsed(false);
       setExternalCompanyCount(0);
@@ -1250,6 +1304,7 @@ export default function AtlasAIOperator() {
         },
       });
 
+      setRiskBriefing(res?.briefing?.type === "revenue-risk" ? res.briefing : null);
       setAtlasResponse(
         res?.result ||
           "Atlas could not generate a response right now. Please try again."
@@ -1546,6 +1601,7 @@ export default function AtlasAIOperator() {
                     onClick={() => {
                       setQuestion("");
                       setAtlasResponse("");
+                      setRiskBriefing(null);
                     }}
                     disabled={asking}
                   >
@@ -1564,10 +1620,12 @@ export default function AtlasAIOperator() {
               {atlasResponse ? (
                 <div style={styles.askResponse}>
                   <div style={styles.askResponseTitle}>Atlas Response</div>
-                  {parseDealPriorityResponse(atlasResponse) ? (
+                  {riskBriefing ? (
+                    <RevenueRiskResponse briefing={riskBriefing} />
+                  ) : parseDealPriorityResponse(atlasResponse) ? (
                     <DealPriorityResponse response={atlasResponse} />
                   ) : (
-                    <div style={styles.askResponseBody}>{atlasResponse}</div>
+                    <FormattedResponse response={atlasResponse} />
                   )}
                 </div>
               ) : null}
