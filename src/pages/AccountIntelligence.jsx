@@ -118,6 +118,11 @@ function normalizeDeal(d) {
       d?.name ||
       "Account",
     stage: String(d?.stage || "Unknown"),
+    industry: d.industry,
+    owner: d.ownerName || d.owner,
+    engagement: d.demoEngagement,
+    expansion: d.demoExpansion,
+    nextAction: d.nextAction || d.nextStep,
     amount:
       safeNum(d?.amount, 0) ||
       safeNum(d?.value, 0) ||
@@ -278,7 +283,7 @@ async function handleGraphIQSearch(event) {
     setGraphiqLoading(false);
   }
 }
-  const workspaceMode = String(dashboard?.workspaceMode || "demo").toLowerCase();
+  const workspaceMode = String(dashboard?.workspaceMode || "live").toLowerCase();
   const isDemo = workspaceMode === "demo";
   const orgName = dashboard?.activeWorkspace?.name || "Workspace";
   const normalizedGraphIQResults = useMemo(
@@ -320,11 +325,18 @@ async function handleGraphIQSearch(event) {
       }
 
       const row = map.get(key);
-      row.revenuePotential += safeNum(deal.amount, 0);
       row.dealCount += 1;
+      if (isDemo && Number.isFinite(deal.engagement)) {
+        row.engagement = deal.engagement;
+        row.expansion = deal.expansion;
+        row.industry = deal.industry || "Sample Account";
+        row.owner = deal.owner;
+        row.nextAction = deal.nextAction;
+      }
 
       if (!["Closed Won", "Closed Lost"].includes(deal.stage)) {
         row.openCount += 1;
+        row.revenuePotential += safeNum(deal.amount, 0);
       }
     });
 
@@ -351,8 +363,9 @@ async function handleGraphIQSearch(event) {
 
       return {
         ...row,
-        engagement: engagementBase,
-        expansion: expansionBase,
+        id: row.name,
+        engagement: isDemo ? row.engagement : engagementBase,
+        expansion: isDemo ? row.expansion : expansionBase,
         revenueLabel: moneyCompact(row.revenuePotential),
         buyingSignal:
           row.openCount > 0
@@ -365,7 +378,7 @@ async function handleGraphIQSearch(event) {
 
     arr.sort((a, b) => b.revenuePotential - a.revenuePotential);
     return arr.slice(0, 6);
-  }, [deals]);
+  }, [deals, isDemo]);
 
   const accounts = groupedAccounts;
 
@@ -390,28 +403,28 @@ async function handleGraphIQSearch(event) {
         label: "Top Opportunity Accounts",
         value: String(accounts.length),
         note: hasLiveAccountData
-          ? "Highest-priority live targets"
+          ? isDemo ? "Sample accounts ranked by open pipeline" : "Highest-priority live targets"
           : "No live targets yet",
       },
       {
         label: "Highest Engagement",
         value: String(topEngagement),
         note: hasLiveAccountData
-          ? "Current live peak score"
+          ? isDemo ? "Illustrative demo engagement score" : "Current live peak score"
           : "Waiting for account activity",
       },
       {
         label: "Best Expansion Signal",
         value: `${topExpansion}%`,
         note: hasLiveAccountData
-          ? "Strongest account fit"
+          ? isDemo ? "Illustrative demo expansion score" : "Strongest account fit"
           : "No expansion signal yet",
       },
       {
-        label: "Revenue Potential",
+        label: "Open Pipeline Value",
         value: moneyCompact(topPotential),
         note: hasLiveAccountData
-          ? "Near-term live upside"
+          ? isDemo ? "Open sample opportunities; closed deals excluded" : "Open opportunity value"
           : "No live upside yet",
       },
     ];
@@ -430,14 +443,14 @@ async function handleGraphIQSearch(event) {
     const top = accounts[0];
 
     return [
-      `${top.name} is currently the strongest near-term account based on live opportunity value.`,
+      `${top.name} is currently the strongest near-term account based on open opportunity value.`,
       `${accounts.length} account group${accounts.length === 1 ? "" : "s"} are currently being evaluated by Atlas.`,
       `Total tracked revenue potential across surfaced accounts is ${moneyCompact(
         accounts.reduce((sum, a) => sum + safeNum(a.revenuePotential, 0), 0)
       )}.`,
-      "Atlas is prioritizing accounts using live deal concentration, opportunity count, and expansion potential.",
+      isDemo ? "Atlas is prioritizing sample accounts using deal concentration and opportunity count; engagement and expansion scores are illustrative." : "Atlas is prioritizing accounts using live opportunity value and count.",
     ];
-  }, [accounts, hasLiveAccountData]);
+  }, [accounts, hasLiveAccountData, isDemo]);
 
   const opportunityRadar = useMemo(() => {
     if (!hasLiveAccountData) {
@@ -451,7 +464,7 @@ async function handleGraphIQSearch(event) {
 
     return accounts.slice(0, 4).map((acct) => {
       if (acct.priority === "High Priority") {
-        return `${acct.name} should move into an executive expansion motion immediately.`;
+        return `${acct.name}: ${acct.owner ? `${acct.owner} — ` : ""}${acct.nextAction || "Review the active opportunity and confirm buyer next steps."}`;
       }
       if (acct.priority === "Expansion Watch") {
         return `${acct.name} has meaningful upside and should stay in active account review.`;
@@ -533,7 +546,8 @@ async function handleGraphIQSearch(event) {
           </div>
         </div>
 
-        <AtlasAccountExpansionSignals clients={accounts} />
+        {isDemo && <div style={{ padding: 12, color: "#bfefff", fontSize: 12 }}>Sample account scenario · fictional accounts and owners. Engagement and expansion scores are illustrative, not validated predictions.</div>}
+        <AtlasAccountExpansionSignals sampleMode={isDemo} clients={isDemo ? accounts.map(account => ({...account, engagementScore: account.engagement, expansionScore: account.expansion, revenue: account.revenuePotential})) : accounts} />
         <Section
   title="Company Intelligence Search"
   subtitle="Powered by GraphIQ"

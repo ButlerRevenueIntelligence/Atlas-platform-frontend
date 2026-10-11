@@ -23,7 +23,7 @@ function scoreAccount(client) {
   if (engagement > 65) expansionScore += 15;
   if (health > 70) expansionScore += 12;
 
-  expansionScore = Math.min(95, Math.round(expansionScore));
+  expansionScore = Number.isFinite(client?.expansionScore) ? client.expansionScore : Math.min(95, Math.round(expansionScore));
 
   let expansionPotential = revenue * 0.25;
 
@@ -64,7 +64,7 @@ function signalColor(signal) {
   };
 }
 
-export default function AtlasAccountExpansionSignals({ clients = [] }) {
+export default function AtlasAccountExpansionSignals({ clients = [], sampleMode = false }) {
   const accounts = useMemo(() => {
     return clients
       .map(scoreAccount)
@@ -145,7 +145,7 @@ export default function AtlasAccountExpansionSignals({ clients = [] }) {
               >
                 <div>
                   <div style={{ fontSize: 10, color: "#94a3b8" }}>
-                    Current Revenue
+                    {sampleMode ? "Open Pipeline" : "Current Revenue"}
                   </div>
                   <div style={{ fontSize: 18, fontWeight: 800 }}>
                     {moneyCompact(account.revenue)}
@@ -163,7 +163,7 @@ export default function AtlasAccountExpansionSignals({ clients = [] }) {
 
                 <div>
                   <div style={{ fontSize: 10, color: "#94a3b8" }}>
-                    Potential Upside
+                    {sampleMode ? "Illustrative 25% Upside Scenario" : "Potential Upside"}
                   </div>
                   <div style={{ fontSize: 18, fontWeight: 800, color: "#86efac" }}>
                     {moneyCompact(account.expansionPotential)}

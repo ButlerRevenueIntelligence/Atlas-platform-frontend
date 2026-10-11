@@ -2,9 +2,6 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   getRevenueIntelBoard,
-  seedDemoData,
-  getActiveWorkspace,
-  getActiveOrgName,
 } from "../api";
 import DealDrawer from "../components/DealDrawer.jsx";
 
@@ -48,171 +45,6 @@ const sectionCount = (arr, fallbackCount) => {
   return safeNum(fallbackCount ?? arr?.length ?? 0);
 };
 
-const daysAgoIso = (days) => {
-  const d = new Date();
-  d.setDate(d.getDate() - days);
-  return d.toISOString();
-};
-
-const daysFromNowIso = (days) => {
-  const d = new Date();
-  d.setDate(d.getDate() + days);
-  return d.toISOString();
-};
-
-function buildDemoRevenueIntelBoard(reactivateAfterDays = 30) {
-  return {
-    execution: {
-      overdue: [
-        {
-          id: "demo-overdue-1",
-          name: "Atlas Enterprise Rollout",
-          clientName: "Northstar Logistics",
-          stage: "Negotiation",
-          amount: 125000,
-          probability: 72,
-          dueAt: daysAgoIso(4),
-          nextAction: "Executive follow-up call",
-          lastActivityAt: daysAgoIso(6),
-        },
-        {
-          id: "demo-overdue-2",
-          name: "Q2 Revenue Intelligence Pilot",
-          clientName: "Pioneer Industrial Group",
-          stage: "Proposal",
-          amount: 78000,
-          probability: 58,
-          dueAt: daysAgoIso(2),
-          nextAction: "Proposal revision + pricing review",
-          lastActivityAt: daysAgoIso(5),
-        },
-        {
-          id: "demo-overdue-3",
-          name: "Multi-Region Forecast Program",
-          clientName: "Elevate Health Systems",
-          stage: "Discovery",
-          amount: 54000,
-          probability: 40,
-          dueAt: daysAgoIso(1),
-          nextAction: "Stakeholder alignment email",
-          lastActivityAt: daysAgoIso(3),
-        },
-      ],
-      dueToday: [
-        {
-          id: "demo-today-1",
-          name: "Board Reporting Expansion",
-          clientName: "Summit Advisory",
-          stage: "Proposal",
-          amount: 64000,
-          probability: 63,
-          dueAt: new Date().toISOString(),
-          nextAction: "Review revised scope",
-          lastActivityAt: daysAgoIso(1),
-        },
-        {
-          id: "demo-today-2",
-          name: "Revenue Command Center Buildout",
-          clientName: "BluePeak Manufacturing",
-          stage: "Negotiation",
-          amount: 98000,
-          probability: 76,
-          dueAt: new Date().toISOString(),
-          nextAction: "Close-plan call with COO",
-          lastActivityAt: daysAgoIso(1),
-        },
-      ],
-      upcoming: [
-        {
-          id: "demo-upcoming-1",
-          name: "Pipeline Visibility Assessment",
-          clientName: "TerraNova Energy",
-          stage: "Discovery",
-          amount: 47000,
-          probability: 34,
-          dueAt: daysFromNowIso(2),
-          nextAction: "Discovery workshop",
-          lastActivityAt: daysAgoIso(1),
-        },
-        {
-          id: "demo-upcoming-2",
-          name: "Atlas AI Operator Deployment",
-          clientName: "Velocity Commerce",
-          stage: "Proposal",
-          amount: 83000,
-          probability: 52,
-          dueAt: daysFromNowIso(3),
-          nextAction: "Security review",
-          lastActivityAt: daysAgoIso(2),
-        },
-        {
-          id: "demo-upcoming-3",
-          name: "Market Signals Expansion",
-          clientName: "Redstone Capital",
-          stage: "Negotiation",
-          amount: 112000,
-          probability: 67,
-          dueAt: daysFromNowIso(5),
-          nextAction: "Finalize implementation timeline",
-          lastActivityAt: daysAgoIso(2),
-        },
-      ],
-      counts: {
-        overdue: 3,
-        dueToday: 2,
-        upcoming: 3,
-      },
-    },
-    reactivation: {
-      count: 4,
-      reactivateAfterDays,
-      items: [
-        {
-          id: "demo-react-1",
-          name: "Enterprise Attribution Program",
-          clientName: "Westbridge Holdings",
-          amount: 91000,
-          lastTouchAgeDays: 46,
-          suggested: "Reopen with revised ROI case study",
-        },
-        {
-          id: "demo-react-2",
-          name: "Revenue Forecasting Sprint",
-          clientName: "Peakline Software",
-          amount: 58000,
-          lastTouchAgeDays: 37,
-          suggested: "Re-engage with Q2 planning angle",
-        },
-        {
-          id: "demo-react-3",
-          name: "Pipeline Leakage Audit",
-          clientName: "Axiom Legal Group",
-          amount: 42000,
-          lastTouchAgeDays: 61,
-          suggested: "Position as revenue recovery initiative",
-        },
-        {
-          id: "demo-react-4",
-          name: "Command Center Advisory",
-          clientName: "BrightPath Staffing",
-          amount: 76000,
-          lastTouchAgeDays: 33,
-          suggested: "Re-introduce with board-level reporting focus",
-        },
-      ],
-    },
-    winLoss: {
-      won: 9,
-      lost: 5,
-      winRate: 64,
-      avgWon: 84200,
-      avgLost: 39100,
-      avgCycleDaysWon: 34,
-      avgCycleDaysLost: 28,
-    },
-  };
-}
-
 function boardHasMeaningfulData(board) {
   const exec = board?.execution || {};
   const react = board?.reactivation || {};
@@ -228,27 +60,10 @@ function boardHasMeaningfulData(board) {
   return overdue > 0 || dueToday > 0 || upcoming > 0 || reactCount > 0 || won > 0 || lost > 0;
 }
 
-function isAtlasDemoWorkspace() {
-  const activeWorkspace = getActiveWorkspace?.();
-  const activeName =
-    activeWorkspace?.name ||
-    getActiveOrgName?.() ||
-    localStorage.getItem("activeOrgName") ||
-    "";
-
-  const normalized = String(activeName).trim().toLowerCase();
-
-  return (
-    normalized === "atlas demo company" ||
-    normalized.includes("atlas demo")
-  );
-}
-
 export default function RevenueIntel() {
   const nav = useNavigate();
 
   const [loading, setLoading] = useState(true);
-  const [seeding, setSeeding] = useState(false);
   const [error, setError] = useState("");
 
   const [reactivateAfterDays, setReactivateAfterDays] = useState(30);
@@ -258,7 +73,7 @@ export default function RevenueIntel() {
   const [drawerDealId, setDrawerDealId] = useState("");
   const [drawerDeal, setDrawerDeal] = useState(null);
 
-  const atlasDemoWorkspace = useMemo(() => isAtlasDemoWorkspace(), []);
+  const atlasDemoWorkspace = data?.workspaceMode === "demo";
 
   const openDealDrawerById = (id, dealObj = null) => {
     if (!id) return;
@@ -286,32 +101,12 @@ export default function RevenueIntel() {
     }
   }, [reactivateAfterDays]);
 
-  async function onSeedDemo() {
-    try {
-      setSeeding(true);
-      setError("");
-      await seedDemoData({ clients: 10, deals: 25 });
-      await load();
-      alert("Demo data seeded ✅");
-    } catch (e) {
-      setError(e?.message || "Seed demo failed");
-      alert(e?.message || "Seed demo failed");
-    } finally {
-      setSeeding(false);
-    }
-  }
-
   useEffect(() => {
     load();
   }, [load]);
 
-  const showDemoFallback = useMemo(() => {
-    return atlasDemoWorkspace && !boardHasMeaningfulData(data);
-  }, [atlasDemoWorkspace, data]);
-
   const effectiveData = useMemo(() => {
     if (boardHasMeaningfulData(data)) return data;
-    if (showDemoFallback) return buildDemoRevenueIntelBoard(reactivateAfterDays);
 
     return {
       execution: {
@@ -335,7 +130,7 @@ export default function RevenueIntel() {
         avgCycleDaysLost: 0,
       },
     };
-  }, [data, reactivateAfterDays, showDemoFallback]);
+  }, [data, reactivateAfterDays]);
 
   const exec = effectiveData?.execution || {
     overdue: [],
@@ -418,7 +213,7 @@ export default function RevenueIntel() {
     if (safeNum(wl.winRate) > 0 && safeNum(wl.winRate) < 30) {
       items.push({
         title: "Improve deal quality and close strategy",
-        body: `Current win rate is ${wl.winRate}%. Review qualification and late-stage follow-up.`,
+        body: `Current win rate is ${Math.round(safeNum(wl.winRate))}%. Review qualification and late-stage follow-up.`,
       });
     }
 
@@ -468,7 +263,7 @@ export default function RevenueIntel() {
     if (overdueCount > 0) list.push(`⚠ ${overdueCount} overdue deal actions detected`);
     if (dueTodayCount > 0) list.push(`⚠ ${dueTodayCount} actions due today`);
     if (reactCount > 0) list.push(`↺ ${reactCount} reactivation opportunities surfaced`);
-    if (safeNum(wl.winRate) > 0) list.push(`✓ Current win rate is ${wl.winRate}%`);
+    if (safeNum(wl.winRate) > 0) list.push(`✓ Current win rate is ${Math.round(safeNum(wl.winRate))}%`);
     if (allExecutionDeals.length > 0) {
       list.push(`• ${allExecutionDeals.length} active execution opportunities tracked`);
     }
@@ -527,7 +322,8 @@ export default function RevenueIntel() {
       stage: d.stage,
       amount: d.amount,
       probability: d.probability,
-      nextAction: d.nextAction,
+      ownerName: d.ownerName,
+      nextAction: d.nextAction || d.suggested,
       nextActionDueAt: d.dueAt || d.nextActionDueAt,
       lastActivityAt: d.lastActivityAt,
       clientId: d.clientId || (d.clientName ? { name: d.clientName } : undefined),
@@ -765,7 +561,7 @@ export default function RevenueIntel() {
 
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
           <div style={S.pill}>
-            Win rate: <b>{wl.winRate}%</b>
+            Win rate: <b>{Math.round(safeNum(wl.winRate))}%</b>
           </div>
           <div style={S.pill}>
             Weighted pipeline: <b>{money(weightedValue)}</b>
@@ -774,22 +570,16 @@ export default function RevenueIntel() {
             Board value: <b>{moneyCompact(totalPipeline)}</b>
           </div>
 
-          <button onClick={load} disabled={loading || seeding} style={S.btn}>
+          <button onClick={load} disabled={loading} style={S.btn}>
             {loading ? "Loading..." : "Refresh"}
           </button>
 
-          {atlasDemoWorkspace ? (
-            <button onClick={onSeedDemo} disabled={loading || seeding} style={S.btnGhost}>
-              {seeding ? "Seeding..." : "Seed Demo Data"}
-            </button>
-          ) : null}
         </div>
       </div>
 
-      {showDemoFallback ? (
+      {atlasDemoWorkspace ? (
         <div style={S.demoBanner}>
-          Demo board data is currently being shown for the Atlas Demo Company workspace because the live Command Center feed is empty.
-          Once the backend returns execution items, reactivation items, or win/loss data, this page will automatically switch to live workspace data.
+          Sample execution scenario · fictional deals and owners, shared with Deal War Room and Account Intelligence. Demo dates roll forward with today; viewing this board does not create database records.
         </div>
       ) : null}
 
@@ -846,7 +636,7 @@ export default function RevenueIntel() {
         <div style={S.kpiCard}>
           <div style={S.kpiLabel}>REACTIVATION CANDIDATES</div>
           <div style={S.kpiValue}>{reactCount}</div>
-          <div style={S.kpiSub}>Closed-lost opportunities surfaced for re-engagement.</div>
+          <div style={S.kpiSub}>Inactive open opportunities surfaced for re-engagement.</div>
         </div>
       </div>
 
@@ -864,11 +654,11 @@ export default function RevenueIntel() {
               }}
             >
               <div style={{ fontSize: 13, opacity: 0.86, maxWidth: 720, lineHeight: 1.5 }}>
-                Closed-lost opportunities older than this threshold will surface in the reactivation queue so Atlas can identify revive-worthy revenue.
+                Open opportunities without recorded activity beyond this threshold will surface in the reactivation queue so Atlas can identify revive-worthy revenue.
               </div>
 
               <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                <div style={{ fontSize: 12, opacity: 0.9 }}>Closed Lost age ≥</div>
+                <div style={{ fontSize: 12, opacity: 0.9 }}>Days since activity ≥</div>
                 <input
                   type="number"
                   min="1"
@@ -877,7 +667,7 @@ export default function RevenueIntel() {
                   onChange={(e) => setReactivateAfterDays(Number(e.target.value || 0))}
                 />
                 <div style={{ fontSize: 12, opacity: 0.9 }}>days</div>
-                <button style={S.btnGhost} disabled={loading || seeding} onClick={load}>
+                <button style={S.btnGhost} disabled={loading} onClick={load}>
                   Apply
                 </button>
               </div>
@@ -905,6 +695,8 @@ export default function RevenueIntel() {
                     </div>
                     <div style={S.small}>
                       Stage: <b>{d.stage || "—"}</b> • Due: <b>{formatDate(d.dueAt)}</b>
+                      <br />
+                      Owner: <b>{d.ownerName || "Owner not recorded"}</b>
                       <br />
                       Next: <b>{d.nextAction || "—"}</b>
                       <br />
@@ -940,6 +732,8 @@ export default function RevenueIntel() {
                     <div style={S.small}>
                       Stage: <b>{d.stage || "—"}</b> • Due: <b>{formatDate(d.dueAt)}</b>
                       <br />
+                      Owner: <b>{d.ownerName || "Owner not recorded"}</b>
+                      <br />
                       Next: <b>{d.nextAction || "—"}</b>
                       <br />
                       Weighted: <b>{money(safeNum(d.amount) * (safeNum(d.probability) / 100))}</b>
@@ -960,7 +754,7 @@ export default function RevenueIntel() {
                 <div style={S.rowStatic}>
                   <div style={{ fontWeight: 900, fontSize: 12 }}>Win / Loss</div>
                   <div style={S.small}>
-                    Won: <b>{wl.won}</b> • Lost: <b>{wl.lost}</b> • Win rate: <b>{wl.winRate}%</b>
+                    Won: <b>{wl.won}</b> • Lost: <b>{wl.lost}</b> • Win rate: <b>{Math.round(safeNum(wl.winRate))}%</b>
                     <br />
                     Avg Won: <b>{money(wl.avgWon)}</b> • Avg Lost: <b>{money(wl.avgLost)}</b>
                     <br />
@@ -970,7 +764,7 @@ export default function RevenueIntel() {
 
                 <div style={S.rowStatic}>
                   <div style={{ fontWeight: 900, fontSize: 12 }}>
-                    Reactivation Queue <span style={{ opacity: 0.8 }}>(Closed Lost)</span>
+                    Reactivation Queue <span style={{ opacity: 0.8 }}>(Inactive Open)</span>
                   </div>
                   <div style={S.small}>
                     Candidates: <b>{reactCount}</b> • Threshold:{" "}
@@ -1025,6 +819,8 @@ export default function RevenueIntel() {
                     </div>
                     <div style={S.small}>
                       Stage: <b>{d.stage || "—"}</b> • Due: <b>{formatDate(d.dueAt)}</b>
+                      <br />
+                      Owner: <b>{d.ownerName || "Owner not recorded"}</b>
                       <br />
                       Next: <b>{d.nextAction || "—"}</b>
                       <br />
@@ -1118,13 +914,22 @@ export default function RevenueIntel() {
         </div>
       </div>
 
-      <DealDrawer
+      {atlasDemoWorkspace ? (drawerOpen && <div role="dialog" aria-modal="true" aria-label="Sample opportunity details" style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,.75)", display: "grid", placeItems: "center", padding: 24 }} onClick={closeDrawer}>
+        <div style={{ background: "#0b1730", color: "#fff", borderRadius: 16, padding: 24, maxWidth: 600, width: "100%" }} onClick={event => event.stopPropagation()}>
+          <button onClick={closeDrawer} style={S.btn}>Close</button>
+          <h2>{drawerDeal?.name}</h2><p>Sample opportunity · read only</p>
+          <p>{drawerDeal?.clientName} · {money(drawerDeal?.amount)} · {drawerDeal?.stage}</p>
+          <p>Owner: {drawerDeal?.ownerName || "Owner not recorded"}</p>
+          <p>Next action: {drawerDeal?.nextAction || drawerDeal?.suggested || "Review the buyer action plan."}</p>
+          <p>Due: {formatDate(drawerDeal?.dueAt || drawerDeal?.nextActionDueAt)}</p>
+        </div>
+      </div>) : <DealDrawer
         open={drawerOpen}
         dealId={drawerDealId}
         initialDeal={drawerDeal}
         onClose={closeDrawer}
         onDealUpdated={load}
-      />
+      />}
     </div>
   );
 }

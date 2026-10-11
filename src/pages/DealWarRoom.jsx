@@ -428,22 +428,10 @@ const deals =
     ? dashboard.deals
     : [];
 
-const hasRealDeals = deals.some((deal) => {
-  const source = String(
-    deal?.externalSource ||
-    deal?.source ||
-    ""
-  ).toLowerCase();
-
-  return source && source !== "demo";
-});
-
-const isDemo =
-  workspaceMode === "demo" &&
-  !hasRealDeals;
+const isDemo = workspaceMode === "demo";
 
   const liveDeals = useMemo(() => {
-    return deals.map((deal, idx) => {
+    return deals.filter(deal => !deal.archived).map((deal, idx) => {
       const stage = normalizeStage(deal?.stage || "");
       const amount =
         safeNum(deal?.amount, 0) ||
@@ -458,8 +446,8 @@ const isDemo =
       const probability =
         probabilityRaw > 1 ? probabilityRaw : Math.round(probabilityRaw * 100);
 
-      const risk =
-        probability >= 65 ? "Low" : probability >= 40 ? "Medium" : "High";
+      const age = deal.lastActivityAt ? Math.max(0, Math.floor((Date.now() - new Date(deal.lastActivityAt).getTime()) / 86400000)) : null;
+      const risk = age >= 7 || probability < 40 ? "High" : (deal.risk || probability < 65) ? "Medium" : "Low";
 
       return {
         name: deal?.name || `Deal ${idx + 1}`,
@@ -473,8 +461,11 @@ const isDemo =
         value: moneyCompact(amount),
         close: `${safeNum(probability, 0)}%`,
         risk,
+        nextAction: deal.nextAction || deal.nextStep || "Confirm the next buyer action.",
+        daysToClose: deal.closeDate ? Math.ceil((new Date(deal.closeDate).getTime() - Date.now()) / 86400000) : null,
+        probability: Math.max(0, Math.min(100, probability)),
         blocker:
-          deal?.nextAction ||
+          deal?.risk ||
           deal?.closedReason ||
           deal?.lastActivityNote ||
           "Needs next-step definition",
@@ -511,7 +502,7 @@ const isDemo =
   const lateStageExposureNum = useMemo(() => {
     return deals.reduce((sum, deal) => {
       const stage = normalizeStage(deal?.stage || "");
-      if (!["Negotiation", "Commit", "Closed Won"].includes(stage)) return sum;
+      if (!["Negotiation", "Commit"].includes(stage)) return sum;
 
       const amount =
         safeNum(deal?.amount, 0) ||
@@ -546,34 +537,7 @@ const isDemo =
   }, [openDeals]);
 
   const stageCards = useMemo(() => {
-    if (isDemo) {
-      return [
-        {
-          stage: "Discovery",
-          deals: 6,
-          value: "$1.20M",
-          note: "Healthy top-of-funnel motion",
-        },
-        {
-          stage: "Proposal",
-          deals: 4,
-          value: "$1.65M",
-          note: "Strong commercial engagement",
-        },
-        {
-          stage: "Negotiation",
-          deals: 3,
-          value: "$1.10M",
-          note: "Highest forecast impact",
-        },
-        {
-          stage: "Commit",
-          deals: 2,
-          value: "$740K",
-          note: "Needs tight close coordination",
-        },
-      ];
-    }
+
 
     const stageMap = new Map();
 
@@ -606,53 +570,26 @@ const isDemo =
   }, [isDemo, openDeals]);
 
   const stagePressure = useMemo(() => {
-    if (isDemo) {
-      return [
-        { name: "Discovery", value: 42 },
-        { name: "Proposal", value: 69 },
-        { name: "Negotiation", value: 84 },
-        { name: "Commit", value: 78 },
-      ];
-    }
 
-    return stageCards.map((s) => ({
-      name: s.stage,
-      value: Math.min(100, s.deals * 18 + Math.round(safeNum(safeNum(s.value?.replace?.(/[$KM,.]/g, ""), 0)) / 10000)),
+
+    return stageCards.map((stage) => ({
+      name: stage.stage,
+      value: Math.round(openDeals.filter(deal => deal.stage === stage.stage && deal.risk === "High").length / Math.max(stage.deals, 1) * 100),
     }));
-  }, [isDemo, stageCards]);
+  }, [stageCards, openDeals]);
 
-  const forecastTrend = useMemo(() => {
-    if (isDemo) {
-      return [
-        { period: "30D", baseline: 1200000, commit: 1420000 },
-        { period: "60D", baseline: 1880000, commit: 2140000 },
-        { period: "90D", baseline: 2520000, commit: 2860000 },
-        { period: "120D", baseline: 3180000, commit: 3560000 },
-      ];
-    }
-
-    const weighted = weightedPipelineNum;
-    return [
-      { period: "30D", baseline: weighted * 0.35, commit: weighted * 0.42 },
-      { period: "60D", baseline: weighted * 0.58, commit: weighted * 0.68 },
-      { period: "90D", baseline: weighted * 0.8, commit: weighted * 0.94 },
-      { period: "120D", baseline: weighted * 1.0, commit: weighted * 1.14 },
-    ];
-  }, [isDemo, weightedPipelineNum]);
+  const forecastTrend = useMemo(() => [30, 60, 90, 120].map(days => {
+    const rows = openDeals.filter(deal => Number.isFinite(deal.daysToClose) && deal.daysToClose <= days);
+    return { period: `${days}D`, baseline: rows.reduce((sum, deal) => sum + deal.valueNum * deal.probability / 100, 0),
+      commit: rows.reduce((sum, deal) => sum + deal.valueNum, 0) };
+  }), [openDeals]);
 
   const executiveSignals = useMemo(() => {
-    if (isDemo) {
-      return [
-        "Three late-stage deals represent 58% of near-term forecast concentration.",
-        "Two enterprise opportunities have slipped decision dates in the last 10 days.",
-        "One high-value expansion deal is blocked by procurement timing.",
-        "Leadership attention should stay on blocker removal, owner accountability, and close-plan discipline.",
-      ];
-    }
+
 
     if (!openDeals.length) {
       return [
-        "No live open deals are currently loaded in this workspace.",
+        "No open deals are currently loaded in this workspace.",
         "Once deals are added or synced from connected systems, the war room will show forecast concentration and stage pressure here.",
         "Leadership views will become more useful as opportunity ownership, stage movement, and next actions are added.",
         "Start by adding your first active deals so Atlas can model live pressure and close readiness.",
@@ -664,64 +601,30 @@ const isDemo =
     const proposalCount = openDeals.filter((d) => d.stage === "Proposal").length;
 
     return [
-      `${openDeals.length} live open deals are currently being tracked for ${orgName}.`,
-      `${highestValueDeal?.name || "The top deal"} is the largest current live opportunity in the board.`,
+      `${openDeals.length} open deals are currently being tracked for ${orgName}.`,
+      `${highestValueDeal?.name || "The top deal"} is the largest current opportunity in the board.`,
       `${negotiationCount} deal(s) are currently in negotiation and ${proposalCount} are in proposal-stage motion.`,
       "Leadership attention should stay focused on next actions, blocker removal, and owner accountability.",
     ];
   }, [isDemo, openDeals, orgName]);
 
   const interventionQueue = useMemo(() => {
-    if (isDemo) {
-      return [
-        {
-          title: "Reconfirm executive sponsor on Vertex Industrial",
-          detail:
-            "Budget approval is stalled and forecast concentration is too high to leave unaddressed.",
-          tone: "high",
-        },
-        {
-          title: "Lock a final commercial timeline for Nova Healthcare",
-          detail:
-            "Close confidence improves materially if legal and decision stakeholders are aligned this week.",
-          tone: "medium",
-        },
-        {
-          title: "Accelerate second-tier proposal opportunities",
-          detail:
-            "Pipeline diversification reduces overreliance on three near-term opportunities.",
-          tone: "medium",
-        },
-        {
-          title: "Run a close-plan review on all negotiation-stage deals",
-          detail:
-            "The current stage mix suggests pressure is clustering too heavily in late-stage motion.",
-          tone: "high",
-        },
-      ];
-    }
+
 
     if (!openDeals.length) return [];
 
     return openDeals.slice(0, 4).map((deal) => ({
       title: `Review ${deal.name}`,
       detail:
-        deal.blocker && deal.blocker !== "Needs next-step definition"
-          ? deal.blocker
+        deal.nextAction
+          ? `${deal.owner}: ${deal.nextAction}`
           : "Confirm next action, decision path, and close timing.",
       tone: deal.risk === "High" ? "high" : deal.risk === "Medium" ? "medium" : "low",
     }));
   }, [isDemo, openDeals]);
 
   const aiNotes = useMemo(() => {
-    if (isDemo) {
-      return [
-        "Forecast quality is acceptable, but too much near-term revenue depends on a narrow deal cluster.",
-        "The most important move is reducing concentration risk, not simply adding more top-of-funnel volume.",
-        "Commit-stage confidence will improve with clearer owner accountability and decision date discipline.",
-        "War room reporting should stay focused on deal movement, blockers, executive ownership, and projected impact.",
-      ];
-    }
+
 
     if (!openDeals.length) {
       return [
@@ -733,7 +636,7 @@ const isDemo =
     }
 
     return [
-      "Atlas is using live opportunity data rather than hardcoded demo war-room numbers.",
+      "Totals and stage charts are calculated from the same opportunity records.",
       "Executive visibility improves as deal owners, blockers, and next actions stay up to date.",
       "Forecast quality gets stronger when stages and close probabilities are actively maintained.",
       "Keep leadership focused on bottlenecks, pressure concentration, and deal movement velocity.",
@@ -741,51 +644,28 @@ const isDemo =
   }, [isDemo, openDeals]);
 
   const topStats = useMemo(() => {
-    if (isDemo) {
-      return [
-        {
-          label: "Weighted Pipeline",
-          value: "$4.85M",
-          note: "Probability-adjusted open pipeline",
-        },
-        {
-          label: "Late-Stage Exposure",
-          value: "$2.10M",
-          note: "Near-term forecast concentration",
-        },
-        {
-          label: "Win Probability",
-          value: "34%",
-          note: "Modeled close likelihood",
-        },
-        {
-          label: "Deals at Risk",
-          value: "5",
-          note: "Need executive attention",
-        },
-      ];
-    }
+
 
     return [
       {
         label: "Weighted Pipeline",
         value: moneyCompact(weightedPipelineNum),
-        note: "Probability-adjusted live open pipeline",
+        note: "Probability-adjusted open pipeline",
       },
       {
         label: "Late-Stage Exposure",
         value: moneyCompact(lateStageExposureNum),
-        note: "Near-term live forecast concentration",
+        note: "Open negotiation and commit-stage value",
       },
       {
         label: "Win Probability",
         value: `${avgCloseProbabilityNum}%`,
-        note: "Average live close likelihood",
+        note: "Average recorded close probability",
       },
       {
         label: "Deals at Risk",
         value: String(dealsAtRiskNum),
-        note: "High-risk live deals needing attention",
+        note: "Low probability or 7+ days without activity",
       },
     ];
   }, [
@@ -797,46 +677,7 @@ const isDemo =
   ]);
 
   const dealTable = useMemo(() => {
-    if (isDemo) {
-      return [
-        {
-          name: "Apex Manufacturing Expansion",
-          owner: "Armon",
-          stage: "Negotiation",
-          value: "$620K",
-          close: "42%",
-          risk: "Medium",
-          blocker: "Procurement approval",
-        },
-        {
-          name: "Nova Healthcare Rollout",
-          owner: "Sales Lead",
-          stage: "Commit",
-          value: "$410K",
-          close: "58%",
-          risk: "Medium",
-          blocker: "Decision timing",
-        },
-        {
-          name: "Titan Logistics Attribution Setup",
-          owner: "Growth Team",
-          stage: "Proposal",
-          value: "$285K",
-          close: "31%",
-          risk: "Low",
-          blocker: "Stakeholder alignment",
-        },
-        {
-          name: "Vertex Industrial Revenue OS",
-          owner: "Executive Team",
-          stage: "Negotiation",
-          value: "$770K",
-          close: "47%",
-          risk: "High",
-          blocker: "Budget confirmation",
-        },
-      ];
-    }
+
 
     return openDeals;
   }, [isDemo, openDeals]);
@@ -884,7 +725,7 @@ const isDemo =
               {[
                 isDemo ? "Demo War Room" : "Live War Room",
                 "Forecast Monitoring",
-                "Deal Pressure Live",
+                isDemo ? "Sample deals · fictional owners" : "Deal Pressure Live",
                 "Executive Review Active",
               ].map((item) => (
                 <div key={item} style={styles.badge}>
@@ -936,7 +777,7 @@ const isDemo =
         </div>
 
         <div style={styles.twoCol}>
-          <Section title="Forecast Trend" subtitle="Modeled Outlook">
+          <Section title="Forecast Trend" subtitle="Cumulative opportunity value by expected close date">
             {noLiveDeals ? (
               <EmptyState text="No live forecast trend yet. Add or sync deals to generate a forecast curve." />
             ) : (
@@ -961,6 +802,7 @@ const isDemo =
                     <Line
                       type="monotone"
                       dataKey="baseline"
+                      name="Probability-weighted value"
                       stroke="#93c5fd"
                       strokeWidth={3}
                       dot={{ r: 3, fill: "#93c5fd" }}
@@ -970,6 +812,7 @@ const isDemo =
                     <Line
                       type="monotone"
                       dataKey="commit"
+                      name="Full pipeline scenario"
                       stroke="#86efac"
                       strokeWidth={3}
                       dot={{ r: 3, fill: "#86efac" }}
@@ -982,7 +825,7 @@ const isDemo =
             )}
           </Section>
 
-          <Section title="Stage Pressure" subtitle="Risk Model">
+          <Section title="Stage Pressure" subtitle="Share of deals flagged for execution review">
             {noLiveDeals ? (
               <EmptyState text="No live stage pressure yet. Deal movement is required to model war-room pressure." />
             ) : (
