@@ -1,3 +1,4 @@
+import WorkspaceDataNotice from "../components/WorkspaceDataNotice.jsx";
 import React, { useEffect, useMemo, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import Map, { Layer, Marker, NavigationControl, Popup, Source } from "react-map-gl/mapbox";
@@ -307,6 +308,7 @@ export default function GlobalRevenueMap() {
 
   return (
     <main className="grm-page">
+      <WorkspaceDataNotice dashboard={dashboard} />
       <style>{pageStyles}</style>
 
       <header className="grm-header">
@@ -314,7 +316,7 @@ export default function GlobalRevenueMap() {
           <p className="grm-kicker">Global performance</p>
           <h1>Revenue by region</h1>
           <p className="grm-description">
-            A geographic view of revenue concentration, open pipeline, and regional conversion.
+            A geographic view of closed-won bookings, open pipeline, and regional conversion.
           </p>
         </div>
         <div className="grm-header-status">
@@ -325,7 +327,7 @@ export default function GlobalRevenueMap() {
 
       <section className="grm-metrics">
         <Metric label="Tracked regions" value={regions.length} detail="Active territories" />
-        <Metric label="Mapped revenue (30D)" value={money(totalRevenue)} detail="Recent closed-won value" />
+        <Metric label="Mapped bookings (30D)" value={money(totalRevenue)} detail="Recent closed-won value" />
         <Metric label="Open pipeline" value={money(totalPipeline)} detail="Mapped opportunity value" />
         <Metric
           label="Geo coverage"
@@ -418,7 +420,7 @@ export default function GlobalRevenueMap() {
                 >
                   <div className="grm-popup-content">
                     <strong>{selectedRegion.name}</strong>
-                    <div><span>Revenue</span>{money(selectedRegion.revenueNum)}</div>
+                    <div><span>Closed-won bookings</span>{money(selectedRegion.revenueNum)}</div>
                     <div><span>Pipeline</span>{money(selectedRegion.pipelineNum)}</div>
                     <div><span>Close rate</span>{selectedRegion.closeRateNum}%</div>
                   </div>
@@ -471,7 +473,7 @@ export default function GlobalRevenueMap() {
         <article className="grm-chart-card">
           <div className="grm-card-heading">
             <div><p className="grm-section-label">Performance</p><h2>Revenue and pipeline</h2></div>
-            <span>Revenue: trailing 30 days</span>
+            <span>Bookings: trailing 30 days</span>
           </div>
           <div className="grm-chart">
             <ResponsiveContainer width="100%" height="100%">
@@ -480,7 +482,7 @@ export default function GlobalRevenueMap() {
                 <XAxis dataKey="name" stroke="#657083" tick={{ fill: "#96a0b2", fontSize: 11 }} tickLine={false} axisLine={false} />
                 <YAxis stroke="#657083" tick={{ fill: "#96a0b2", fontSize: 11 }} tickFormatter={money} tickLine={false} axisLine={false} width={58} />
                 <Tooltip content={<ChartTooltip />} cursor={{ fill: "rgba(255,255,255,.025)" }} />
-                <Bar dataKey="revenueNum" name="Revenue" fill="#4f8cff" radius={[3, 3, 0, 0]} maxBarSize={38} />
+                <Bar dataKey="revenueNum" name="Closed-won bookings" fill="#4f8cff" radius={[3, 3, 0, 0]} maxBarSize={38} />
                 <Bar dataKey="pipelineNum" name="Pipeline" fill="#5e6d83" radius={[3, 3, 0, 0]} maxBarSize={38} />
               </BarChart>
             </ResponsiveContainer>
@@ -517,7 +519,7 @@ export default function GlobalRevenueMap() {
         </div>
         <div className="grm-table-wrap">
           <table>
-            <thead><tr><th>Region</th><th>Status</th><th>Revenue</th><th>Pipeline</th><th>Close rate</th><th>Priority accounts</th></tr></thead>
+            <thead><tr><th>Region</th><th>Status</th><th>Closed-won bookings</th><th>Pipeline</th><th>Close rate</th><th>Priority accounts</th></tr></thead>
             <tbody>
               {rankedRegions.map((region) => (
                 <tr key={region.name}>

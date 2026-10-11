@@ -1,3 +1,4 @@
+import WorkspaceDataNotice from "../components/WorkspaceDataNotice.jsx";
 import React, { useEffect, useMemo, useState } from "react";
 import MetricCard from "../components/atlas/MetricCard";
 import {
@@ -564,9 +565,9 @@ export default function Reports() {
     revenue > 0 ||
     pipelineValue > 0 ||
     forecast90d > 0 ||
-    metrics.length > 0 ||
+    metrics.some(row => safeNum(row.revenue) !== 0 || safeNum(row.spend) !== 0 || safeNum(row.leads) !== 0) ||
     openDeals > 0 ||
-    revenueHealth > 0;
+    !!dashboard?.financials;
 
   const executiveSignals = useMemo(() => {
     if (isDemo) {
@@ -700,11 +701,12 @@ export default function Reports() {
     return metrics.map((m) => ({
       month: getMonthLabel(m?.date),
       revenue: safeNum(m?.revenue, 0),
-      pipeline: safeNum(m?.pipelineValue, 0) || Math.round(pipelineValue / Math.max(metrics.length || 1, 1)),
+      pipeline: m?.pipelineValue == null ? null : safeNum(m.pipelineValue),
     }));
   }, [isDemo, metrics, pipelineValue]);
 
   const reportValueData = useMemo(() => {
+    if (!isDemo) return [];
     if (isDemo) {
       return [
         { name: "Board", value: 92 },
@@ -791,7 +793,7 @@ export default function Reports() {
         topQuartile: "90%",
       },
       {
-        title: "Customer Acquisition Cost",
+        title: "Cost Per Lead",
         company: moneyCompact(customerAcquisitionCost),
         industry: "$610",
         topQuartile: "$420",
@@ -864,7 +866,7 @@ export default function Reports() {
         "",
         "Benchmark View",
         `Pipeline Coverage: ${benchmarkCards[0]?.company}`,
-        `Customer Acquisition Cost: ${benchmarkCards[2]?.company}`,
+        `Cost Per Lead: ${benchmarkCards[2]?.company}`,
         `Deal Velocity: ${benchmarkCards[3]?.company}`,
         "",
         "Key Narrative",
@@ -909,6 +911,7 @@ export default function Reports() {
 
   return (
     <div style={styles.page}>
+      <WorkspaceDataNotice dashboard={dashboard} />
       <div style={styles.wrap}>
         <div style={styles.hero}>
           <div style={styles.heroTop}>
@@ -936,12 +939,21 @@ export default function Reports() {
           </div>
         </div>
 
-        <AtlasBenchmarksSection
+        {dashboard?.financials ? (
+          <Section title="QuickBooks financials" subtitle={`${new Date(dashboard.financials.periodStart).toLocaleDateString()} – ${new Date(dashboard.financials.periodEnd).toLocaleDateString()}`}>
+            <div style={styles.statsWrap}>
+              {[['Accounting revenue', 'revenue'], ['Expenses', 'expenses'], ['Net income', 'netIncome'], ['Cash', 'cash']].map(([label, key]) => (
+                <MetricCard key={key} title={label} value={Number(dashboard.financials[key] || 0).toLocaleString(undefined, { style: 'currency', currency: dashboard.financials.currency || 'USD', maximumFractionDigits: 0 })} subtext="QuickBooks reporting period" accent="emerald" />
+              ))}
+            </div>
+          </Section>
+        ) : null}
+        {isDemo ? <AtlasBenchmarksSection
           orgName={orgName}
           isDemo={isDemo}
           hasLiveData={hasLiveData}
           benchmarkCards={benchmarkCards}
-        />
+        /> : null}
 
         <div style={styles.signalGrid}>
           {executiveSignals.map((item) => (
@@ -1053,8 +1065,8 @@ export default function Reports() {
 
           <Section title="Report Type Value" subtitle="Strategic Score">
             <div style={styles.chartShell}>
-              {!isDemo && !hasLiveData ? (
-                <EmptyState text="No live report scoring yet." />
+              {!isDemo ? (
+                <EmptyState text="Report scoring is unavailable until a validated scoring model is configured." />
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={reportValueData}>

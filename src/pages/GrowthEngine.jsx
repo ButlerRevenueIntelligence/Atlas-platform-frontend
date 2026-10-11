@@ -1,3 +1,4 @@
+import WorkspaceDataNotice from "../components/WorkspaceDataNotice.jsx";
 import React, { useEffect, useMemo, useState } from "react";
 import RecommendedActions from "../components/atlas/RecommendedActions";
 import { getDashboard } from "../api";
@@ -173,21 +174,27 @@ export default function GrowthEngine() {
   }, [metrics]);
 
   const funnelCards = useMemo(() => {
-    const visitors = Math.round(openDeals * 190 + 800);
-    const leads = Math.round(openDeals * 18 + 40);
+    const visitors = isDemo ? Math.round(openDeals * 190 + 800) : metrics.reduce((sum, row) => sum + safeNum(row.sessions), 0);
+    const leads = isDemo ? Math.round(openDeals * 18 + 40) : metrics.reduce((sum, row) => sum + safeNum(row.leads), 0);
     const opportunities = openDeals;
     const wonRevenue = safeNum(revenue, 0);
 
     return [
-      { label: "Visitors", value: visitors.toLocaleString() },
+      { label: "Sessions", value: visitors.toLocaleString() },
       { label: "Leads", value: leads.toLocaleString() },
       { label: "Opportunities", value: opportunities.toLocaleString() },
       { label: "Deals", value: safeNum(summary.wonDeals, 0).toLocaleString() },
       { label: "Revenue", value: money(wonRevenue) },
     ];
-  }, [openDeals, revenue, summary.wonDeals]);
+  }, [openDeals, revenue, summary.wonDeals, metrics, isDemo]);
 
   const summaryStats = useMemo(() => {
+    if (!isDemo) return [
+      { label: "Ad Spend (30D)", value: money(metrics.reduce((sum, row) => sum + safeNum(row.spend), 0)), note: "Connected advertising accounts" },
+      { label: "Leads (30D)", value: metrics.reduce((sum, row) => sum + safeNum(row.leads), 0).toLocaleString(), note: dashboard?.dataSources?.leads === "ga4_generate_lead" ? "GA4 generate_lead events" : "Reported leads" },
+      { label: "Open Pipeline", value: money(pipelineValue), note: "Open opportunities" },
+      { label: "Source Attribution", value: "Unavailable", note: "Deal-to-channel attribution has not been recorded" },
+    ];
     const marketingPipeline = Math.round(pipelineValue * 0.45);
     const salesPipeline = Math.round(pipelineValue * 0.35);
     const partnerPipeline = Math.round(pipelineValue * 0.2);
@@ -214,7 +221,7 @@ export default function GrowthEngine() {
         note: pipelineValue > 0 ? "Best efficiency right now" : "Connect data to evaluate",
       },
     ];
-  }, [pipelineValue, isDemo]);
+  }, [pipelineValue, isDemo, metrics, dashboard]);
 
   const summaryPoints = useMemo(() => {
     if (!pipelineValue && !revenue && !openDeals) {
@@ -230,8 +237,8 @@ export default function GrowthEngine() {
       `Atlas is tracking ${moneyCompact(pipelineValue)} in pipeline activity for ${orgName}.`,
       `Current 30-day revenue is ${money(revenue)} and the 90-day forecast is ${money(forecast90d)}.`,
       cac > 0
-        ? `Customer acquisition cost is currently ${money(cac)} based on available spend and lead data.`
-        : "Customer acquisition cost will populate once spend and lead data are available.",
+        ? `Cost per lead is currently ${money(cac)} based on available spend and lead data.`
+        : "Cost per lead will populate once spend and lead data are available.",
       openDeals > 0
         ? `${openDeals} open opportunities are currently active in this workspace.`
         : "There are currently no active opportunities in this workspace.",
@@ -263,6 +270,7 @@ export default function GrowthEngine() {
   }, [deals]);
 
   const attributionData = useMemo(() => {
+    if (!isDemo) return [];
     if (!pipelineValue) {
       return [
         { label: "CRM", value: 0 },
@@ -278,9 +286,13 @@ export default function GrowthEngine() {
       { label: "Organic", value: 20 },
       { label: "Partners", value: 15 },
     ];
-  }, [pipelineValue]);
+  }, [pipelineValue, isDemo]);
 
   const channelRows = useMemo(() => {
+    if (!isDemo) return (dashboard?.channelMetrics || []).map(channel => ({
+      name: channel.provider.replaceAll("_", " "), pipeline: "Unavailable", conversion: "Unavailable",
+      cpl: channel.leads > 0 ? money(channel.spend / channel.leads) : "Unavailable", won: "Unavailable", tone: "Reported",
+    }));
     const tone =
       pipelineValue > 250000 ? "High" : pipelineValue > 100000 ? "Strong" : pipelineValue > 0 ? "Weak" : "Weak";
 
@@ -318,7 +330,7 @@ export default function GrowthEngine() {
         tone: pipelineValue > 0 ? "Elite" : "Weak",
       },
     ];
-  }, [pipelineValue, openDeals, summary.wonDeals, cac, revenue]);
+  }, [pipelineValue, openDeals, summary.wonDeals, cac, revenue, isDemo, dashboard]);
 
   const actions = useMemo(() => {
     if (!pipelineValue && !revenue) {
@@ -344,10 +356,10 @@ export default function GrowthEngine() {
         description: "Atlas has detected active pipeline flow. Double down on the strongest sources while monitoring conversion efficiency.",
       },
       {
-        title: "Improve CAC efficiency",
+        title: "Improve lead acquisition efficiency",
         description: cac > 0
-          ? `Current CAC is ${money(cac)}. Focus on tightening channel spend and lead quality to improve returns.`
-          : "Bring in spend and lead data so Atlas can calculate true CAC and optimize it.",
+          ? `Current cost per lead is ${money(cac)}. Focus on tightening channel spend and lead quality to improve returns.`
+          : "Bring in spend and lead data so Atlas can calculate cost per lead and optimize it.",
       },
       {
         title: "Expand what is converting",
@@ -382,6 +394,7 @@ export default function GrowthEngine() {
 
   return (
     <div style={styles.page}>
+      <WorkspaceDataNotice dashboard={dashboard} />
       <div style={styles.wrap}>
         <div style={styles.hero}>
           <div style={styles.heroTop}>
@@ -504,7 +517,7 @@ export default function GrowthEngine() {
         </div>
 
         <div style={styles.twoCol}>
-          <Section title="Pipeline by Channel" subtitle="Contribution">
+          <Section title="Pipeline by Stage" subtitle="Contribution">
             <div style={styles.chartShellSmall}>
               {pipelineValue <= 0 ? (
                 <EmptyState text="No pipeline values yet. Once live deals are added, this chart will fill automatically." />
@@ -539,8 +552,8 @@ export default function GrowthEngine() {
           <Section title="Marketing Attribution" subtitle="Channel Share">
             <div style={styles.attributionLayout}>
               <div style={styles.chartShellSmall}>
-                {pipelineValue <= 0 ? (
-                  <EmptyState text="No attribution mix yet. Live connected channels will populate this area." />
+                {!isDemo || pipelineValue <= 0 ? (
+                  <EmptyState text="Deal-to-channel attribution is unavailable. Connectors report activity; attributed revenue requires linked transactions." />
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -640,7 +653,7 @@ export default function GrowthEngine() {
                       <div style={styles.miniValue}>{row.conversion}</div>
                     </div>
                     <div style={styles.mini}>
-                      <div style={styles.miniLabel}>CAC</div>
+                      <div style={styles.miniLabel}>CPL</div>
                       <div style={styles.miniValue}>{row.cpl}</div>
                     </div>
                     <div style={styles.mini}>

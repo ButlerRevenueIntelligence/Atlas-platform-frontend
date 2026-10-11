@@ -1,3 +1,4 @@
+import WorkspaceDataNotice from "../components/WorkspaceDataNotice.jsx";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   ResponsiveContainer,
@@ -16,6 +17,7 @@ import AtlasAccountExpansionSignals from "../components/atlas/AtlasAccountExpans
 import {
   getDashboard,
   searchGraphIQOrganizations,
+  getSharedCompanyIntelligence,
 } from "../api";
 
 const axisTick = { fill: "#9fb0d0", fontSize: 11 };
@@ -184,6 +186,18 @@ function normalizeGraphIQOrganization(org, index) {
   };
 }
 export default function AccountIntelligence() {
+  useEffect(() => {
+    let active = true;
+    getSharedCompanyIntelligence().then(response => {
+      if (!active || !response?.query) return;
+      const data = response.data;
+      const rows = Array.isArray(data) ? data : data?.entities || data?.organizations || data?.results || data?.items || data?.data || [];
+      setGraphiqResults(Array.isArray(rows) ? rows.slice(0, 10) : []);
+      setGraphiqQuery(response.query?.capabilities?.[0] || "");
+    }).catch(() => {});
+    return () => { active = false; };
+  }, []);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [dashboard, setDashboard] = useState(null);
@@ -494,6 +508,7 @@ async function handleGraphIQSearch(event) {
 
   return (
     <div style={styles.page}>
+      <WorkspaceDataNotice dashboard={dashboard} />
       <div style={styles.wrap}>
         <div style={styles.hero}>
           <div style={styles.eyebrow}>Prioritize the Right Accounts</div>
