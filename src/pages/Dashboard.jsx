@@ -1,3 +1,4 @@
+import WorkspaceDataNotice from "../components/WorkspaceDataNotice.jsx";
   import React, { useEffect, useMemo, useState } from "react";
 import {
   apiGet,
@@ -216,7 +217,7 @@ const buildLocalInsights = (kpis, seed = 0) => {
         impact: "MEDIUM IMPACT",
         confidence: jitter(80),
         title: "Performance is stable",
-        body: "Run controlled experiments (landing page + offer tests) to lift conversion rate while maintaining CAC.",
+        body: "Run controlled experiments (landing page + offer tests) to lift conversion rate while maintaining CPL.",
       });
     }
   } else {
@@ -260,15 +261,15 @@ const buildLocalInsights = (kpis, seed = 0) => {
       type: "WARNING",
       impact: "MEDIUM IMPACT",
       confidence: jitter(81),
-      title: "CAC is elevated",
-      body: "Reduce CAC by tightening ICP targeting, adding retargeting, and improving landing page conversion rate.",
+      title: "CPL is elevated",
+      body: "Reduce CPL by tightening ICP targeting, adding retargeting, and improving landing page conversion rate.",
     });
   } else {
     items.push({
       type: "SUCCESS",
       impact: "MEDIUM IMPACT",
       confidence: jitter(86),
-      title: "CAC is under control",
+      title: "CPL is under control",
       body: "Maintain efficiency while scaling budget in channels that drive the highest close-rate leads.",
     });
   }
@@ -1248,7 +1249,7 @@ export default function Dashboard() {
     }
 
     if (safeNum(kpis.cac) > 500) {
-      items.push("Customer acquisition cost is elevated and should be reviewed");
+      items.push("Cost per lead is elevated and should be reviewed");
     }
 
     return items.slice(0, 5);
@@ -1865,6 +1866,7 @@ export default function Dashboard() {
 
   return (
     <div style={S.page}>
+      <WorkspaceDataNotice dashboard={dashboard} />
       <div style={S.bgGlow} />
 
       <div style={S.topRow}>

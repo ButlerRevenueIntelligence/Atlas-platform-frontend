@@ -28,7 +28,7 @@ export default function AccountDetail() {
       setAccount(acc);
 
       // Load clients under same org
-      const listRes = await apiGet(`/clients?orgId=${id}`);
+      const listRes = await apiGet("/clients");
       const rows =
         listRes?.clients ||
         listRes?.data ||

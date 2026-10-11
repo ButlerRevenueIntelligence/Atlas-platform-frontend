@@ -506,6 +506,7 @@ export const getForecastScenarios = () => apiGet("/forecast/scenarios");
 export const getOperatorSignals = () => apiGet("/operator/signals");
 
 // -------------------- GraphIQ --------------------
+export const getSharedCompanyIntelligence = () => apiGet("/graphiq/context");
 export const searchGraphIQOrganizations = (organization) =>
   apiPost("/graphiq/organizations/search", {
     organization,

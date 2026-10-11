@@ -4,6 +4,7 @@ import {
   getMetricsDaily,
   getMetricsSummary,
   searchGraphIQOrganizations,
+  getSharedCompanyIntelligence,
 } from "../api";
 import OpportunityRadar from "../components/atlas/OpportunityRadar";
 import RevenueTimeline from "../components/atlas/RevenueTimeline";
@@ -138,6 +139,18 @@ function readableValue(value, fallback = "") {
 }
 
 export default function Metrics() {
+  useEffect(() => {
+    let active = true;
+    getSharedCompanyIntelligence().then(response => {
+      if (!active || !response?.query) return;
+      const data = response.data;
+      const rows = Array.isArray(data) ? data : data?.entities || data?.organizations || data?.results || data?.items || data?.data || [];
+      setMarketResults(Array.isArray(rows) ? rows.slice(0, 10) : []);
+      setMarketQuery(response.query?.capabilities?.[0] || "");
+    }).catch(() => {});
+    return () => { active = false; };
+  }, []);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [days, setDays] = useState(30);

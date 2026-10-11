@@ -1,3 +1,4 @@
+import WorkspaceDataNotice from "../components/WorkspaceDataNotice.jsx";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   analyzeWithAtlas,
@@ -708,7 +709,7 @@ export default function AtlasAIOperator() {
   const forecast90d = safeNum(summary.forecast90d, 0);
   const metrics = Array.isArray(dashboard?.metrics) ? dashboard.metrics : [];
   const hasLiveData =
-    revenue30 > 0 || pipelineValue > 0 || openDeals > 0 || metrics.length > 0;
+    revenue30 > 0 || pipelineValue > 0 || openDeals > 0 || metrics.some(row => safeNum(row.revenue) !== 0 || safeNum(row.spend) !== 0 || safeNum(row.leads) !== 0);
 
   const forecastTrend = useMemo(() => {
     if (isDemo) {
@@ -1180,6 +1181,7 @@ export default function AtlasAIOperator() {
             : [];
 
           graphiqContext = {
+            snapshotId: graphiqResponse?.snapshotId,
             source: "GraphIQ",
             query: graphiqQuery,
             totalMatches:
@@ -1288,6 +1290,7 @@ export default function AtlasAIOperator() {
 
   return (
     <div style={styles.page}>
+      <WorkspaceDataNotice dashboard={dashboard} />
       <div style={styles.wrap}>
         <div style={styles.hero}>
           <div style={styles.heroTop}>

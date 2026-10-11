@@ -502,6 +502,16 @@ export default function Integrations() {
     }
   }
 
+  async function handleGoogleSync(provider) {
+    try {
+      setBusyId(`${provider}_sync`); setError(""); setSuccess("");
+      await apiPost(`/integrations/${provider}/sync`, {});
+      setSuccess(`${provider === "ga4" ? "GA4" : "Google Ads"} data synced`);
+      await load();
+    } catch (error) { setError(error.message || "Sync failed"); }
+    finally { setBusyId(""); }
+  }
+
   async function handleSlackTest() {
     try {
       setBusyId("slack_test");
@@ -1247,6 +1257,11 @@ export default function Integrations() {
                       Connected
                     </button>
 
+                    {(isGoogleAds || isGA4) && isConnected && live?.mode === "live" && !needsGoogleSelection && !needsGA4Selection ? (
+                      <button onClick={() => handleGoogleSync(c.id)} disabled={!!busyId || uploading} style={{ padding: "8px 12px", borderRadius: 10, color: "#fff", background: "#243249", border: "1px solid #35445e", cursor: "pointer" }}>
+                        {busyId === `${c.id}_sync` ? "Syncing..." : "Run Sync"}
+                      </button>
+                    ) : null}
                     {isHubSpotLive ? (
                       <button
                         onClick={handleHubSpotSync}

@@ -1,3 +1,4 @@
+import WorkspaceDataNotice from "../components/WorkspaceDataNotice.jsx";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import OpportunityRadar from "../components/atlas/OpportunityRadar";
@@ -536,6 +537,7 @@ export default function BoardMode() {
 
   return (
     <>
+      <WorkspaceDataNotice dashboard={dashboard} />
       <style>{`
         @media (max-width: 1050px) {
           .board-stat-grid,
