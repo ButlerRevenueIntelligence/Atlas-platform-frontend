@@ -6,7 +6,7 @@ export default function AuthLayout({ signup = false, children }) {
     <main className="atlas-auth">
       <header className="atlas-auth-header">
         <a className="atlas-auth-brand" href="https://atlasrevenueai.com/" aria-label="Atlas Revenue AI home">
-          <span className="atlas-auth-mark" aria-hidden="true">A<span /></span>
+          <span className="atlas-auth-mark" aria-hidden="true"><img src="/favicon-new.png" alt="" /></span>
           <span>Atlas Revenue AI<small>Decision intelligence for revenue leaders</small></span>
         </a>
         <div className="atlas-auth-switch">

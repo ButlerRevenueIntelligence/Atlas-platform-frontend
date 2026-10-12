@@ -4,8 +4,9 @@
 .atlas-auth-header, .atlas-auth-footer { max-width: 1240px; margin: auto; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
 .atlas-auth-brand { display: flex; align-items: center; gap: 13px; color: #f3f6fc; font-size: 18px; font-weight: 700; letter-spacing: -.4px; }
 .atlas-auth-brand small { display: block; font-size: 11px; font-weight: 400; color: #9aaac0; margin-top: 4px; letter-spacing: 0; }
-.atlas-auth-mark { position: relative; display: grid; place-items: center; width: 40px; height: 44px; color: #83d6f4; font-size: 32px; font-weight: 650; border: 1px solid #30435b; border-radius: 10px; background: #132237; }
-.atlas-auth-mark > span { position: absolute; width: 22px; height: 2px; background: #83d6f4; bottom: 10px; transform: rotate(-25deg); }
+/* Use Atlas's supplied brand symbol, also used by the app favicon. */
+.atlas-auth-mark { position: relative; display: block; flex: 0 0 48px; width: 48px; height: 48px; overflow: hidden; border-radius: 12px; }
+.atlas-auth-mark img { position: absolute; width: 76px; height: 76px; max-width: none; left: 50%; top: 50%; transform: translate(-50%, -50%); }
 .atlas-auth-switch { display: flex; gap: 16px; align-items: center; font-size: 13px; color: #aab8cb; }
 .atlas-auth-switch a { border: 1px solid #334158; border-radius: 8px; padding: 10px 15px; color: #edf5ff; font-weight: 600; display: flex; gap: 18px; }
 .atlas-auth-main { max-width: 1120px; margin: 76px auto 70px; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(340px, .85fr); gap: 100px; align-items: center; }
