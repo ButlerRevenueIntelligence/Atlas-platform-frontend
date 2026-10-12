@@ -1,6 +1,7 @@
+import AuthLayout, { PasswordField } from "../components/AuthLayout";
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { signup, acceptInvite } from "../api";
+import { useNavigate, useLocation, Link } from "react-router-dom";
+import { signup, acceptInvite, getInvite } from "../api";
 
 function useQuery() {
   const { search } = useLocation();
@@ -19,6 +20,7 @@ export default function Signup() {
     password: "",
   });
 
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [inviteLoading, setInviteLoading] = useState(false);
   const [error, setError] = useState("");
@@ -39,12 +41,9 @@ export default function Signup() {
       setError("");
 
       try {
-        const res = await fetch(
-          `${import.meta.env.VITE_API_URL || ""}/api/invites/${inviteToken}`
-        );
-        const data = await res.json();
+        const data = await getInvite(inviteToken);
 
-        if (!res.ok || !data?.ok || !data?.invite) {
+        if (!data?.ok || !data?.invite) {
           setInviteInfo(null);
           setError(data?.message || "Invite link is invalid or expired.");
           return;
@@ -136,150 +135,31 @@ export default function Signup() {
     }
   }
 
-  if (!isInvite) {
-    return (
-      <div style={styles.page}>
-        <div style={styles.card}>
-          <div style={styles.brand}>Start Your Free Trial</div>
-          <div style={styles.brandSub}>
-            Get full access to Atlas Revenue AI for 7 days
-          </div>
-
-          <form onSubmit={handlePublicSignup} style={styles.form}>
-            <input
-              name="name"
-              placeholder="Full Name"
-              value={form.name}
-              onChange={onChange}
-              style={styles.input}
-              required
-            />
-
-            <input
-              name="email"
-              type="email"
-              placeholder="Email"
-              value={form.email}
-              onChange={onChange}
-              style={styles.input}
-              required
-            />
-
-            <input
-              name="password"
-              type="password"
-              placeholder="Password"
-              value={form.password}
-              onChange={onChange}
-              style={styles.input}
-              required
-            />
-
-            {error && <div style={styles.errBox}>{error}</div>}
-
-            <button type="submit" style={styles.btn} disabled={loading}>
-              {loading ? "Starting Trial..." : "Start Free Trial"}
-            </button>
-          </form>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div style={styles.page}>
-      <div style={styles.card}>
-        <div style={styles.brand}>Activate Your Access</div>
-        <div style={styles.brandSub}>
-          {inviteLoading ? "Loading invite..." : "Complete your invited setup"}
+    <AuthLayout signup>
+      <div className="atlas-auth-card-kicker">{isInvite ? "WORKSPACE INVITATION" : "SEVEN-DAY FREE TRIAL"}</div>
+      <h2 id="auth-form-title">{isInvite ? "Join your team." : "Get started with Atlas."}</h2>
+      <p className="atlas-auth-subtitle">{isInvite ? (inviteLoading ? "Loading your invitation…" : "Create your account to access your team’s workspace.") : "Create your workspace, connect your data, and explore a clearer view of revenue."}</p>
+      {isInvite && inviteInfo && <div className="atlas-auth-invite">You’ve been invited to join {inviteInfo.orgName || inviteInfo.workspaceName || "an Atlas workspace"}. Your invitation email is shown below.</div>}
+      <form onSubmit={isInvite ? handleInviteSignup : handlePublicSignup} className="atlas-auth-form" aria-busy={loading || inviteLoading}>
+        <div className="atlas-auth-field">
+          <label htmlFor="signup-name">Full name</label>
+          <input id="signup-name" name="name" placeholder="Your full name" value={form.name} onChange={onChange} autoComplete="name" required disabled={loading || inviteLoading} />
         </div>
-
-        <form onSubmit={handleInviteSignup} style={styles.form}>
-          <input
-            name="name"
-            placeholder="Full Name"
-            value={form.name}
-            onChange={onChange}
-            style={styles.input}
-            required
-          />
-
-          <input
-            name="email"
-            value={form.email}
-            readOnly
-            style={styles.input}
-          />
-
-          <input
-            name="password"
-            type="password"
-            placeholder="Create Password"
-            value={form.password}
-            onChange={onChange}
-            style={styles.input}
-            required
-          />
-
-          {error && <div style={styles.errBox}>{error}</div>}
-
-          <button type="submit" style={styles.btn} disabled={loading || inviteLoading || !inviteInfo}>
-            {loading ? "Activating..." : "Activate Access"}
-          </button>
-        </form>
-      </div>
-    </div>
+        <div className="atlas-auth-field">
+          <label htmlFor="signup-email">Email address</label>
+          <input id="signup-email" name="email" type="email" placeholder="you@company.com" value={form.email} onChange={onChange} readOnly={isInvite} autoComplete="email" autoCapitalize="none" spellCheck={false} required disabled={loading || inviteLoading} />
+        </div>
+        <div className="atlas-auth-field">
+          <label htmlFor="signup-password">Create a password</label>
+          <PasswordField id="signup-password" value={form.password} onChange={onChange} visible={showPassword} onToggle={() => setShowPassword(!showPassword)} autoComplete="new-password" minLength={8} disabled={loading || inviteLoading} />
+          <p className="atlas-auth-hint">Use at least 8 characters.</p>
+        </div>
+        {error && <div className="atlas-auth-error" role="alert">{error}</div>}
+        <button type="submit" className="atlas-auth-submit" disabled={loading || inviteLoading || (isInvite && !inviteInfo)}><span>{loading ? (isInvite ? "Creating your account…" : "Creating your workspace…") : (isInvite ? "Join workspace" : "Start free trial")}</span><span aria-hidden="true">→</span></button>
+        {!isInvite && <p className="atlas-auth-hint">Your seven-day trial begins when you create your account.</p>}
+      </form>
+      <div className="atlas-auth-card-bottom">Already have an account? <Link to={isInvite ? `/login?email=${encodeURIComponent(form.email)}&invite=${encodeURIComponent(inviteToken)}` : "/login"}>Sign in</Link></div>
+    </AuthLayout>
   );
 }
-
-const styles = {
-  page: {
-    minHeight: "100vh",
-    display: "grid",
-    placeItems: "center",
-    background: "#050916",
-    padding: 24,
-  },
-  card: {
-    width: "100%",
-    maxWidth: 420,
-    padding: 24,
-    borderRadius: 20,
-    background: "#0b1228",
-    color: "#fff",
-    boxShadow: "0 24px 60px rgba(0,0,0,0.35)",
-  },
-  brand: {
-    fontSize: 24,
-    fontWeight: 900,
-  },
-  brandSub: {
-    fontSize: 14,
-    opacity: 0.7,
-    marginBottom: 20,
-    marginTop: 6,
-  },
-  form: {
-    display: "grid",
-    gap: 10,
-  },
-  input: {
-    height: 45,
-    borderRadius: 10,
-    padding: "0 12px",
-    border: "1px solid rgba(255,255,255,0.12)",
-  },
-  btn: {
-    height: 48,
-    borderRadius: 12,
-    background: "#3b82f6",
-    color: "#fff",
-    fontWeight: 900,
-    border: "none",
-    cursor: "pointer",
-  },
-  errBox: {
-    color: "#ff6b6b",
-    fontSize: 13,
-  },
-};
