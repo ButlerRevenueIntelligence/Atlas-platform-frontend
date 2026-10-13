@@ -374,7 +374,7 @@ function Section({ title, subtitle, children }) {
 
 function SmallStat({ label, value, note }) {
   return (
-    <div style={styles.statCard}>
+    <div className="atlas-responsive-card" style={styles.statCard}>
       <div style={styles.statLabel}>{label}</div>
       <div style={styles.statValue}>{value}</div>
       {note ? <div style={styles.statNote}>{note}</div> : null}
@@ -383,7 +383,7 @@ function SmallStat({ label, value, note }) {
 }
 
 function EmptyState({ text }) {
-  return <div style={styles.emptyState}>{text}</div>;
+  return <div className="atlas-responsive-card atlas-responsive-row" style={styles.emptyState}>{text}</div>;
 }
 
 export default function DealWarRoom() {
@@ -684,10 +684,10 @@ const isDemo = workspaceMode === "demo";
 
   if (loading) {
     return (
-      <div style={styles.page}>
+      <div className="atlas-responsive-page" style={styles.page}>
         <div style={styles.wrap}>
-          <div style={styles.hero}>
-            <h1 style={styles.h1}>Loading Deal War Room...</h1>
+          <div className="atlas-responsive-card" style={styles.hero}>
+            <h1 className="atlas-responsive-title" style={styles.h1}>Loading Deal War Room...</h1>
           </div>
         </div>
       </div>
@@ -696,9 +696,9 @@ const isDemo = workspaceMode === "demo";
 
   if (error) {
     return (
-      <div style={styles.page}>
+      <div className="atlas-responsive-page" style={styles.page}>
         <div style={styles.wrap}>
-          <div style={styles.errorBox}>{error}</div>
+          <div className="atlas-responsive-card" style={styles.errorBox}>{error}</div>
         </div>
       </div>
     );
@@ -707,13 +707,13 @@ const isDemo = workspaceMode === "demo";
   const noLiveDeals = !isDemo && !openDeals.length;
 
   return (
-    <div style={styles.page}>
+    <div className="atlas-responsive-page" style={styles.page}>
       <div style={styles.wrap}>
-        <div style={styles.hero}>
-          <div style={styles.heroTop}>
+        <div className="atlas-responsive-card" style={styles.hero}>
+          <div className="atlas-responsive-grid" style={styles.heroTop}>
             <div>
               <div style={styles.eyebrow}>Executive Command Center</div>
-              <h1 style={styles.h1}>Deal War Room</h1>
+              <h1 className="atlas-responsive-title" style={styles.h1}>Deal War Room</h1>
               <div style={styles.heroText}>
                 A focused operating view for leadership to manage late-stage deal
                 movement, forecast concentration, blocker resolution, and next-best
@@ -721,14 +721,14 @@ const isDemo = workspaceMode === "demo";
               </div>
             </div>
 
-            <div style={styles.badgeWrap}>
+            <div className="atlas-responsive-row" style={styles.badgeWrap}>
               {[
                 isDemo ? "Demo War Room" : "Live War Room",
                 "Forecast Monitoring",
                 isDemo ? "Sample deals · fictional owners" : "Deal Pressure Live",
                 "Executive Review Active",
               ].map((item) => (
-                <div key={item} style={styles.badge}>
+                <div className="atlas-responsive-card" key={item} style={styles.badge}>
                   {item}
                 </div>
               ))}
@@ -736,7 +736,7 @@ const isDemo = workspaceMode === "demo";
           </div>
         </div>
 
-        <div style={styles.statsGrid}>
+        <div className="atlas-responsive-metrics" style={styles.statsGrid}>
           {topStats.map((item) => (
             <SmallStat
               key={item.label}
@@ -747,11 +747,11 @@ const isDemo = workspaceMode === "demo";
           ))}
         </div>
 
-        <div style={styles.twoCol}>
+        <div className="atlas-responsive-grid" style={styles.twoCol}>
           <Section title="Executive Pressure Signals" subtitle="Board View">
             <div style={styles.summaryList}>
               {executiveSignals.map((point) => (
-                <div key={point} style={styles.summaryItem}>
+                <div className="atlas-responsive-card" key={point} style={styles.summaryItem}>
                   {point}
                 </div>
               ))}
@@ -760,9 +760,9 @@ const isDemo = workspaceMode === "demo";
 
           <Section title="Stage Distribution" subtitle="Pipeline Mix">
             {stageCards.length ? (
-              <div style={styles.stageGrid}>
+              <div className="atlas-responsive-grid" style={styles.stageGrid}>
                 {stageCards.map((item) => (
-                  <div key={item.stage} style={styles.stageCard}>
+                  <div className="atlas-responsive-card" key={item.stage} style={styles.stageCard}>
                     <div style={styles.stageName}>{item.stage}</div>
                     <div style={styles.stageMeta}>{item.deals} deals</div>
                     <div style={styles.stageValue}>{item.value}</div>
@@ -776,12 +776,12 @@ const isDemo = workspaceMode === "demo";
           </Section>
         </div>
 
-        <div style={styles.twoCol}>
+        <div className="atlas-responsive-grid" style={styles.twoCol}>
           <Section title="Forecast Trend" subtitle="Cumulative opportunity value by expected close date">
             {noLiveDeals ? (
               <EmptyState text="No live forecast trend yet. Add or sync deals to generate a forecast curve." />
             ) : (
-              <div style={styles.chartShell}>
+              <div className="atlas-responsive-card" style={styles.chartShell}>
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={forecastTrend}>
                     <CartesianGrid
@@ -829,7 +829,7 @@ const isDemo = workspaceMode === "demo";
             {noLiveDeals ? (
               <EmptyState text="No live stage pressure yet. Deal movement is required to model war-room pressure." />
             ) : (
-              <div style={styles.chartShell}>
+              <div className="atlas-responsive-card" style={styles.chartShell}>
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={stagePressure}>
                     <CartesianGrid
@@ -861,10 +861,10 @@ const isDemo = workspaceMode === "demo";
 
         <AtlasDealIntelligencePanel deals={dealTable} />
 
-        <div style={styles.twoCol}>
+        <div className="atlas-responsive-grid" style={styles.twoCol}>
           <Section title="Top Active Opportunities" subtitle="Deal Board">
             {dealTable.length ? (
-              <div style={styles.tableWrap}>
+              <div className="atlas-responsive-scroll" style={styles.tableWrap}>
                 <table style={styles.table}>
                   <thead>
                     <tr>
@@ -903,8 +903,8 @@ const isDemo = workspaceMode === "demo";
             {interventionQueue.length ? (
               <div style={styles.queueList}>
                 {interventionQueue.map((item) => (
-                  <div key={item.title} style={styles.queueCard}>
-                    <div style={styles.queueTop}>
+                  <div className="atlas-responsive-card" key={item.title} style={styles.queueCard}>
+                    <div className="atlas-responsive-row" style={styles.queueTop}>
                       <div style={styles.queueTitle}>{item.title}</div>
                       <div style={tonePill(item.tone)}>
                         {item.tone === "high"
@@ -924,11 +924,11 @@ const isDemo = workspaceMode === "demo";
           </Section>
         </div>
 
-        <div style={styles.twoCol}>
+        <div className="atlas-responsive-grid" style={styles.twoCol}>
           <Section title="AI Deal Notes" subtitle="Executive Intelligence">
             <div style={styles.noteCards}>
               {aiNotes.map((note) => (
-                <div key={note} style={styles.noteCard}>
+                <div className="atlas-responsive-card" key={note} style={styles.noteCard}>
                   {note}
                 </div>
               ))}
@@ -939,7 +939,7 @@ const isDemo = workspaceMode === "demo";
             {noLiveDeals ? (
               <EmptyState text="No live board pressure is available yet." />
             ) : (
-              <div style={styles.chartShell}>
+              <div className="atlas-responsive-card" style={styles.chartShell}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={stagePressure}>
                     <CartesianGrid

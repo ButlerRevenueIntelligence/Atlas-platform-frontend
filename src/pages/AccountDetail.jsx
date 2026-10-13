@@ -51,9 +51,9 @@ export default function AccountDetail() {
 
   if (loading) {
     return (
-      <div style={styles.page}>
+      <div className="atlas-responsive-page" style={styles.page}>
         <div style={styles.wrap}>
-          <div style={styles.stateCard}>Loading account intelligence…</div>
+          <div className="atlas-responsive-card" style={styles.stateCard}>Loading account intelligence…</div>
         </div>
       </div>
     );
@@ -61,16 +61,16 @@ export default function AccountDetail() {
 
   if (error) {
     return (
-      <div style={styles.page}>
+      <div className="atlas-responsive-page" style={styles.page}>
         <div style={styles.wrap}>
-          <div style={styles.errorCard}>
+          <div className="atlas-responsive-card" style={styles.errorCard}>
             <div style={styles.stateTitle}>Account could not be loaded</div>
             <div style={styles.errorText}>{error}</div>
-            <div style={styles.actionRow}>
-              <button type="button" onClick={() => navigate(-1)} style={styles.secondaryButton}>
+            <div className="atlas-responsive-row" style={styles.actionRow}>
+              <button  type="button" onClick={() => navigate(-1)} style={styles.secondaryButton}>
                 ← Back
               </button>
-              <button type="button" onClick={load} style={styles.primaryButton}>
+              <button  type="button" onClick={load} style={styles.primaryButton}>
                 Try Again
               </button>
             </div>
@@ -82,39 +82,39 @@ export default function AccountDetail() {
 
   if (!account) {
     return (
-      <div style={styles.page}>
+      <div className="atlas-responsive-page" style={styles.page}>
         <div style={styles.wrap}>
-          <div style={styles.stateCard}>Account not found.</div>
+          <div className="atlas-responsive-card" style={styles.stateCard}>Account not found.</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={styles.page}>
+    <div className="atlas-responsive-page" style={styles.page}>
       <div style={styles.wrap}>
-        <header style={styles.hero}>
-          <div style={styles.heroTop}>
+        <header className="atlas-responsive-card" style={styles.hero}>
+          <div className="atlas-responsive-row" style={styles.heroTop}>
             <div>
-              <button type="button" onClick={() => navigate(-1)} style={styles.backButton}>
+              <button  type="button" onClick={() => navigate(-1)} style={styles.backButton}>
                 ← Accounts
               </button>
               <div style={styles.eyebrow}>Account Intelligence Workspace</div>
-              <h1 style={styles.h1}>{account.name || "Untitled Account"}</h1>
+              <h1 className="atlas-responsive-title" style={styles.h1}>{account.name || "Untitled Account"}</h1>
               <div style={styles.heroText}>
                 Review the account profile and open the client records connected
                 to this company.
               </div>
             </div>
 
-            <div style={styles.badgeWrap}>
-              <div style={styles.badge}>Account Active</div>
-              <div style={styles.badge}>{clients.length} clients linked</div>
+            <div className="atlas-responsive-row" style={styles.badgeWrap}>
+              <div className="atlas-responsive-card" style={styles.badge}>Account Active</div>
+              <div className="atlas-responsive-card" style={styles.badge}>{clients.length} clients linked</div>
             </div>
           </div>
         </header>
 
-        <section style={styles.statsGrid}>
+        <section className="atlas-responsive-metrics" style={styles.statsGrid}>
           <StatCard
             label="Linked Clients"
             value={clients.length}
@@ -135,21 +135,21 @@ export default function AccountDetail() {
         </section>
 
         <section style={styles.section}>
-          <div style={styles.sectionHead}>
+          <div className="atlas-responsive-row" style={styles.sectionHead}>
             <div>
               <div style={styles.sectionSub}>Relationship Directory</div>
               <div style={styles.sectionTitle}>Clients</div>
             </div>
-            <div style={styles.sectionTag}>{clients.length} total</div>
+            <div className="atlas-responsive-card" style={styles.sectionTag}>{clients.length} total</div>
           </div>
 
           <div style={styles.sectionBody}>
             {clients.length === 0 ? (
-              <div style={styles.emptyState}>
+              <div className="atlas-responsive-card atlas-responsive-row" style={styles.emptyState}>
                 No clients are connected to this account yet.
               </div>
             ) : (
-              <div style={styles.clientGrid}>
+              <div className="atlas-responsive-grid" style={styles.clientGrid}>
                 {clients.map((client) => {
                   const clientName = client.name || "Untitled Client";
                   const initials = clientName
@@ -167,7 +167,7 @@ export default function AccountDetail() {
                       style={styles.clientCard}
                       onClick={() => navigate(`/clients/${client._id}`)}
                     >
-                      <div style={styles.clientTop}>
+                      <div className="atlas-responsive-row" style={styles.clientTop}>
                         <div style={styles.companyIcon}>{initials || "C"}</div>
                         <div style={styles.openLabel}>Open client →</div>
                       </div>
@@ -189,7 +189,7 @@ export default function AccountDetail() {
 
 function StatCard({ label, value, note, compact = false }) {
   return (
-    <div style={styles.statCard}>
+    <div className="atlas-responsive-card" style={styles.statCard}>
       <div style={styles.statLabel}>{label}</div>
       <div
         style={{

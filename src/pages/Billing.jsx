@@ -270,7 +270,7 @@ function SummaryCard({
   valueStyle,
 }) {
   return (
-    <div style={styles.summaryCard}>
+    <div className="atlas-responsive-card" style={styles.summaryCard}>
       <div style={styles.summaryLabel}>{label}</div>
 
       <div
@@ -373,7 +373,7 @@ function PlanCard({
           : {}),
       }}
     >
-      <div style={styles.planTop}>
+      <div className="atlas-responsive-row" style={styles.planTop}>
         <div>
           <div style={styles.planName}>
             {plan.name}
@@ -463,7 +463,7 @@ function PlanChangeModal({
   const isUpgrade = direction === "upgrade";
 
   return (
-    <div
+    <div className="atlas-responsive-row"
       style={styles.modalBackdrop}
       onMouseDown={onClose}
       role="presentation"
@@ -475,7 +475,7 @@ function PlanChangeModal({
         aria-modal="true"
         aria-labelledby="plan-change-title"
       >
-        <div style={styles.modalHeader}>
+        <div className="atlas-responsive-row" style={styles.modalHeader}>
           <div>
             <div style={styles.eyebrow}>
               {isUpgrade ? "Plan Upgrade" : "Plan Downgrade"}
@@ -497,7 +497,7 @@ function PlanChangeModal({
         </div>
 
         <div style={styles.modalBody}>
-          <div style={styles.changeSummary}>
+          <div className="atlas-responsive-grid atlas-responsive-card" style={styles.changeSummary}>
             <div>
               <div style={styles.changeLabel}>Current</div>
               <div style={styles.changeValue}>{planName(currentPlan)}</div>
@@ -517,7 +517,7 @@ function PlanChangeModal({
               : "Stripe will show when the downgrade takes effect and any billing adjustment before you approve it. Your current access remains available according to the billing portal settings."}
           </div>
 
-          <div style={styles.modalActions}>
+          <div className="atlas-responsive-row" style={styles.modalActions}>
             <button
               type="button"
               onClick={onClose}
@@ -732,14 +732,14 @@ export default function Billing() {
 
   if (loadingSummary) {
     return (
-      <div style={styles.loadingPage}>
+      <div className="atlas-responsive-page atlas-responsive-row" style={styles.loadingPage}>
         Loading billing information...
       </div>
     );
   }
 
   return (
-    <div style={styles.page}>
+    <div className="atlas-responsive-page" style={styles.page}>
       <style>{`
         .atlas-billing-summary {
           display: grid;
@@ -771,8 +771,8 @@ export default function Billing() {
       `}</style>
 
       <div style={styles.container}>
-        <section style={styles.hero}>
-          <div style={styles.heroHeader}>
+        <section className="atlas-responsive-card" style={styles.hero}>
+          <div className="atlas-responsive-row" style={styles.heroHeader}>
             <div>
               <div style={styles.eyebrow}>
                 Workspace Billing
@@ -792,7 +792,7 @@ export default function Billing() {
               </p>
             </div>
 
-            <div style={styles.headerActions}>
+            <div className="atlas-responsive-row" style={styles.headerActions}>
               <button
                 type="button"
                 onClick={loadSummary}
@@ -819,13 +819,13 @@ export default function Billing() {
           </div>
 
           {notice ? (
-            <div style={styles.notice}>
+            <div className="atlas-responsive-card" style={styles.notice}>
               {notice}
             </div>
           ) : null}
 
           {error ? (
-            <div style={styles.error}>
+            <div className="atlas-responsive-card" style={styles.error}>
               {error}
             </div>
           ) : null}
@@ -889,7 +889,7 @@ export default function Billing() {
           </div>
 
           {!summary?.canManage ? (
-            <div style={styles.permissionNotice}>
+            <div className="atlas-responsive-card" style={styles.permissionNotice}>
               You can view this workspace’s plan, but
               only an owner or admin can make billing
               changes.
@@ -897,7 +897,7 @@ export default function Billing() {
           ) : null}
         </section>
 
-        <section style={styles.plansSection}>
+        <section className="atlas-responsive-card" style={styles.plansSection}>
           <div style={styles.sectionHeader}>
             <div>
               <div style={styles.eyebrow}>

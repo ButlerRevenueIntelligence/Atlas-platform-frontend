@@ -1,0 +1,27 @@
+/* Shared mobile layout rules; classes are attached to specific page sections.
+   Wide tables and kanban boards retain their own horizontal scrolling. */
+@media (max-width: 900px) {
+  .atlas-app-content .atlas-responsive-grid { grid-template-columns: minmax(0, 1fr) !important; }
+  .atlas-app-content .atlas-responsive-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .atlas-app-content .atlas-responsive-grid > *,
+  .atlas-app-content .atlas-responsive-metrics > * { min-width: 0; max-width: 100%; }
+}
+@media (max-width: 760px) {
+  .atlas-app-content { padding: 12px 12px 28px !important; }
+  .atlas-app-content .atlas-responsive-page { padding: 0 !important; min-width: 0; }
+  .atlas-app-content .atlas-responsive-card { padding: 16px !important; border-radius: 14px !important; min-width: 0; max-width: 100%; height: auto !important; }
+  .atlas-app-content .atlas-responsive-grid { gap: 16px !important; }
+  .atlas-app-content .atlas-responsive-metrics { gap: 12px !important; }
+  .atlas-app-content .atlas-responsive-title { font-size: 25px !important; line-height: 1.2 !important; }
+  .atlas-app-content .atlas-responsive-row { flex-wrap: wrap !important; gap: 10px !important; }
+  .atlas-app-content .atlas-responsive-row > * { min-width: 0 !important; max-width: 100%; }
+  .atlas-app-content .atlas-responsive-scroll { min-width: 0; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .atlas-app-content :is(h1, h2, h3, p, label) { overflow-wrap: anywhere; }
+  .atlas-app-content :is(button, input, select) { max-width: 100%; }
+  .atlas-app-content :is(input, select, textarea) { font-size: 16px !important; }
+  .atlas-app-content button { min-height: 44px; white-space: normal; }
+  .atlas-app-content .atlas-responsive-metrics > * { overflow-wrap: anywhere; }
+}
+@media (max-width: 440px) {
+  .atlas-app-content .atlas-responsive-metrics { grid-template-columns: minmax(0, 1fr) !important; }
+}

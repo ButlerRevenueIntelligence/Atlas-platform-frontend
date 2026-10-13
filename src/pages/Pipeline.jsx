@@ -437,9 +437,9 @@ export default function Pipeline() {
 
   if (loading) {
     return (
-      <div style={S.page}>
+      <div className="atlas-responsive-page" style={S.page}>
         <div style={S.titleWrap}>
-          <h1 style={S.title}>Deal Room</h1>
+          <h1 className="atlas-responsive-title" style={S.title}>Deal Room</h1>
           <div style={S.sub}>Loading pipeline intelligence…</div>
         </div>
       </div>
@@ -447,30 +447,30 @@ export default function Pipeline() {
   }
 
   return (
-    <div style={S.page}>
-      <div style={S.header}>
+    <div className="atlas-responsive-page" style={S.page}>
+      <div className="atlas-responsive-row" style={S.header}>
         <div style={S.titleWrap}>
-          <h1 style={S.title}>Deal Room</h1>
+          <h1 className="atlas-responsive-title" style={S.title}>Deal Room</h1>
           <div style={S.sub}>
             Manage pipeline movement, review deal pressure, and surface next best actions across the revenue board.
           </div>
         </div>
 
-        <button style={S.btn} onClick={load} disabled={loading}>
+        <button  style={S.btn} onClick={load} disabled={loading}>
           {loading ? "Refreshing..." : "Refresh"}
         </button>
       </div>
 
-      <div style={S.signalStrip}>
+      <div className="atlas-responsive-grid" style={S.signalStrip}>
         {signalStrip.map((item, idx) => (
-          <div key={`${item}-${idx}`} style={S.signalPill}>
+          <div className="atlas-responsive-card" key={`${item}-${idx}`} style={S.signalPill}>
             {item}
           </div>
         ))}
       </div>
 
-      <div style={S.kpiGrid}>
-        <div style={S.kpi}>
+      <div className="atlas-responsive-metrics" style={S.kpiGrid}>
+        <div className="atlas-responsive-card" style={S.kpi}>
           <div style={S.kpiLabel}>WEIGHTED PIPELINE</div>
           <div style={S.kpiValue}>{money(weightedPipeline)}</div>
           <div style={S.kpiSub}>
@@ -478,41 +478,41 @@ export default function Pipeline() {
           </div>
         </div>
 
-        <div style={S.kpi}>
+        <div className="atlas-responsive-card" style={S.kpi}>
           <div style={S.kpiLabel}>RAW PIPELINE</div>
           <div style={S.kpiValue}>{money(rawPipeline)}</div>
           <div style={S.kpiSub}>Total deal value represented across the board.</div>
         </div>
 
-        <div style={S.kpi}>
+        <div className="atlas-responsive-card" style={S.kpi}>
           <div style={S.kpiLabel}>WIN RATE</div>
           <div style={S.kpiValue}>{winRate}%</div>
           <div style={S.kpiSub}>Closed won performance versus closed lost outcomes.</div>
         </div>
 
-        <div style={S.kpi}>
+        <div className="atlas-responsive-card" style={S.kpi}>
           <div style={S.kpiLabel}>AVERAGE DEAL SIZE</div>
           <div style={S.kpiValue}>{money(avgDeal)}</div>
           <div style={S.kpiSub}>Average opportunity value across all deals in the system.</div>
         </div>
 
-        <div style={S.kpi}>
+        <div className="atlas-responsive-card" style={S.kpi}>
           <div style={S.kpiLabel}>AVG CLOSE CONFIDENCE</div>
           <div style={S.kpiValue}>{avgProbability}%</div>
           <div style={S.kpiSub}>Average probability level across all opportunities.</div>
         </div>
       </div>
 
-      <div style={S.mainGrid}>
+      <div className="atlas-responsive-grid" style={S.mainGrid}>
         <div style={S.boardWrap}>
-          <div style={S.board}>
+          <div className="atlas-responsive-scroll" style={S.board}>
             {STAGES.map((stage) => {
               const list = columns.get(stage) || [];
               const stageValue = stageStats[stage]?.value || 0;
               const stageCount = stageStats[stage]?.count || 0;
 
               return (
-                <div key={stage} style={S.column}>
+                <div className="atlas-responsive-card" key={stage} style={S.column}>
                   <div style={S.columnTitle}>{stage}</div>
                   <div style={S.columnMeta}>
                     {stageCount} deals • {money(stageValue)}
@@ -522,7 +522,7 @@ export default function Pipeline() {
                     const id = d._id || d.id;
 
                     return (
-                      <div
+                      <div className="atlas-responsive-card"
                         key={id}
                         style={S.dealCard}
                         onClick={() => openDealDrawer(id, d)}
@@ -568,23 +568,23 @@ export default function Pipeline() {
         </div>
 
         <div style={S.rightStack}>
-          <div style={S.sideCard}>
+          <div className="atlas-responsive-card" style={S.sideCard}>
             <div style={S.sectionTitle}>AI Deal Signals</div>
             <div style={S.list}>
               {dealSignals.map((item, idx) => (
-                <div key={`${item}-${idx}`} style={S.listItem}>
+                <div className="atlas-responsive-card" key={`${item}-${idx}`} style={S.listItem}>
                   <div style={S.listItemBody}>{item}</div>
                 </div>
               ))}
             </div>
           </div>
 
-          <div style={S.sideCard}>
+          <div className="atlas-responsive-card" style={S.sideCard}>
             <div style={S.sectionTitle}>Deal Risk Radar</div>
             <div style={S.list}>
               {dealRiskRadar.map((item, idx) => (
-                <div key={`${item.label}-${idx}`} style={S.listItem}>
-                  <div
+                <div className="atlas-responsive-card" key={`${item.label}-${idx}`} style={S.listItem}>
+                  <div className="atlas-responsive-row"
                     style={{
                       display: "flex",
                       justifyContent: "space-between",
@@ -602,11 +602,11 @@ export default function Pipeline() {
             </div>
           </div>
 
-          <div style={S.sideCard}>
+          <div className="atlas-responsive-card" style={S.sideCard}>
             <div style={S.sectionTitle}>Recommended Actions</div>
             <div style={S.list}>
               {recommendedActions.map((item, idx) => (
-                <div key={`${item}-${idx}`} style={S.listItem}>
+                <div className="atlas-responsive-card" key={`${item}-${idx}`} style={S.listItem}>
                   <div style={S.listItemBody}>{item}</div>
                 </div>
               ))}

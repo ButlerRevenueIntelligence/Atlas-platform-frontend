@@ -542,8 +542,8 @@ export default function RevenueIntel() {
   };
 
   return (
-    <div style={S.page}>
-      <div style={S.statusBar}>
+    <div className="atlas-responsive-page" style={S.page}>
+      <div className="atlas-responsive-card atlas-responsive-row" style={S.statusBar}>
         <span>Systems Online</span>
         <span>Revenue Engine Active</span>
         <span>Forecast Model Running</span>
@@ -551,26 +551,26 @@ export default function RevenueIntel() {
         <span>⚠ {signals.length} Signals Detected</span>
       </div>
 
-      <div style={S.headerRow}>
+      <div className="atlas-responsive-row" style={S.headerRow}>
         <div>
-          <h2 style={S.title}>Atlas Revenue Command Center</h2>
+          <h2 className="atlas-responsive-title" style={S.title}>Atlas Revenue Command Center</h2>
           <div style={S.subtitle}>
             Real-time revenue execution, deal follow-up pressure, win/loss visibility, and reactivation intelligence across the active board.
           </div>
         </div>
 
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-          <div style={S.pill}>
+        <div className="atlas-responsive-row" style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+          <div className="atlas-responsive-card" style={S.pill}>
             Win rate: <b>{Math.round(safeNum(wl.winRate))}%</b>
           </div>
-          <div style={S.pill}>
+          <div className="atlas-responsive-card" style={S.pill}>
             Weighted pipeline: <b>{money(weightedValue)}</b>
           </div>
-          <div style={S.pill}>
+          <div className="atlas-responsive-card" style={S.pill}>
             Board value: <b>{moneyCompact(totalPipeline)}</b>
           </div>
 
-          <button onClick={load} disabled={loading} style={S.btn}>
+          <button  onClick={load} disabled={loading} style={S.btn}>
             {loading ? "Loading..." : "Refresh"}
           </button>
 
@@ -578,15 +578,15 @@ export default function RevenueIntel() {
       </div>
 
       {atlasDemoWorkspace ? (
-        <div style={S.demoBanner}>
+        <div className="atlas-responsive-card" style={S.demoBanner}>
           Sample execution scenario · fictional deals and owners, shared with Deal War Room and Account Intelligence. Demo dates roll forward with today; viewing this board does not create database records.
         </div>
       ) : null}
 
-      {error ? <div style={S.error}>{error}</div> : null}
+      {error ? <div className="atlas-responsive-card" style={S.error}>{error}</div> : null}
 
-      <div style={S.heroCard}>
-        <div style={S.heroGrid}>
+      <div className="atlas-responsive-card" style={S.heroCard}>
+        <div className="atlas-responsive-grid" style={S.heroGrid}>
           <div>
             <div style={{ fontWeight: 900, fontSize: 16, marginBottom: 10 }}>
               Atlas AI Executive Summary
@@ -596,8 +596,8 @@ export default function RevenueIntel() {
             </div>
           </div>
 
-          <div style={S.pressureCard}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div className="atlas-responsive-card" style={S.pressureCard}>
+            <div className="atlas-responsive-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ fontWeight: 900, fontSize: 13 }}>Execution Pressure</div>
               <div style={S.badge(riskTone)}>{systemHealthLabel}</div>
             </div>
@@ -614,37 +614,37 @@ export default function RevenueIntel() {
         </div>
       </div>
 
-      <div style={S.kpiGrid}>
-        <div style={S.kpiCard}>
+      <div className="atlas-responsive-metrics" style={S.kpiGrid}>
+        <div className="atlas-responsive-card" style={S.kpiCard}>
           <div style={S.kpiLabel}>TOTAL PIPELINE</div>
           <div style={S.kpiValue}>{money(totalPipeline)}</div>
           <div style={S.kpiSub}>Combined value of active execution opportunities.</div>
         </div>
 
-        <div style={S.kpiCard}>
+        <div className="atlas-responsive-card" style={S.kpiCard}>
           <div style={S.kpiLabel}>WEIGHTED PIPELINE</div>
           <div style={S.kpiValue}>{money(weightedValue)}</div>
           <div style={S.kpiSub}>Probability-adjusted value tied to the current board.</div>
         </div>
 
-        <div style={S.kpiCard}>
+        <div className="atlas-responsive-card" style={S.kpiCard}>
           <div style={S.kpiLabel}>AVG CLOSE PROBABILITY</div>
           <div style={S.kpiValue}>{avgProbability.toFixed(0)}%</div>
           <div style={S.kpiSub}>Average close confidence across active deals.</div>
         </div>
 
-        <div style={S.kpiCard}>
+        <div className="atlas-responsive-card" style={S.kpiCard}>
           <div style={S.kpiLabel}>REACTIVATION CANDIDATES</div>
           <div style={S.kpiValue}>{reactCount}</div>
           <div style={S.kpiSub}>Inactive open opportunities surfaced for re-engagement.</div>
         </div>
       </div>
 
-      <div style={S.mainGrid}>
+      <div className="atlas-responsive-grid" style={S.mainGrid}>
         <div style={S.leftStack}>
-          <div style={S.card}>
+          <div className="atlas-responsive-card" style={S.card}>
             <div style={{ fontWeight: 900, marginBottom: 10 }}>Reactivation Rules</div>
-            <div
+            <div className="atlas-responsive-row"
               style={{
                 display: "flex",
                 justifyContent: "space-between",
@@ -657,7 +657,7 @@ export default function RevenueIntel() {
                 Open opportunities without recorded activity beyond this threshold will surface in the reactivation queue so Atlas can identify revive-worthy revenue.
               </div>
 
-              <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+              <div className="atlas-responsive-row" style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
                 <div style={{ fontSize: 12, opacity: 0.9 }}>Days since activity ≥</div>
                 <input
                   type="number"
@@ -667,23 +667,23 @@ export default function RevenueIntel() {
                   onChange={(e) => setReactivateAfterDays(Number(e.target.value || 0))}
                 />
                 <div style={{ fontSize: 12, opacity: 0.9 }}>days</div>
-                <button style={S.btnGhost} disabled={loading} onClick={load}>
+                <button  style={S.btnGhost} disabled={loading} onClick={load}>
                   Apply
                 </button>
               </div>
             </div>
           </div>
 
-          <div style={S.panelGrid}>
-            <div style={S.panel}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div className="atlas-responsive-grid" style={S.panelGrid}>
+            <div className="atlas-responsive-card" style={S.panel}>
+              <div className="atlas-responsive-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div style={S.panelTitle}>OVERDUE</div>
                 <div style={S.badge("bad")}>{overdueCount}</div>
               </div>
 
               {overdueCount ? (
                 (exec.overdue || []).slice(0, 10).map((d) => (
-                  <div
+                  <div className="atlas-responsive-card"
                     key={d.id || d._id}
                     style={S.row}
                     onClick={() => openDealDrawerById(d.id || d._id, toDrawerDeal(d))}
@@ -711,15 +711,15 @@ export default function RevenueIntel() {
               )}
             </div>
 
-            <div style={S.panel}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div className="atlas-responsive-card" style={S.panel}>
+              <div className="atlas-responsive-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div style={S.panelTitle}>DUE TODAY</div>
                 <div style={S.badge("warn")}>{dueTodayCount}</div>
               </div>
 
               {dueTodayCount ? (
                 (exec.dueToday || []).slice(0, 10).map((d) => (
-                  <div
+                  <div className="atlas-responsive-card"
                     key={d.id || d._id}
                     style={S.row}
                     onClick={() => openDealDrawerById(d.id || d._id, toDrawerDeal(d))}
@@ -747,11 +747,11 @@ export default function RevenueIntel() {
               )}
             </div>
 
-            <div style={S.panel}>
+            <div className="atlas-responsive-card" style={S.panel}>
               <div style={S.panelTitle}>WIN / LOSS + REACTIVATION</div>
 
               <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
-                <div style={S.rowStatic}>
+                <div className="atlas-responsive-card" style={S.rowStatic}>
                   <div style={{ fontWeight: 900, fontSize: 12 }}>Win / Loss</div>
                   <div style={S.small}>
                     Won: <b>{wl.won}</b> • Lost: <b>{wl.lost}</b> • Win rate: <b>{Math.round(safeNum(wl.winRate))}%</b>
@@ -762,7 +762,7 @@ export default function RevenueIntel() {
                   </div>
                 </div>
 
-                <div style={S.rowStatic}>
+                <div className="atlas-responsive-card" style={S.rowStatic}>
                   <div style={{ fontWeight: 900, fontSize: 12 }}>
                     Reactivation Queue <span style={{ opacity: 0.8 }}>(Inactive Open)</span>
                   </div>
@@ -773,7 +773,7 @@ export default function RevenueIntel() {
                 </div>
 
                 {(react.items || []).slice(0, 6).map((d) => (
-                  <div
+                  <div className="atlas-responsive-card"
                     key={d.id || d._id}
                     style={S.row}
                     onClick={() => openDealDrawerById(d.id || d._id, toDrawerDeal(d))}
@@ -802,12 +802,12 @@ export default function RevenueIntel() {
             </div>
           </div>
 
-          <div style={S.card}>
+          <div className="atlas-responsive-card" style={S.card}>
             <div style={{ fontWeight: 900, marginBottom: 10 }}>Upcoming Execution Queue</div>
             {upcomingCount ? (
               <div style={{ display: "grid", gap: 10 }}>
                 {(exec.upcoming || []).slice(0, 8).map((d) => (
-                  <div
+                  <div className="atlas-responsive-card"
                     key={d.id || d._id}
                     style={S.row}
                     onClick={() => openDealDrawerById(d.id || d._id, toDrawerDeal(d))}
@@ -836,7 +836,7 @@ export default function RevenueIntel() {
         </div>
 
         <div style={S.rightStack}>
-          <div style={S.insightCard}>
+          <div className="atlas-responsive-card" style={S.insightCard}>
             <div style={{ fontWeight: 900, marginBottom: 10 }}>Atlas AI Insights</div>
             <div style={{ display: "grid", gap: 10 }}>
               {aiInsights.map((item, idx) => (
@@ -847,7 +847,7 @@ export default function RevenueIntel() {
             </div>
           </div>
 
-          <div style={S.insightCard}>
+          <div className="atlas-responsive-card" style={S.insightCard}>
             <div style={{ fontWeight: 900, marginBottom: 10 }}>Signals</div>
             <div style={{ display: "grid", gap: 10 }}>
               {signals.map((item, idx) => (
@@ -858,7 +858,7 @@ export default function RevenueIntel() {
             </div>
           </div>
 
-          <div style={S.insightCard}>
+          <div className="atlas-responsive-card" style={S.insightCard}>
             <div style={{ fontWeight: 900, marginBottom: 10 }}>Recommended Actions</div>
             <div style={{ display: "grid", gap: 12 }}>
               {topRecommendations.map((item, idx) => (
@@ -872,7 +872,7 @@ export default function RevenueIntel() {
             </div>
           </div>
 
-          <div style={S.insightCard}>
+          <div className="atlas-responsive-card" style={S.insightCard}>
             <div style={{ fontWeight: 900, marginBottom: 10 }}>Board Snapshot</div>
             <div style={{ display: "grid", gap: 10 }}>
               <div style={{ fontSize: 13, opacity: 0.9 }}>
@@ -894,19 +894,19 @@ export default function RevenueIntel() {
             </div>
           </div>
 
-          <div style={S.insightCard}>
+          <div className="atlas-responsive-card" style={S.insightCard}>
             <div style={{ fontWeight: 900, marginBottom: 10 }}>Quick Navigation</div>
             <div style={{ display: "grid", gap: 10 }}>
-              <button style={S.btnGhost} onClick={() => nav("/deal-war-room")}>
+              <button  style={S.btnGhost} onClick={() => nav("/deal-war-room")}>
                 Open Deal War Room
               </button>
-              <button style={S.btnGhost} onClick={() => nav("/growth-engine")}>
+              <button  style={S.btnGhost} onClick={() => nav("/growth-engine")}>
                 Open Growth Engine
               </button>
-              <button style={S.btnGhost} onClick={() => nav("/account-intelligence")}>
+              <button  style={S.btnGhost} onClick={() => nav("/account-intelligence")}>
                 Open Account Intelligence
               </button>
-              <button style={S.btnGhost} onClick={() => nav("/atlas-ai-operator")}>
+              <button  style={S.btnGhost} onClick={() => nav("/atlas-ai-operator")}>
                 Open Atlas AI Operator
               </button>
             </div>
@@ -915,8 +915,8 @@ export default function RevenueIntel() {
       </div>
 
       {atlasDemoWorkspace ? (drawerOpen && <div role="dialog" aria-modal="true" aria-label="Sample opportunity details" style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,.75)", display: "grid", placeItems: "center", padding: 24 }} onClick={closeDrawer}>
-        <div style={{ background: "#0b1730", color: "#fff", borderRadius: 16, padding: 24, maxWidth: 600, width: "100%" }} onClick={event => event.stopPropagation()}>
-          <button onClick={closeDrawer} style={S.btn}>Close</button>
+        <div className="atlas-responsive-card" style={{ background: "#0b1730", color: "#fff", borderRadius: 16, padding: 24, maxWidth: 600, width: "100%" }} onClick={event => event.stopPropagation()}>
+          <button  onClick={closeDrawer} style={S.btn}>Close</button>
           <h2>{drawerDeal?.name}</h2><p>Sample opportunity · read only</p>
           <p>{drawerDeal?.clientName} · {money(drawerDeal?.amount)} · {drawerDeal?.stage}</p>
           <p>Owner: {drawerDeal?.ownerName || "Owner not recorded"}</p>

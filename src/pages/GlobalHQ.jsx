@@ -54,7 +54,7 @@ function Badge({ children, active = false, danger = false }) {
   }
 
   return (
-    <span
+    <span className="atlas-responsive-card"
       style={{
         display: "inline-flex",
         alignItems: "center",
@@ -218,7 +218,7 @@ export default function GlobalHQ() {
   return (
     <div style={{ padding: 20 }}>
       <div style={{ ...cardStyle, marginBottom: 18 }}>
-        <div
+        <div className="atlas-responsive-row"
           style={{
             display: "flex",
             justifyContent: "space-between",
@@ -283,7 +283,7 @@ export default function GlobalHQ() {
         </div>
       )}
 
-      <div
+      <div className="atlas-responsive-grid"
         style={{
           display: "grid",
           gridTemplateColumns: "1.15fr 1fr",
@@ -331,7 +331,7 @@ export default function GlobalHQ() {
                 />
               </div>
 
-              <div
+              <div className="atlas-responsive-grid"
                 style={{
                   display: "grid",
                   gridTemplateColumns: "1fr 1fr",
@@ -477,7 +477,7 @@ export default function GlobalHQ() {
 
               return (
                 <div key={workspace._id} style={cardStyle}>
-                  <div
+                  <div className="atlas-responsive-row"
                     style={{
                       display: "flex",
                       justifyContent: "space-between",
@@ -501,7 +501,7 @@ export default function GlobalHQ() {
                       </div>
                     </div>
 
-                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <div className="atlas-responsive-row" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                       {isActive ? (
                         <Badge active>Active Workspace</Badge>
                       ) : (

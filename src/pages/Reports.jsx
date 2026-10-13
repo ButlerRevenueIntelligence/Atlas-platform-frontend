@@ -455,7 +455,7 @@ function InsightStack({ items = [] }) {
   return (
     <div style={styles.insightStack}>
       {items.map((item) => (
-        <div key={item} style={styles.insightItem}>
+        <div className="atlas-responsive-card" key={item} style={styles.insightItem}>
           {item}
         </div>
       ))}
@@ -464,7 +464,7 @@ function InsightStack({ items = [] }) {
 }
 
 function EmptyState({ text }) {
-  return <div style={styles.emptyState}>{text}</div>;
+  return <div className="atlas-responsive-card atlas-responsive-row" style={styles.emptyState}>{text}</div>;
 }
 
 function AtlasBenchmarksSection({ orgName, isDemo, hasLiveData, benchmarkCards }) {
@@ -473,22 +473,22 @@ function AtlasBenchmarksSection({ orgName, isDemo, hasLiveData, benchmarkCards }
       {(!isDemo && !hasLiveData) ? (
         <EmptyState text="No live benchmark data yet. Once sales, revenue, and pipeline signals are flowing, Atlas will compare this workspace against market benchmark ranges." />
       ) : (
-        <div style={styles.benchmarkGrid}>
+        <div className="atlas-responsive-grid" style={styles.benchmarkGrid}>
           {benchmarkCards.map((card) => (
-            <div key={card.title} style={styles.benchmarkCard}>
+            <div className="atlas-responsive-card" key={card.title} style={styles.benchmarkCard}>
               <div style={styles.benchmarkLabel}>{card.title}</div>
 
-              <div style={styles.benchmarkRow}>
+              <div className="atlas-responsive-row" style={styles.benchmarkRow}>
                 <div style={styles.benchmarkName}>{orgName}</div>
                 <div style={styles.benchmarkValue}>{card.company}</div>
               </div>
 
-              <div style={styles.benchmarkRow}>
+              <div className="atlas-responsive-row" style={styles.benchmarkRow}>
                 <div style={styles.benchmarkSub}>Industry Avg</div>
                 <div style={styles.benchmarkSub}>{card.industry}</div>
               </div>
 
-              <div style={styles.benchmarkRow}>
+              <div className="atlas-responsive-row" style={styles.benchmarkRow}>
                 <div style={styles.benchmarkSub}>Top Quartile</div>
                 <div style={styles.benchmarkSub}>{card.topQuartile}</div>
               </div>
@@ -889,10 +889,10 @@ export default function Reports() {
 
   if (loading) {
     return (
-      <div style={styles.page}>
+      <div className="atlas-responsive-page" style={styles.page}>
         <div style={styles.wrap}>
-          <div style={styles.hero}>
-            <h1 style={styles.h1}>Loading Reports...</h1>
+          <div className="atlas-responsive-card" style={styles.hero}>
+            <h1 className="atlas-responsive-title" style={styles.h1}>Loading Reports...</h1>
           </div>
         </div>
       </div>
@@ -901,23 +901,23 @@ export default function Reports() {
 
   if (loadError) {
     return (
-      <div style={styles.page}>
+      <div className="atlas-responsive-page" style={styles.page}>
         <div style={styles.wrap}>
-          <div style={styles.errorBox}>{loadError}</div>
+          <div className="atlas-responsive-card" style={styles.errorBox}>{loadError}</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={styles.page}>
+    <div className="atlas-responsive-page" style={styles.page}>
       <WorkspaceDataNotice dashboard={dashboard} />
       <div style={styles.wrap}>
-        <div style={styles.hero}>
-          <div style={styles.heroTop}>
+        <div className="atlas-responsive-card" style={styles.hero}>
+          <div className="atlas-responsive-row" style={styles.heroTop}>
             <div>
               <div style={styles.eyebrow}>Reporting Layer</div>
-              <h1 style={styles.h1}>Reports & Executive Briefings</h1>
+              <h1 className="atlas-responsive-title" style={styles.h1}>Reports & Executive Briefings</h1>
               <div style={styles.heroText}>
                 Atlas transforms platform intelligence into leadership-ready reporting.
                 Prepare board reports, revenue summaries, sales reviews, and marketing
@@ -925,13 +925,13 @@ export default function Reports() {
               </div>
             </div>
 
-            <div style={styles.badgeWrap}>
+            <div className="atlas-responsive-row" style={styles.badgeWrap}>
               {[
                 isDemo ? "Reporting Demo" : "Reporting Live",
                 hasLiveData ? "Executive Briefing Ready" : "Briefing Pending",
                 "Atlas AI Summarizing",
               ].map((item) => (
-                <div key={item} style={styles.badge}>
+                <div className="atlas-responsive-card" key={item} style={styles.badge}>
                   {item}
                 </div>
               ))}
@@ -941,7 +941,7 @@ export default function Reports() {
 
         {dashboard?.financials ? (
           <Section title="QuickBooks financials" subtitle={`${new Date(dashboard.financials.periodStart).toLocaleDateString()} – ${new Date(dashboard.financials.periodEnd).toLocaleDateString()}`}>
-            <div style={styles.statsWrap}>
+            <div className="atlas-responsive-metrics" style={styles.statsWrap}>
               {[['Accounting revenue', 'revenue'], ['Expenses', 'expenses'], ['Net income', 'netIncome'], ['Cash', 'cash']].map(([label, key]) => (
                 <MetricCard key={key} title={label} value={Number(dashboard.financials[key] || 0).toLocaleString(undefined, { style: 'currency', currency: dashboard.financials.currency || 'USD', maximumFractionDigits: 0 })} subtext="QuickBooks reporting period" accent="emerald" />
               ))}
@@ -955,16 +955,16 @@ export default function Reports() {
           benchmarkCards={benchmarkCards}
         /> : null}
 
-        <div style={styles.signalGrid}>
+        <div className="atlas-responsive-grid" style={styles.signalGrid}>
           {executiveSignals.map((item) => (
-            <div key={item.title} style={styles.signalCard}>
+            <div className="atlas-responsive-card" key={item.title} style={styles.signalCard}>
               <div style={styles.signalTitle}>{item.title}</div>
               <div style={styles.signalBody}>{item.body}</div>
             </div>
           ))}
         </div>
 
-        <div style={styles.statsWrap}>
+        <div className="atlas-responsive-metrics" style={styles.statsWrap}>
           {summaryStats.map((stat) => (
             <MetricCard
               key={stat.label}
@@ -976,9 +976,9 @@ export default function Reports() {
           ))}
         </div>
 
-        <div style={styles.twoCol}>
+        <div className="atlas-responsive-grid" style={styles.twoCol}>
           <Section title="Revenue & Pipeline Snapshot" subtitle="Performance Trend">
-            <div style={styles.chartShell}>
+            <div className="atlas-responsive-card" style={styles.chartShell}>
               {!isDemo && !hasLiveData ? (
                 <EmptyState text="No live report trend data yet. Connect revenue and pipeline sources to generate executive reporting." />
               ) : (
@@ -1025,18 +1025,18 @@ export default function Reports() {
           </Section>
         </div>
 
-        <div style={styles.twoCol}>
+        <div className="atlas-responsive-grid" style={styles.twoCol}>
           <Section title="Generate Reports" subtitle="Output Library">
-            <div style={styles.reportGrid}>
+            <div className="atlas-responsive-grid" style={styles.reportGrid}>
               {reportTypes.map((report) => {
                 const busy = generatingTitle === report.title;
                 return (
-                  <div key={report.title} style={styles.reportCard}>
+                  <div className="atlas-responsive-card" key={report.title} style={styles.reportCard}>
                     <div style={styles.reportTitle}>{report.title}</div>
                     <div style={styles.reportBody}>{report.description}</div>
                     <div style={styles.reportMeta}>{report.meta}</div>
 
-                    <div style={styles.buttonRow}>
+                    <div className="atlas-responsive-row" style={styles.buttonRow}>
                       <button
                         style={{
                           ...styles.primaryBtn,
@@ -1064,7 +1064,7 @@ export default function Reports() {
           </Section>
 
           <Section title="Report Type Value" subtitle="Strategic Score">
-            <div style={styles.chartShell}>
+            <div className="atlas-responsive-card" style={styles.chartShell}>
               {!isDemo ? (
                 <EmptyState text="Report scoring is unavailable until a validated scoring model is configured." />
               ) : (
@@ -1091,11 +1091,11 @@ export default function Reports() {
           </Section>
         </div>
 
-        <div style={styles.twoCol}>
+        <div className="atlas-responsive-grid" style={styles.twoCol}>
           <Section title="Executive Briefing Structure" subtitle="Recommended Sections">
             <div style={styles.bulletStack}>
               {briefingSections.map((item, idx) => (
-                <div key={item} style={styles.bulletRow}>
+                <div className="atlas-responsive-card" key={item} style={styles.bulletRow}>
                   <div style={styles.bulletDot}>{idx + 1}</div>
                   <div style={{ color: "#e5edf8", fontSize: 15, lineHeight: 1.6 }}>
                     {item}
@@ -1107,21 +1107,21 @@ export default function Reports() {
 
           <Section title="Recommended Reporting Use Cases" subtitle="Where To Use">
             <div style={styles.useCaseGrid}>
-              <div style={styles.useCaseCard}>
+              <div className="atlas-responsive-card" style={styles.useCaseCard}>
                 <div style={styles.useCaseTitle}>Board & Investor Meetings</div>
                 <div style={styles.useCaseBody}>
                   Lead with performance direction, strategic risk, and the decisions leadership needs to make next.
                 </div>
               </div>
 
-              <div style={styles.useCaseCard}>
+              <div className="atlas-responsive-card" style={styles.useCaseCard}>
                 <div style={styles.useCaseTitle}>Weekly Revenue Reviews</div>
                 <div style={styles.useCaseBody}>
                   Keep reporting focused on pipeline coverage, close confidence, deal movement, and execution pressure.
                 </div>
               </div>
 
-              <div style={styles.useCaseCard}>
+              <div className="atlas-responsive-card" style={styles.useCaseCard}>
                 <div style={styles.useCaseTitle}>Growth & Channel Reviews</div>
                 <div style={styles.useCaseBody}>
                   Show which initiatives are influencing opportunity creation, efficiency, and closed revenue outcomes.
@@ -1133,15 +1133,15 @@ export default function Reports() {
       </div>
 
       {previewReport ? (
-        <div style={styles.modalBackdrop} onClick={() => setPreviewReport(null)}>
-          <div style={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+        <div className="atlas-responsive-row" style={styles.modalBackdrop} onClick={() => setPreviewReport(null)}>
+          <div className="atlas-responsive-card" style={styles.modalCard} onClick={(e) => e.stopPropagation()}>
             <div style={styles.modalTitle}>{previewReport.title}</div>
             <div style={styles.modalSub}>
               {previewReport.description} <br />
               {previewReport.meta}
             </div>
 
-            <div style={styles.modalBlock}>
+            <div className="atlas-responsive-card" style={styles.modalBlock}>
               <div style={styles.modalBlockTitle}>Executive Snapshot</div>
               <ul style={styles.modalList}>
                 <li>Workspace: {orgName}</li>
@@ -1154,7 +1154,7 @@ export default function Reports() {
               </ul>
             </div>
 
-            <div style={styles.modalBlock}>
+            <div className="atlas-responsive-card" style={styles.modalBlock}>
               <div style={styles.modalBlockTitle}>Preview Narrative</div>
               <ul style={styles.modalList}>
                 {previewReport.sections.map((item) => (
@@ -1163,7 +1163,7 @@ export default function Reports() {
               </ul>
             </div>
 
-            <div style={styles.modalBlock}>
+            <div className="atlas-responsive-card" style={styles.modalBlock}>
               <div style={styles.modalBlockTitle}>Recommended Briefing Sections</div>
               <ul style={styles.modalList}>
                 {briefingSections.map((item) => (
@@ -1172,7 +1172,7 @@ export default function Reports() {
               </ul>
             </div>
 
-            <div style={styles.modalCloseRow}>
+            <div className="atlas-responsive-row" style={styles.modalCloseRow}>
               <button
                 style={styles.secondaryBtn}
                 onClick={() => setPreviewReport(null)}

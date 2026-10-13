@@ -371,15 +371,15 @@ export default function Invites() {
         }
       `}</style>
 
-      <div style={styles.page}>
+      <div className="atlas-responsive-page" style={styles.page}>
         <div style={styles.container}>
-          <header style={styles.header}>
+          <header className="atlas-responsive-card atlas-responsive-row" style={styles.header}>
             <div>
               <div style={styles.eyebrow}>
                 Workspace administration
               </div>
 
-              <h1 style={styles.title}>
+              <h1 className="atlas-responsive-title" style={styles.title}>
                 Invitations
               </h1>
 
@@ -390,7 +390,7 @@ export default function Invites() {
               </p>
             </div>
 
-            <div style={styles.headerActions}>
+            <div className="atlas-responsive-row" style={styles.headerActions}>
               <button
                 type="button"
                 onClick={loadInvites}
@@ -413,18 +413,18 @@ export default function Invites() {
           </header>
 
           {error && !modalOpen ? (
-            <div style={styles.error}>
+            <div className="atlas-responsive-card" style={styles.error}>
               {error}
             </div>
           ) : null}
 
           {success ? (
-            <div style={styles.success}>
+            <div className="atlas-responsive-card" style={styles.success}>
               {success}
             </div>
           ) : null}
 
-          <section style={styles.statsGrid}>
+          <section className="atlas-responsive-metrics" style={styles.statsGrid}>
             <MetricCard
               label="Total Invites"
               value={stats.total}
@@ -451,7 +451,7 @@ export default function Invites() {
           </section>
 
           <section style={styles.invitesSection}>
-            <div style={styles.sectionHeader}>
+            <div className="atlas-responsive-row" style={styles.sectionHeader}>
               <div>
                 <div style={styles.sectionEyebrow}>
                   Access onboarding
@@ -463,7 +463,7 @@ export default function Invites() {
               </div>
 
               <div
-                className="invite-filters"
+                className="invite-filters atlas-responsive-row"
                 style={styles.filters}
               >
                 <input
@@ -595,7 +595,7 @@ export default function Invites() {
 
 function MetricCard({ label, value, detail }) {
   return (
-    <div style={styles.metricCard}>
+    <div className="atlas-responsive-card" style={styles.metricCard}>
       <div style={styles.metricLabel}>
         {label}
       </div>
@@ -633,7 +633,7 @@ function InviteRow({
 
   return (
     <article
-      className="invite-row"
+      className="invite-row atlas-responsive-grid atlas-responsive-card"
       style={styles.inviteRow}
     >
       <div style={styles.identity}>
@@ -650,7 +650,7 @@ function InviteRow({
         </div>
       </div>
 
-      <div style={styles.inviteDetails}>
+      <div className="atlas-responsive-grid" style={styles.inviteDetails}>
         <div>
           <div style={styles.detailLabel}>
             Role
@@ -684,7 +684,7 @@ function InviteRow({
         </div>
       </div>
 
-      <div style={styles.rowActions}>
+      <div className="atlas-responsive-row" style={styles.rowActions}>
         {pending ? (
           <>
             <button
@@ -780,7 +780,7 @@ function InviteModal({
           event.stopPropagation()
         }
       >
-        <div style={styles.modalHeader}>
+        <div className="atlas-responsive-row" style={styles.modalHeader}>
           <div>
             <div style={styles.sectionEyebrow}>
               New workspace access
@@ -804,7 +804,7 @@ function InviteModal({
         <form onSubmit={onSubmit}>
           <div style={styles.formBody}>
             {error ? (
-              <div style={styles.error}>
+              <div className="atlas-responsive-card" style={styles.error}>
                 {error}
               </div>
             ) : null}
@@ -860,14 +860,14 @@ function InviteModal({
               {ROLE_DESCRIPTIONS[form.role]}
             </div>
 
-            <div style={styles.securityNote}>
+            <div className="atlas-responsive-card" style={styles.securityNote}>
               The invitation expires after seven
               days. Workspace ownership cannot be
               assigned through an invitation.
             </div>
           </div>
 
-          <div style={styles.modalFooter}>
+          <div className="atlas-responsive-row" style={styles.modalFooter}>
             <button
               type="button"
               onClick={onClose}

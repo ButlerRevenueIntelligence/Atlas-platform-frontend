@@ -1866,22 +1866,22 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div style={S.page}>
+      <div className="atlas-responsive-page" style={S.page}>
         <div style={S.bgGlow} />
-        <h1 style={S.title}>Atlas Overview</h1>
+        <h1 className="atlas-responsive-title" style={S.title}>Atlas Overview</h1>
         <div style={S.sub}>Loading…</div>
       </div>
     );
   }
 
   return (
-    <div style={S.page}>
+    <div className="atlas-responsive-page" style={S.page}>
       <WorkspaceDataNotice dashboard={dashboard} />
       <div style={S.bgGlow} />
 
-      <div style={S.topRow}>
+      <div className="atlas-responsive-card atlas-responsive-row" style={S.topRow}>
         <div>
-          <h1 style={S.title}>Atlas Overview</h1>
+          <h1 className="atlas-responsive-title" style={S.title}>Atlas Overview</h1>
           <div style={S.sub}>
             <span style={{ opacity: 0.7 }}>Last updated:</span> {lastUpdatedLabel}{" "}
             <span style={{ opacity: 0.7 }}>• Data as of:</span> {dataAsOfLabel}
@@ -1891,7 +1891,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div style={{ display: "flex", gap: 14, flexWrap: "wrap", justifyContent: "flex-end" }}>
+        <div className="atlas-responsive-row" style={{ display: "flex", gap: 14, flexWrap: "wrap", justifyContent: "flex-end" }}>
           <div style={{ minWidth: 260 }}>
             <OrgSwitcher
               onSwitched={async () => {
@@ -1900,12 +1900,12 @@ export default function Dashboard() {
             />
           </div>
 
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "flex-end" }}>
-            <button onClick={openClientModal} style={S.actionBtn}>
+          <div className="atlas-responsive-row" style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "flex-end" }}>
+            <button  onClick={openClientModal} style={S.actionBtn}>
               Add Client
             </button>
 
-            <button onClick={openDealModal} style={S.actionBtn}>
+            <button  onClick={openDealModal} style={S.actionBtn}>
               Add Deal
             </button>
 
@@ -1920,15 +1920,15 @@ export default function Dashboard() {
               </button>
             ) : null}
 
-            <div style={S.badge}>Revenue OS Overview</div>
-            <div style={S.badge}>AI Insights Active</div>
-            <div style={S.badge}>Secure Session</div>
+            <div className="atlas-responsive-card" style={S.badge}>Revenue OS Overview</div>
+            <div className="atlas-responsive-card" style={S.badge}>AI Insights Active</div>
+            <div className="atlas-responsive-card" style={S.badge}>Secure Session</div>
           </div>
         </div>
       </div>
 
-      {demoMsg ? <div style={S.success}>{demoMsg}</div> : null}
-      {error ? <div style={S.error}>{error}</div> : null}
+      {demoMsg ? <div className="atlas-responsive-card" style={S.success}>{demoMsg}</div> : null}
+      {error ? <div className="atlas-responsive-card" style={S.error}>{error}</div> : null}
 
       <SystemStatus />
       <AITicker />
@@ -1948,7 +1948,7 @@ export default function Dashboard() {
           operate inside one revenue command center.
         </div>
 
-        <div
+        <div className="atlas-responsive-grid"
           style={{
             display: "grid",
             gridTemplateColumns: "1.6fr 0.8fr auto",
@@ -2002,19 +2002,19 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {inviteMsg ? <div style={S.success}>{inviteMsg}</div> : null}
-        {inviteErr ? <div style={S.error}>{inviteErr}</div> : null}
+        {inviteMsg ? <div className="atlas-responsive-card" style={S.success}>{inviteMsg}</div> : null}
+        {inviteErr ? <div className="atlas-responsive-card" style={S.error}>{inviteErr}</div> : null}
       </div>
 
-      <div style={S.signalStrip}>
+      <div className="atlas-responsive-grid" style={S.signalStrip}>
         {overviewSignals.length ? (
           overviewSignals.map((signal, idx) => (
-            <div key={`${signal}-${idx}`} style={S.signalPill}>
+            <div className="atlas-responsive-card" key={`${signal}-${idx}`} style={S.signalPill}>
               {signal}
             </div>
           ))
         ) : (
-          <div style={S.signalPill}>
+          <div className="atlas-responsive-card" style={S.signalPill}>
             No live signals yet. Connect integrations, upload a spreadsheet, or add deals to activate Atlas intelligence.
           </div>
         )}
@@ -2088,29 +2088,29 @@ export default function Dashboard() {
         )}
       </div>
 
-      <div style={S.navGrid}>
-        <div style={S.navCard} onClick={() => nav("/command-center")}>
+      <div className="atlas-responsive-grid" style={S.navGrid}>
+        <div className="atlas-responsive-card" style={S.navCard} onClick={() => nav("/command-center")}>
           <div style={S.navTitle}>Command Center</div>
           <div style={S.navDesc}>
             Go to the main revenue war room for forecast, pipeline health, and AI intelligence.
           </div>
         </div>
 
-        <div style={S.navCard} onClick={() => nav("/deal-war-room")}>
+        <div className="atlas-responsive-card" style={S.navCard} onClick={() => nav("/deal-war-room")}>
           <div style={S.navTitle}>Deal War Room</div>
           <div style={S.navDesc}>
             Analyze opportunity risk, stakeholders, next best actions, and close probability.
           </div>
         </div>
 
-        <div style={S.navCard} onClick={() => nav("/growth-engine")}>
+        <div className="atlas-responsive-card" style={S.navCard} onClick={() => nav("/growth-engine")}>
           <div style={S.navTitle}>Growth Engine</div>
           <div style={S.navDesc}>
             Connect marketing to pipeline and understand what channels drive revenue.
           </div>
         </div>
 
-        <div style={S.navCard} onClick={() => nav("/atlas-ai-operator")}>
+        <div className="atlas-responsive-card" style={S.navCard} onClick={() => nav("/atlas-ai-operator")}>
           <div style={S.navTitle}>Atlas AI Operator</div>
           <div style={S.navDesc}>
             Open the AI copilot for executive insights, strategy prompts, and revenue guidance.
@@ -2148,7 +2148,7 @@ export default function Dashboard() {
         />
       </div>
 
-      <div style={S.simRow}>
+      <div className="atlas-responsive-row" style={S.simRow}>
         {scenarioList.map((s) => (
           <button
             key={s.key}
@@ -2169,7 +2169,7 @@ export default function Dashboard() {
         ))}
       </div>
 
-      <div style={S.kpiGrid}>
+      <div className="atlas-responsive-metrics" style={S.kpiGrid}>
         <div style={S.card}>
           <div style={S.kLabel}>REVENUE (30D)</div>
           <div style={S.kValue}>
@@ -2224,12 +2224,12 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div style={S.grid}>
-        <div style={S.chartsGrid}>
-          <div style={S.chartRow}>
+      <div className="atlas-responsive-grid" style={S.grid}>
+        <div className="atlas-responsive-grid" style={S.chartsGrid}>
+          <div className="atlas-responsive-grid" style={S.chartRow}>
             <div style={S.card}>
               <div style={S.sectionTitle}>Revenue vs Spend (30 Days)</div>
-              <div style={S.chartShell}>
+              <div className="atlas-responsive-card" style={S.chartShell}>
                 {metrics.length ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={metrics} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
@@ -2288,7 +2288,7 @@ export default function Dashboard() {
 
             <div style={S.card}>
               <div style={S.sectionTitle}>Pipeline by Stage</div>
-              <div style={S.miniChartShell}>
+              <div className="atlas-responsive-card" style={S.miniChartShell}>
                 {pipelineByStage.length ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -2326,7 +2326,7 @@ export default function Dashboard() {
 
           <div style={S.card}>
             <div style={S.sectionTitle}>Leads (30 Days)</div>
-            <div style={S.chartShell}>
+            <div className="atlas-responsive-card" style={S.chartShell}>
               {metrics.length ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={metrics} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
@@ -2351,7 +2351,7 @@ export default function Dashboard() {
 
           <div style={S.card}>
             <div style={S.sectionTitle}>Channel Revenue Attribution</div>
-            <div style={S.chartShell}>
+            <div className="atlas-responsive-card" style={S.chartShell}>
               {channelChart.length ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={channelChart} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
@@ -2391,7 +2391,7 @@ export default function Dashboard() {
           <div style={S.card}>
             <div style={S.sectionTitle}>Global Revenue Intelligence Map</div>
 
-            <div style={S.miniWorldGrid}>
+            <div className="atlas-responsive-grid" style={S.miniWorldGrid}>
               <div style={S.miniMapShell}>
                 <div style={S.miniMapHud}>
                   <div style={S.miniMapHudHead}>
@@ -2488,7 +2488,7 @@ export default function Dashboard() {
                       offset={20}
                       className="atlas-map-popup"
                     >
-                      <div
+                      <div className="atlas-responsive-card"
                         style={{
                           minWidth: 220,
                           padding: 12,
@@ -2534,19 +2534,19 @@ export default function Dashboard() {
                 </Map>
 
                 {!hasDashboardMapToken ? (
-                  <div style={S.miniMapStatus}>
+                  <div className="atlas-responsive-card" style={S.miniMapStatus}>
                     Fallback map active — add VITE_MAPBOX_TOKEN for full globe
                   </div>
                 ) : null}
               </div>
 
-              <div style={S.miniMapSide}>
+              <div className="atlas-responsive-card" style={S.miniMapSide}>
                 <div style={S.miniMapSideTitle}>Regional Priority Ranking</div>
 
                 <div style={S.miniRankList}>
                   {regionalSignals.map((r, idx) => (
-                    <div key={`${r.region}-rank`} style={S.miniRankRow}>
-                      <div style={S.miniRankTop}>
+                    <div className="atlas-responsive-card" key={`${r.region}-rank`} style={S.miniRankRow}>
+                      <div className="atlas-responsive-row" style={S.miniRankTop}>
                         <div style={S.miniRankName}>
                           #{idx + 1} {r.region}
                         </div>
@@ -2564,7 +2564,7 @@ export default function Dashboard() {
           </div>
 
           <div style={S.card}>
-            <div
+            <div className="atlas-responsive-row"
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -2595,11 +2595,11 @@ export default function Dashboard() {
                 <div style={S.insightWrap}>
                   {displayedInsights.map((it, idx) => (
                     <div key={`${it.title}-${idx}`} style={S.insightItem(it.type)}>
-                      <div style={S.insightTop}>
+                      <div className="atlas-responsive-row" style={S.insightTop}>
                         <div style={S.tag(it.type)}>
                           {it.type} <span style={{ opacity: 0.7 }}>•</span> {it.impact}
                         </div>
-                        <div style={S.confidence}>{it.confidence}% CONFIDENCE</div>
+                        <div className="atlas-responsive-card" style={S.confidence}>{it.confidence}% CONFIDENCE</div>
                       </div>
                       <div style={S.insightTitle}>{it.title}</div>
                       <div style={S.insightBody}>{it.body}</div>
@@ -2607,7 +2607,7 @@ export default function Dashboard() {
                   ))}
                 </div>
               ) : (
-                <div style={S.signalPill}>
+                <div className="atlas-responsive-card" style={S.signalPill}>
                   No AI insights yet. Atlas will generate them after real workspace data is added.
                 </div>
               )}
@@ -2621,12 +2621,12 @@ export default function Dashboard() {
             <div style={S.list}>
               {overviewSignals.length ? (
                 overviewSignals.map((signal, idx) => (
-                  <div key={`${signal}-side-${idx}`} style={S.pillCard}>
+                  <div className="atlas-responsive-card" key={`${signal}-side-${idx}`} style={S.pillCard}>
                     <div style={S.pillMeta}>{signal}</div>
                   </div>
                 ))
               ) : (
-                <div style={S.pillCard}>
+                <div className="atlas-responsive-card" style={S.pillCard}>
                   <div style={S.pillMeta}>
                     No live signals yet. This panel activates when Atlas receives real workspace data.
                   </div>
@@ -2667,7 +2667,7 @@ export default function Dashboard() {
 
             <div style={{ marginBottom: 14 }}>
               <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 6 }}>30-Day Revenue vs Goal</div>
-              <div
+              <div className="atlas-responsive-row"
                 style={{
                   display: "flex",
                   justifyContent: "space-between",
@@ -2688,7 +2688,7 @@ export default function Dashboard() {
 
             <div>
               <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 6 }}>90-Day Forecast vs Goal</div>
-              <div
+              <div className="atlas-responsive-row"
                 style={{
                   display: "flex",
                   justifyContent: "space-between",
@@ -2718,7 +2718,7 @@ export default function Dashboard() {
                   const meta = integrationMeta(i);
 
                   return (
-                    <div
+                    <div className="atlas-responsive-card"
                       key={i?._id || i?.id || `${i?.provider || i?.name || "int"}-${idx}`}
                       style={S.pillCard}
                     >
@@ -2749,7 +2749,7 @@ export default function Dashboard() {
             {deals?.length ? (
               <div style={S.list}>
                 {deals.slice(0, 5).map((d, idx) => (
-                  <div key={d?._id || d?.id || `${d?.name || "deal"}-${idx}`} style={S.pillCard}>
+                  <div className="atlas-responsive-card" key={d?._id || d?.id || `${d?.name || "deal"}-${idx}`} style={S.pillCard}>
                     <div style={S.pillTitle}>
                       {d?.clientId?.name ? `${d.clientId.name} — ` : ""}
                       {d?.name || d?.title || "Deal"}
@@ -2825,7 +2825,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div
+      <div className="atlas-responsive-grid"
         style={{
           display: "grid",
           gridTemplateColumns: "1fr 1fr",
@@ -2857,9 +2857,9 @@ export default function Dashboard() {
       </div>
 
       {showClientModal ? (
-        <div style={S.modalOverlay} onClick={() => setShowClientModal(false)}>
-          <div style={S.modalCard} onClick={(e) => e.stopPropagation()}>
-            <div style={S.modalHeaderRow}>
+        <div className="atlas-responsive-row" style={S.modalOverlay} onClick={() => setShowClientModal(false)}>
+          <div className="atlas-responsive-card" style={S.modalCard} onClick={(e) => e.stopPropagation()}>
+            <div className="atlas-responsive-row" style={S.modalHeaderRow}>
               <div>
                 <div style={S.modalEyebrow}>Manual Entry</div>
                 <div style={S.modalTitle}>Add Client</div>
@@ -2875,7 +2875,7 @@ export default function Dashboard() {
             </div>
 
             <form onSubmit={handleCreateClientSubmit} style={S.modalForm}>
-              <div style={S.formGrid2}>
+              <div className="atlas-responsive-grid" style={S.formGrid2}>
                 <div style={S.fieldWrap}>
                   <label style={S.fieldLabel}>Client Name</label>
                   <input
@@ -2976,7 +2976,7 @@ export default function Dashboard() {
 
               <div style={S.fieldWrap}>
                 <label style={S.fieldLabel}>Notes</label>
-                <textarea
+                <textarea className="atlas-responsive-card"
                   value={clientForm.notes}
                   onChange={(e) =>
                     setClientForm((prev) => ({ ...prev, notes: e.target.value }))
@@ -2987,10 +2987,10 @@ export default function Dashboard() {
                 />
               </div>
 
-              {clientModalMsg ? <div style={S.success}>{clientModalMsg}</div> : null}
-              {clientModalErr ? <div style={S.error}>{clientModalErr}</div> : null}
+              {clientModalMsg ? <div className="atlas-responsive-card" style={S.success}>{clientModalMsg}</div> : null}
+              {clientModalErr ? <div className="atlas-responsive-card" style={S.error}>{clientModalErr}</div> : null}
 
-              <div style={S.modalActionRow}>
+              <div className="atlas-responsive-row" style={S.modalActionRow}>
                 <button
                   type="button"
                   onClick={() => setShowClientModal(false)}
@@ -3016,9 +3016,9 @@ export default function Dashboard() {
       ) : null}
 
       {showDealModal ? (
-        <div style={S.modalOverlay} onClick={() => setShowDealModal(false)}>
-          <div style={S.modalCard} onClick={(e) => e.stopPropagation()}>
-            <div style={S.modalHeaderRow}>
+        <div className="atlas-responsive-row" style={S.modalOverlay} onClick={() => setShowDealModal(false)}>
+          <div className="atlas-responsive-card" style={S.modalCard} onClick={(e) => e.stopPropagation()}>
+            <div className="atlas-responsive-row" style={S.modalHeaderRow}>
               <div>
                 <div style={S.modalEyebrow}>Pipeline Entry</div>
                 <div style={S.modalTitle}>Add Deal</div>
@@ -3034,7 +3034,7 @@ export default function Dashboard() {
             </div>
 
             <form onSubmit={handleCreateDealSubmit} style={S.modalForm}>
-              <div style={S.formGrid2}>
+              <div className="atlas-responsive-grid" style={S.formGrid2}>
                 <div style={S.fieldWrap}>
                   <label style={S.fieldLabel}>Deal Name</label>
                   <input
@@ -3197,10 +3197,10 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {dealModalMsg ? <div style={S.success}>{dealModalMsg}</div> : null}
-              {dealModalErr ? <div style={S.error}>{dealModalErr}</div> : null}
+              {dealModalMsg ? <div className="atlas-responsive-card" style={S.success}>{dealModalMsg}</div> : null}
+              {dealModalErr ? <div className="atlas-responsive-card" style={S.error}>{dealModalErr}</div> : null}
 
-              <div style={S.modalActionRow}>
+              <div className="atlas-responsive-row" style={S.modalActionRow}>
                 <button
                   type="button"
                   onClick={() => setShowDealModal(false)}

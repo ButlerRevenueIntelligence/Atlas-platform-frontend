@@ -279,15 +279,15 @@ export default function Clients() {
         }
       `}</style>
 
-      <div style={styles.page}>
+      <div className="atlas-responsive-page" style={styles.page}>
         <div style={styles.container}>
-          <header style={styles.header}>
+          <header className="atlas-responsive-card atlas-responsive-row" style={styles.header}>
             <div>
               <div style={styles.eyebrow}>
                 Customer portfolio
               </div>
 
-              <h1 style={styles.title}>
+              <h1 className="atlas-responsive-title" style={styles.title}>
                 Customer Accounts
               </h1>
 
@@ -298,7 +298,7 @@ export default function Clients() {
               </p>
             </div>
 
-            <div style={styles.headerActions}>
+            <div className="atlas-responsive-row" style={styles.headerActions}>
               <button
                 type="button"
                 onClick={loadAccounts}
@@ -323,14 +323,14 @@ export default function Clients() {
           </header>
 
           {error && !modalOpen ? (
-            <div style={styles.error}>{error}</div>
+            <div className="atlas-responsive-card" style={styles.error}>{error}</div>
           ) : null}
 
           {success ? (
-            <div style={styles.success}>{success}</div>
+            <div className="atlas-responsive-card" style={styles.success}>{success}</div>
           ) : null}
 
-          <section style={styles.statsGrid}>
+          <section className="atlas-responsive-metrics" style={styles.statsGrid}>
             <MetricCard
               label="Total Accounts"
               value={stats.total}
@@ -357,7 +357,7 @@ export default function Clients() {
           </section>
 
           <section style={styles.accountsSection}>
-            <div style={styles.sectionHeader}>
+            <div className="atlas-responsive-row" style={styles.sectionHeader}>
               <div>
                 <div style={styles.sectionEyebrow}>
                   Workspace records
@@ -369,7 +369,7 @@ export default function Clients() {
               </div>
 
               <div
-                className="account-filters"
+                className="account-filters atlas-responsive-row"
                 style={styles.filters}
               >
                 <input
@@ -516,7 +516,7 @@ export default function Clients() {
 
 function MetricCard({ label, value, detail }) {
   return (
-    <div style={styles.metricCard}>
+    <div className="atlas-responsive-card" style={styles.metricCard}>
       <div style={styles.metricLabel}>{label}</div>
       <div style={styles.metricValue}>{value}</div>
       <div style={styles.metricDetail}>{detail}</div>
@@ -542,7 +542,7 @@ function AccountRow({
 
   return (
     <article
-      className="account-row"
+      className="account-row atlas-responsive-grid atlas-responsive-card"
       style={styles.accountRow}
     >
       <div style={styles.identity}>
@@ -551,7 +551,7 @@ function AccountRow({
         </div>
 
         <div style={styles.identityText}>
-          <div style={styles.nameRow}>
+          <div className="atlas-responsive-row" style={styles.nameRow}>
             <h3 style={styles.accountName}>
               {account?.name || "Untitled Account"}
             </h3>
@@ -559,7 +559,7 @@ function AccountRow({
             <StatusBadge status={status} />
           </div>
 
-          <div style={styles.companyMeta}>
+          <div className="atlas-responsive-row" style={styles.companyMeta}>
             {account?.industry || "Industry not added"}
 
             {domain ? (
@@ -582,7 +582,7 @@ function AccountRow({
         </div>
       </div>
 
-      <div style={styles.accountDetails}>
+      <div className="atlas-responsive-grid" style={styles.accountDetails}>
         <div>
           <div style={styles.detailLabel}>
             Primary Contact
@@ -625,7 +625,7 @@ function AccountRow({
         </div>
       </div>
 
-      <div style={styles.rowActions}>
+      <div className="atlas-responsive-row" style={styles.rowActions}>
         <button
           type="button"
           onClick={onView}
@@ -670,7 +670,7 @@ function AccountModal({
           event.stopPropagation()
         }
       >
-        <div style={styles.modalHeader}>
+        <div className="atlas-responsive-row" style={styles.modalHeader}>
           <div>
             <div style={styles.sectionEyebrow}>
               New workspace record
@@ -694,12 +694,12 @@ function AccountModal({
         <form onSubmit={onSubmit}>
           <div style={styles.formBody}>
             {error ? (
-              <div style={styles.error}>
+              <div className="atlas-responsive-card" style={styles.error}>
                 {error}
               </div>
             ) : null}
 
-            <div style={styles.formGrid}>
+            <div className="atlas-responsive-grid" style={styles.formGrid}>
               <FormField label="Account name *">
                 <input
                   value={form.name}
@@ -840,7 +840,7 @@ function AccountModal({
             </FormField>
           </div>
 
-          <div style={styles.modalFooter}>
+          <div className="atlas-responsive-row" style={styles.modalFooter}>
             <button
               type="button"
               onClick={onClose}

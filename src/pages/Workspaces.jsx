@@ -278,7 +278,7 @@ function WorkspaceCard({
         ...(active ? styles.activeWorkspaceCard : {}),
       }}
     >
-      <div style={styles.workspaceTop}>
+      <div className="atlas-responsive-row" style={styles.workspaceTop}>
         <div style={styles.workspaceIdentity}>
           <div style={styles.workspaceName}>
             {workspace.orgName}
@@ -295,7 +295,7 @@ function WorkspaceCard({
           </div>
         </div>
 
-        <div style={styles.pillRow}>
+        <div className="atlas-responsive-row" style={styles.pillRow}>
           <Pill style={roleStyle(workspace.role)}>
             {titleCase(workspace.role)}
           </Pill>
@@ -308,15 +308,15 @@ function WorkspaceCard({
         </div>
       </div>
 
-      <div style={styles.workspaceDetails}>
-        <div style={styles.detail}>
+      <div className="atlas-responsive-row" style={styles.workspaceDetails}>
+        <div className="atlas-responsive-card" style={styles.detail}>
           <span style={styles.detailLabel}>Plan</span>
           <span style={styles.detailValue}>
             {titleCase(workspace.plan)}
           </span>
         </div>
 
-        <div style={styles.detail}>
+        <div className="atlas-responsive-card" style={styles.detail}>
           <span style={styles.detailLabel}>Access</span>
           <span style={styles.detailValue}>
             {isAccessAvailable(workspace)
@@ -325,7 +325,7 @@ function WorkspaceCard({
           </span>
         </div>
 
-        <div style={styles.detail}>
+        <div className="atlas-responsive-card" style={styles.detail}>
           <span style={styles.detailLabel}>Billing</span>
           <span style={styles.detailValue}>
             {isTrial(workspace)
@@ -347,7 +347,7 @@ function WorkspaceCard({
         </div>
       ) : null}
 
-      <div style={styles.workspaceActions}>
+      <div className="atlas-responsive-row" style={styles.workspaceActions}>
         {active ? (
           <button
             type="button"
@@ -387,7 +387,7 @@ function CreateWorkspaceModal({
   onSubmit,
 }) {
   return (
-    <div
+    <div className="atlas-responsive-row"
       style={styles.modalBackdrop}
       onMouseDown={onClose}
       role="presentation"
@@ -399,7 +399,7 @@ function CreateWorkspaceModal({
         aria-modal="true"
         aria-labelledby="create-workspace-title"
       >
-        <div style={styles.modalHeader}>
+        <div className="atlas-responsive-row" style={styles.modalHeader}>
           <div>
             <div style={styles.eyebrow}>New Environment</div>
             <h2
@@ -445,7 +445,7 @@ function CreateWorkspaceModal({
             />
           </div>
 
-          <div style={styles.formGrid}>
+          <div className="atlas-responsive-grid" style={styles.formGrid}>
             <div style={styles.formGroup}>
               <label
                 style={styles.label}
@@ -511,13 +511,13 @@ function CreateWorkspaceModal({
             />
           </div>
 
-          <div style={styles.formNotice}>
+          <div className="atlas-responsive-card" style={styles.formNotice}>
             The new workspace will begin on the standard
             7-day trial and will become your active workspace
             after creation.
           </div>
 
-          <div style={styles.modalActions}>
+          <div className="atlas-responsive-row" style={styles.modalActions}>
             <button
               type="button"
               onClick={onClose}
@@ -790,7 +790,7 @@ export default function Workspaces() {
   }
 
   return (
-    <div style={styles.page}>
+    <div className="atlas-responsive-page" style={styles.page}>
       <style>{`
         .global-hq-stats {
           display: grid;
@@ -838,8 +838,8 @@ export default function Workspaces() {
       `}</style>
 
       <div style={styles.container}>
-        <section style={styles.hero}>
-          <div style={styles.heroContent}>
+        <section className="atlas-responsive-card" style={styles.hero}>
+          <div className="atlas-responsive-row" style={styles.heroContent}>
             <div>
               <div style={styles.eyebrow}>
                 Organization Management
@@ -853,7 +853,7 @@ export default function Workspaces() {
               </p>
             </div>
 
-            <div style={styles.heroActions}>
+            <div className="atlas-responsive-row" style={styles.heroActions}>
               <button
                 type="button"
                 onClick={() => load({ quiet: true })}
@@ -883,7 +883,7 @@ export default function Workspaces() {
         </section>
 
         {error ? (
-          <div style={styles.errorBanner}>{error}</div>
+          <div className="atlas-responsive-card" style={styles.errorBanner}>{error}</div>
         ) : null}
 
         <div className="global-hq-stats">
@@ -921,8 +921,8 @@ export default function Workspaces() {
         </div>
 
         {activeWorkspace ? (
-          <section style={styles.currentSection}>
-            <div style={styles.currentHeader}>
+          <section className="atlas-responsive-card" style={styles.currentSection}>
+            <div className="atlas-responsive-row" style={styles.currentHeader}>
               <div>
                 <div style={styles.eyebrow}>
                   Current Workspace
@@ -940,7 +940,7 @@ export default function Workspaces() {
                 </div>
               </div>
 
-              <div style={styles.pillRow}>
+              <div className="atlas-responsive-row" style={styles.pillRow}>
                 <Pill style={styles.activePill}>Active</Pill>
 
                 <Pill
@@ -963,7 +963,7 @@ export default function Workspaces() {
             </div>
 
             <div className="global-hq-details">
-              <div style={styles.currentDetail}>
+              <div className="atlas-responsive-card" style={styles.currentDetail}>
                 <div style={styles.detailLabel}>
                   Workspace Type
                 </div>
@@ -972,7 +972,7 @@ export default function Workspaces() {
                 </div>
               </div>
 
-              <div style={styles.currentDetail}>
+              <div className="atlas-responsive-card" style={styles.currentDetail}>
                 <div style={styles.detailLabel}>
                   Current Plan
                 </div>
@@ -981,7 +981,7 @@ export default function Workspaces() {
                 </div>
               </div>
 
-              <div style={styles.currentDetail}>
+              <div className="atlas-responsive-card" style={styles.currentDetail}>
                 <div style={styles.detailLabel}>
                   Your Access
                 </div>
@@ -994,7 +994,7 @@ export default function Workspaces() {
         ) : null}
 
         <section style={styles.directory}>
-          <div style={styles.directoryHeader}>
+          <div className="atlas-responsive-row" style={styles.directoryHeader}>
             <div>
               <div style={styles.eyebrow}>
                 Workspace Directory
@@ -1008,7 +1008,7 @@ export default function Workspaces() {
               </div>
             </div>
 
-            <div style={styles.filters}>
+            <div className="atlas-responsive-row" style={styles.filters}>
               <input
                 className="global-hq-input"
                 value={search}

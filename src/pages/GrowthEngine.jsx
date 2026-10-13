@@ -97,7 +97,7 @@ function Section({ title, subtitle, children }) {
 
 function SmallStat({ label, value, note }) {
   return (
-    <div style={styles.statCard}>
+    <div className="atlas-responsive-card" style={styles.statCard}>
       <div style={styles.statLabel}>{label}</div>
       <div style={styles.statValue}>{value}</div>
       {note ? <div style={styles.statNote}>{note}</div> : null}
@@ -107,7 +107,7 @@ function SmallStat({ label, value, note }) {
 
 function EmptyState({ text = "No live data available yet for this workspace." }) {
   return (
-    <div style={styles.emptyState}>
+    <div className="atlas-responsive-row" style={styles.emptyState}>
       {text}
     </div>
   );
@@ -370,10 +370,10 @@ export default function GrowthEngine() {
 
   if (loading) {
     return (
-      <div style={styles.page}>
+      <div className="atlas-responsive-page" style={styles.page}>
         <div style={styles.wrap}>
-          <div style={styles.hero}>
-            <div style={styles.h1}>Loading Growth Engine...</div>
+          <div className="atlas-responsive-card" style={styles.hero}>
+            <div className="atlas-responsive-title" style={styles.h1}>Loading Growth Engine...</div>
           </div>
         </div>
       </div>
@@ -382,9 +382,9 @@ export default function GrowthEngine() {
 
   if (error) {
     return (
-      <div style={styles.page}>
+      <div className="atlas-responsive-page" style={styles.page}>
         <div style={styles.wrap}>
-          <div style={styles.errorBox}>{error}</div>
+          <div className="atlas-responsive-card" style={styles.errorBox}>{error}</div>
         </div>
       </div>
     );
@@ -393,14 +393,14 @@ export default function GrowthEngine() {
   const showEmptyCharts = !trendData.length && !pipelineValue && !revenue;
 
   return (
-    <div style={styles.page}>
+    <div className="atlas-responsive-page" style={styles.page}>
       <WorkspaceDataNotice dashboard={dashboard} />
       <div style={styles.wrap}>
-        <div style={styles.hero}>
-          <div style={styles.heroTop}>
+        <div className="atlas-responsive-card" style={styles.hero}>
+          <div className="atlas-responsive-grid" style={styles.heroTop}>
             <div>
               <div style={styles.eyebrow}>Growth Performance</div>
-              <h1 style={styles.h1}>Growth Engine</h1>
+              <h1 className="atlas-responsive-title" style={styles.h1}>Growth Engine</h1>
               <div style={styles.heroText}>
                 A focused operating view of how paid, organic, partner, and revenue sources
                 are converting activity into qualified pipeline and closed revenue for{" "}
@@ -408,14 +408,14 @@ export default function GrowthEngine() {
               </div>
             </div>
 
-            <div style={styles.badgeWrap}>
+            <div className="atlas-responsive-row" style={styles.badgeWrap}>
               {[
                 isDemo ? "Demo Growth Mode" : "Live Growth Mode",
                 pipelineValue > 0 ? "Pipeline Active" : "Pipeline Empty",
                 revenue > 0 ? "Revenue Detected" : "Revenue Waiting",
                 "AI Monitoring",
               ].map((item) => (
-                <div key={item} style={styles.badge}>
+                <div className="atlas-responsive-card" key={item} style={styles.badge}>
                   {item}
                 </div>
               ))}
@@ -423,7 +423,7 @@ export default function GrowthEngine() {
           </div>
         </div>
 
-        <div style={styles.statsGrid}>
+        <div className="atlas-responsive-metrics" style={styles.statsGrid}>
           {summaryStats.map((item) => (
             <SmallStat
               key={item.label}
@@ -434,11 +434,11 @@ export default function GrowthEngine() {
           ))}
         </div>
 
-        <div style={styles.twoCol}>
+        <div className="atlas-responsive-grid" style={styles.twoCol}>
           <Section title="Executive Summary" subtitle="Overview">
             <div style={styles.summaryList}>
               {summaryPoints.map((point) => (
-                <div key={point} style={styles.summaryItem}>
+                <div className="atlas-responsive-card" key={point} style={styles.summaryItem}>
                   {point}
                 </div>
               ))}
@@ -446,9 +446,9 @@ export default function GrowthEngine() {
           </Section>
 
           <Section title="Funnel Snapshot" subtitle="Demand Flow">
-            <div style={styles.funnelGrid}>
+            <div className="atlas-responsive-grid" style={styles.funnelGrid}>
               {funnelCards.map((item) => (
-                <div key={item.label} style={styles.funnelCard}>
+                <div className="atlas-responsive-card atlas-responsive-row" key={item.label} style={styles.funnelCard}>
                   <div style={styles.statLabel}>{item.label}</div>
                   <div style={{ ...styles.statValue, fontSize: 23 }}>{item.value}</div>
                 </div>
@@ -457,9 +457,9 @@ export default function GrowthEngine() {
           </Section>
         </div>
 
-        <div style={styles.twoCol}>
+        <div className="atlas-responsive-grid" style={styles.twoCol}>
           <Section title="Spend vs Revenue Trend" subtitle="Momentum">
-            <div style={styles.chartShell}>
+            <div className="atlas-responsive-card" style={styles.chartShell}>
               {showEmptyCharts ? (
                 <EmptyState text="No live trend data yet. Connect sources and sync metrics to populate this chart." />
               ) : (
@@ -500,13 +500,13 @@ export default function GrowthEngine() {
           </Section>
 
           <Section title="Active Campaign" subtitle="Campaign Intelligence">
-            <div style={styles.channelCard}>
+            <div className="atlas-responsive-card" style={styles.channelCard}>
               <div style={styles.statLabel}>Primary Motion</div>
               <div style={{ ...styles.sectionTitle, marginTop: 8, fontSize: 26 }}>
                 {pipelineValue > 0 ? "Revenue Pipeline Monitoring" : "No Active Campaign Data Yet"}
               </div>
 
-              <div style={styles.campaignGrid}>
+              <div className="atlas-responsive-grid" style={styles.campaignGrid}>
                 <SmallStat label="Spend" value={money(metrics.reduce((sum, m) => sum + safeNum(m.spend, 0), 0))} note="" />
                 <SmallStat label="Leads" value={metrics.reduce((sum, m) => sum + safeNum(m.leads, 0), 0).toLocaleString()} note="" />
                 <SmallStat label="Opportunities" value={openDeals.toLocaleString()} note="" />
@@ -516,9 +516,9 @@ export default function GrowthEngine() {
           </Section>
         </div>
 
-        <div style={styles.twoCol}>
+        <div className="atlas-responsive-grid" style={styles.twoCol}>
           <Section title="Pipeline by Stage" subtitle="Contribution">
-            <div style={styles.chartShellSmall}>
+            <div className="atlas-responsive-card" style={styles.chartShellSmall}>
               {pipelineValue <= 0 ? (
                 <EmptyState text="No pipeline values yet. Once live deals are added, this chart will fill automatically." />
               ) : (
@@ -550,8 +550,8 @@ export default function GrowthEngine() {
           </Section>
 
           <Section title="Marketing Attribution" subtitle="Channel Share">
-            <div style={styles.attributionLayout}>
-              <div style={styles.chartShellSmall}>
+            <div className="atlas-responsive-grid" style={styles.attributionLayout}>
+              <div className="atlas-responsive-card" style={styles.chartShellSmall}>
                 {!isDemo || pipelineValue <= 0 ? (
                   <EmptyState text="Deal-to-channel attribution is unavailable. Connectors report activity; attributed revenue requires linked transactions." />
                 ) : (
@@ -584,7 +584,7 @@ export default function GrowthEngine() {
 
               <div style={styles.attributionList}>
                 {attributionData.map((row) => (
-                  <div
+                  <div className="atlas-responsive-card"
                     key={row.label}
                   style={{
                       border: "1px solid rgba(255,255,255,0.08)",
@@ -593,7 +593,7 @@ export default function GrowthEngine() {
                       background: "rgba(4,10,24,0.34)",
                     }}
                   >
-                    <div
+                    <div className="atlas-responsive-row"
                       style={{
                         display: "flex",
                         justifyContent: "space-between",
@@ -634,12 +634,12 @@ export default function GrowthEngine() {
           </Section>
         </div>
 
-        <div style={styles.twoCol}>
+        <div className="atlas-responsive-grid" style={styles.twoCol}>
           <Section title="Channel Performance Radar" subtitle="Efficiency">
             <div style={styles.channelList}>
               {channelRows.map((row) => (
-                <div key={row.name} style={styles.channelCard}>
-                  <div style={styles.channelTop}>
+                <div className="atlas-responsive-card" key={row.name} style={styles.channelCard}>
+                  <div className="atlas-responsive-row" style={styles.channelTop}>
                     <div>
                       <div style={styles.channelName}>{row.name}</div>
                       <div style={styles.channelMeta}>Pipeline {row.pipeline}</div>
@@ -647,16 +647,16 @@ export default function GrowthEngine() {
                     <div style={toneStyle(row.tone)}>{row.tone}</div>
                   </div>
 
-                  <div style={styles.channelStats}>
-                    <div style={styles.mini}>
+                  <div className="atlas-responsive-grid" style={styles.channelStats}>
+                    <div className="atlas-responsive-card" style={styles.mini}>
                       <div style={styles.miniLabel}>Conversion</div>
                       <div style={styles.miniValue}>{row.conversion}</div>
                     </div>
-                    <div style={styles.mini}>
+                    <div className="atlas-responsive-card" style={styles.mini}>
                       <div style={styles.miniLabel}>CPL</div>
                       <div style={styles.miniValue}>{row.cpl}</div>
                     </div>
-                    <div style={styles.mini}>
+                    <div className="atlas-responsive-card" style={styles.mini}>
                       <div style={styles.miniLabel}>Won Revenue</div>
                       <div style={styles.miniValue}>{row.won}</div>
                     </div>

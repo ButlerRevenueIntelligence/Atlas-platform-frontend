@@ -530,7 +530,7 @@ const styles = {
 function Section({ title, subtitle, children }) {
   return (
     <div style={styles.section}>
-      <div style={styles.sectionHead}>
+      <div className="atlas-responsive-row" style={styles.sectionHead}>
         <div>
           {subtitle ? <div style={styles.sectionSub}>{subtitle}</div> : null}
           <div style={styles.sectionTitle}>{title}</div>
@@ -543,7 +543,7 @@ function Section({ title, subtitle, children }) {
 
 function SmallStat({ label, value, note }) {
   return (
-    <div style={styles.statCard}>
+    <div className="atlas-responsive-card" style={styles.statCard}>
       <div style={styles.statLabel}>{label}</div>
       <div style={styles.statValue}>{value}</div>
       {note ? <div style={styles.statNote}>{note}</div> : null}
@@ -552,7 +552,7 @@ function SmallStat({ label, value, note }) {
 }
 
 function EmptyState({ text }) {
-  return <div style={styles.emptyState}>{text}</div>;
+  return <div className="atlas-responsive-card atlas-responsive-row" style={styles.emptyState}>{text}</div>;
 }
 
 function valueAfterLabel(block, label) {
@@ -605,23 +605,23 @@ function parseDealPriorityResponse(response) {
 function RevenueRiskResponse({ briefing }) {
   return <div>
     <div style={styles.askMuted}>{briefing.label}</div>
-    <div style={styles.leadershipTakeaway}><b>Executive decision</b><p>{briefing.summary}</p></div>
+    <div className="atlas-responsive-card" style={styles.leadershipTakeaway}><b>Executive decision</b><p>{briefing.summary}</p></div>
     <h3>This week's priorities</h3>
-    <div style={styles.dealCards}>{briefing.risks.map((risk, index) => <div key={`${index}-${risk.name}`} style={styles.dealCard}>
+    <div style={styles.dealCards}>{briefing.risks.map((risk, index) => <div className="atlas-responsive-card" key={`${index}-${risk.name}`} style={styles.dealCard}>
       <div style={styles.dealHeading}><div style={styles.dealRank}>{index + 1}</div><div>
         <div style={styles.dealName}>{risk.name}</div>
         <div style={styles.dealMeta}>{moneyCompact(risk.amount)} · {risk.stage} · {moneyCompact(risk.weightedValue)} weighted</div>
       </div></div>
-      <div style={styles.dealDetailGrid}>
-        {[['Account', risk.account], ['Owner', risk.owner], ['Evidence', risk.evidence]].map(([label, value]) => <div key={label} style={styles.dealDetail}>
+      <div className="atlas-responsive-grid" style={styles.dealDetailGrid}>
+        {[['Account', risk.account], ['Owner', risk.owner], ['Evidence', risk.evidence]].map(([label, value]) => <div className="atlas-responsive-card" key={label} style={styles.dealDetail}>
           <div style={styles.dealDetailLabel}>{label}</div><div style={styles.dealDetailValue}>{value}</div>
         </div>)}
       </div>
-      <div style={styles.dealRisk}><b>Risk:</b> {risk.risk}</div>
-      <div style={styles.dealAction}><b>Next action:</b> {risk.action}<div style={{marginTop: 8}}><b>{risk.deadline}</b></div></div>
+      <div className="atlas-responsive-card" style={styles.dealRisk}><b>Risk:</b> {risk.risk}</div>
+      <div className="atlas-responsive-card" style={styles.dealAction}><b>Next action:</b> {risk.action}<div style={{marginTop: 8}}><b>{risk.deadline}</b></div></div>
     </div>)}</div>
     {!briefing.risks.length && <p>Confirm owners, buyer actions, and close dates before ranking execution risks.</p>}
-    {briefing.opportunities.length > 0 && <div style={styles.leadershipTakeaway}><b>Build the next wave</b>{briefing.opportunities.map((item, i) => <p key={i}>{item}</p>)}</div>}
+    {briefing.opportunities.length > 0 && <div className="atlas-responsive-card" style={styles.leadershipTakeaway}><b>Build the next wave</b>{briefing.opportunities.map((item, i) => <p key={i}>{item}</p>)}</div>}
     <div style={{...styles.askMuted, marginTop: 18}}><b>Evidence limits</b><ul>{briefing.caveats.map((item, i) => <li key={i} style={{marginBottom: 8}}>{item}</li>)}</ul></div>
   </div>;
 }
@@ -663,8 +663,8 @@ function DealPriorityResponse({ response }) {
       <div style={styles.dealAnswerIntro}>{parsed.intro}</div>
       <div style={styles.dealCards}>
         {parsed.deals.map((deal) => (
-          <div key={`${deal.rank}-${deal.name}`} style={styles.dealCard}>
-            <div style={styles.dealCardTop}>
+          <div className="atlas-responsive-card" key={`${deal.rank}-${deal.name}`} style={styles.dealCard}>
+            <div className="atlas-responsive-row" style={styles.dealCardTop}>
               <div style={styles.dealHeading}>
                 <div style={styles.dealRank}>{deal.rank}</div>
                 <div>
@@ -676,25 +676,25 @@ function DealPriorityResponse({ response }) {
               </div>
             </div>
 
-            <div style={styles.dealDetailGrid}>
-              <div style={styles.dealDetail}>
+            <div className="atlas-responsive-grid" style={styles.dealDetailGrid}>
+              <div className="atlas-responsive-card" style={styles.dealDetail}>
                 <div style={styles.dealDetailLabel}>Account</div>
                 <div style={styles.dealDetailValue}>{deal.account}</div>
               </div>
-              <div style={styles.dealDetail}>
+              <div className="atlas-responsive-card" style={styles.dealDetail}>
                 <div style={styles.dealDetailLabel}>Owner</div>
                 <div style={styles.dealDetailValue}>{deal.owner}</div>
               </div>
-              <div style={styles.dealDetail}>
+              <div className="atlas-responsive-card" style={styles.dealDetail}>
                 <div style={styles.dealDetailLabel}>Why it matters</div>
                 <div style={styles.dealDetailValue}>{deal.why}</div>
               </div>
             </div>
 
-            <div style={styles.dealRisk}>
+            <div className="atlas-responsive-card" style={styles.dealRisk}>
               <b>Risk:</b> {deal.risk}
             </div>
-            <div style={styles.dealAction}>
+            <div className="atlas-responsive-card" style={styles.dealAction}>
               <b>Next action:</b> {deal.action}
             </div>
           </div>
@@ -702,7 +702,7 @@ function DealPriorityResponse({ response }) {
       </div>
 
       {parsed.takeaway ? (
-        <div style={styles.leadershipTakeaway}>
+        <div className="atlas-responsive-card" style={styles.leadershipTakeaway}>
           <b>Leadership takeaway:</b> {parsed.takeaway}
         </div>
       ) : null}
@@ -1323,10 +1323,10 @@ export default function AtlasAIOperator() {
 
   if (loading) {
     return (
-      <div style={styles.page}>
+      <div className="atlas-responsive-page" style={styles.page}>
         <div style={styles.wrap}>
-          <div style={styles.hero}>
-            <h1 style={styles.h1}>Loading Atlas AI Operator...</h1>
+          <div className="atlas-responsive-card" style={styles.hero}>
+            <h1 className="atlas-responsive-title" style={styles.h1}>Loading Atlas AI Operator...</h1>
           </div>
         </div>
       </div>
@@ -1335,23 +1335,23 @@ export default function AtlasAIOperator() {
 
   if (loadError) {
     return (
-      <div style={styles.page}>
+      <div className="atlas-responsive-page" style={styles.page}>
         <div style={styles.wrap}>
-          <div style={styles.errorBox}>{loadError}</div>
+          <div className="atlas-responsive-card" style={styles.errorBox}>{loadError}</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={styles.page}>
+    <div className="atlas-responsive-page" style={styles.page}>
       <WorkspaceDataNotice dashboard={dashboard} />
       <div style={styles.wrap}>
-        <div style={styles.hero}>
-          <div style={styles.heroTop}>
+        <div className="atlas-responsive-card" style={styles.hero}>
+          <div className="atlas-responsive-row" style={styles.heroTop}>
             <div>
               <div style={styles.eyebrow}>Revenue Intelligence Copilot</div>
-              <h1 style={styles.h1}>Atlas AI Operator</h1>
+              <h1 className="atlas-responsive-title" style={styles.h1}>Atlas AI Operator</h1>
               <div style={styles.heroText}>
                 Atlas AI Operator turns revenue signals into decisions. It monitors
                 forecast risk, surfaces execution pressure, and recommends what
@@ -1359,14 +1359,14 @@ export default function AtlasAIOperator() {
               </div>
             </div>
 
-            <div style={styles.badgeWrap}>
+            <div className="atlas-responsive-row" style={styles.badgeWrap}>
               {[
                 isDemo ? "Operator Demo" : "Operator Live",
                 hasLiveData ? "Monitoring Forecast" : "Awaiting Signals",
                 "External Intelligence Active",
                 "Atlas AI Active",
               ].map((item) => (
-                <div key={item} style={styles.badge}>
+                <div className="atlas-responsive-card" key={item} style={styles.badge}>
                   {item}
                 </div>
               ))}
@@ -1374,7 +1374,7 @@ export default function AtlasAIOperator() {
           </div>
         </div>
 
-        <div style={styles.statsGrid}>
+        <div className="atlas-responsive-metrics" style={styles.statsGrid}>
           {summaryStats.map((item) => (
             <SmallStat
               key={item.label}
@@ -1385,9 +1385,9 @@ export default function AtlasAIOperator() {
           ))}
         </div>
 
-        <div style={styles.twoCol}>
+        <div className="atlas-responsive-grid" style={styles.twoCol}>
           <Section title="Forecast Trend" subtitle="Modeled Outlook">
-            <div style={styles.chartShell}>
+            <div className="atlas-responsive-card" style={styles.chartShell}>
               {!isDemo && !hasLiveData ? (
                 <EmptyState text="No live forecast trend data yet. Connect revenue and pipeline sources to activate Operator forecasting." />
               ) : (
@@ -1437,7 +1437,7 @@ export default function AtlasAIOperator() {
           </Section>
 
           <Section title="Intelligence Signal Mix" subtitle="What Atlas Is Monitoring">
-            <div style={styles.signalMixShell}>
+            <div className="atlas-responsive-grid atlas-responsive-card" style={styles.signalMixShell}>
               {!isDemo && !hasLiveData ? (
                 <EmptyState text="No live operator signal mix yet." />
               ) : (
@@ -1473,7 +1473,7 @@ export default function AtlasAIOperator() {
                       </PieChart>
                     </ResponsiveContainer>
 
-                    <div style={styles.signalCenter}>
+                    <div className="atlas-responsive-row" style={styles.signalCenter}>
                       <div style={styles.signalCenterValue}>{operatorMix.length}</div>
                       <div style={styles.signalCenterLabel}>Signal Areas</div>
                     </div>
@@ -1510,9 +1510,9 @@ export default function AtlasAIOperator() {
           </Section>
         </div>
 
-        <div style={styles.twoCol}>
+        <div className="atlas-responsive-grid" style={styles.twoCol}>
           <Section title="Risk Severity by Category" subtitle="Risk Model">
-            <div style={styles.chartShell}>
+            <div className="atlas-responsive-card" style={styles.chartShell}>
               {!isDemo && !hasLiveData ? (
                 <EmptyState text="No live risk severity model yet." />
               ) : (
@@ -1547,7 +1547,7 @@ export default function AtlasAIOperator() {
           </Section>
         </div>
 
-        <div style={styles.twoCol}>
+        <div className="atlas-responsive-grid" style={styles.twoCol}>
           <Section title="Executive Briefing" subtitle="Narrative">
             <ExecutiveBriefing
               text={
@@ -1563,7 +1563,7 @@ export default function AtlasAIOperator() {
           <Section title="Operator Feed" subtitle="Live Notes">
             <div style={styles.feedGrid}>
               {operatorFeed.map((item) => (
-                <div key={item.title} style={styles.feedCard}>
+                <div className="atlas-responsive-card" key={item.title} style={styles.feedCard}>
                   <div style={styles.feedTitle}>{item.title}</div>
                   <div style={styles.feedBody}>{item.body}</div>
                 </div>
@@ -1572,22 +1572,22 @@ export default function AtlasAIOperator() {
           </Section>
         </div>
 
-        <div style={styles.twoCol}>
+        <div className="atlas-responsive-grid" style={styles.twoCol}>
           <Section title="Next Best Operator Moves" subtitle="Priorities">
             <RecommendedActions actions={operatorMoves} />
           </Section>
 
           <Section title="Ask Atlas" subtitle="Copilot">
             <div style={styles.askPanel}>
-              <div style={styles.askInputWrap}>
-                <textarea
+              <div className="atlas-responsive-card" style={styles.askInputWrap}>
+                <textarea className="atlas-responsive-card"
                   style={styles.askTextarea}
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
                   placeholder="Ask about your revenue, pipeline, accounts, or market — or ask Atlas to find companies based on what they make, sell, or provide..."
                 />
 
-                <div style={styles.askActionRow}>
+                <div className="atlas-responsive-row" style={styles.askActionRow}>
                   <button
                     style={styles.askButton}
                     onClick={() => handleAsk()}
@@ -1618,7 +1618,7 @@ export default function AtlasAIOperator() {
               </div>
 
               {atlasResponse ? (
-                <div style={styles.askResponse}>
+                <div className="atlas-responsive-card" style={styles.askResponse}>
                   <div style={styles.askResponseTitle}>Atlas Response</div>
                   {riskBriefing ? (
                     <RevenueRiskResponse briefing={riskBriefing} />
@@ -1633,11 +1633,11 @@ export default function AtlasAIOperator() {
           </Section>
         </div>
 
-        <div style={styles.twoCol}>
+        <div className="atlas-responsive-grid" style={styles.twoCol}>
           <Section title="Executive Summary" subtitle="Overview">
             <div style={styles.summaryList}>
               {summaryPoints.map((point) => (
-                <div key={point} style={styles.summaryItem}>
+                <div className="atlas-responsive-card" key={point} style={styles.summaryItem}>
                   {point}
                 </div>
               ))}
