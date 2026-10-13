@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+import "./AppLayout.css";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   logout,
@@ -73,7 +74,7 @@ const label = {
 
 function NavRow({ title, children }) {
   return (
-    <div
+    <div className="atlas-nav-row"
       style={{
         display: "grid",
         gridTemplateColumns: "88px 1fr",
@@ -81,8 +82,8 @@ function NavRow({ title, children }) {
         alignItems: "start",
       }}
     >
-      <div style={label}>{title}</div>
-      <div
+      <div className="atlas-nav-label" style={label}>{title}</div>
+      <div className="atlas-nav-links"
         style={{
           display: "flex",
           gap: 8,
@@ -194,6 +195,30 @@ function getPaywallCopy(state) {
 export default function AppLayout() {
   const nav = useNavigate();
   const location = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const mobileMenuButton = useRef(null);
+  useEffect(() => { setMobileMenuOpen(false); }, [location.pathname]);
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setMobileMenuOpen(false);
+        mobileMenuButton.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [mobileMenuOpen]);
+  const currentPage = {
+    "/overview": "Overview", "/command-center": "Command Center",
+    "/deal-war-room": "Deal War Room", "/deal-room": "Deal Room",
+    "/data-connectors": "Data Connectors", "/integrations": "Data Connectors",
+    "/accounts": "Accounts", "/partners": "Partners", "/growth-engine": "Growth Engine",
+    "/account-intelligence": "Account Intelligence", "/market-signals": "Market Signals",
+    "/global-revenue-map": "Global Revenue Map", "/atlas-ai-operator": "Atlas AI Operator",
+    "/reports": "Reports", "/board-mode": "Board Mode", "/global-hq": "Global HQ",
+    "/billing": "Billing", "/members": "Members", "/invites": "Invites",
+  }["/" + location.pathname.split("/")[1]] || "Workspace";
   const isBillingPage = location.pathname === "/billing";
 
   const [permissions, setPermissions] = useState(() => getPermissions());
@@ -403,7 +428,7 @@ export default function AppLayout() {
     >
       <TrialBanner />
 
-      <div
+      <div className={`atlas-app-header${mobileMenuOpen ? " is-menu-open" : ""}`}
         style={{
           position: "sticky",
           top: 0,
@@ -422,7 +447,7 @@ export default function AppLayout() {
             gap: 10,
           }}
         >
-          <div
+          <div className="atlas-header-top"
             style={{
               display: "flex",
               justifyContent: "space-between",
@@ -431,7 +456,7 @@ export default function AppLayout() {
               flexWrap: "wrap",
             }}
           >
-            <div
+            <div className="atlas-header-brand"
               style={{
                 display: "grid",
                 gap: 3,
@@ -460,7 +485,11 @@ export default function AppLayout() {
               </div>
             </div>
 
-            <div
+            <button ref={mobileMenuButton} className="atlas-mobile-menu-button" type="button" aria-expanded={mobileMenuOpen} aria-controls="atlas-main-navigation" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">{mobileMenuOpen ? <path d="m6 6 12 12M6 18 18 6" /> : <path d="M4 6h16M4 12h16M4 18h16" />}</svg>
+              {mobileMenuOpen ? "Close" : "Menu"}
+            </button>
+            <div className="atlas-header-meta"
               style={{
                 display: "flex",
                 gap: 8,
@@ -469,7 +498,7 @@ export default function AppLayout() {
                 alignItems: "center",
               }}
             >
-              <div style={pill}>
+              <div className="atlas-header-status" style={pill}>
                 <span
                   style={{
                     width: 7,
@@ -485,7 +514,7 @@ export default function AppLayout() {
               </div>
 
               {visibleWorkspaceOptions.length > 0 ? (
-                <div
+                <div className="atlas-header-workspace"
                   style={{
                     ...pill,
                     gap: 8,
@@ -494,6 +523,7 @@ export default function AppLayout() {
                 >
                   <span>Workspace:</span>
                   <select
+                    aria-label="Active workspace"
                     value={selectedWorkspaceId}
                     onChange={handleWorkspaceChange}
                     disabled={switchingWorkspace}
@@ -524,21 +554,21 @@ export default function AppLayout() {
                   </select>
                 </div>
               ) : (
-                <div style={pill}>
+                <div className="atlas-header-workspace" style={pill}>
                   Workspace: <strong>{workspaceLabel}</strong>
                 </div>
               )}
 
-              <div style={pill}>
-                HQ (EST): <strong>{hqTime || "—"}</strong>
+              <div className="atlas-header-clock" style={pill}>
+                HQ (Eastern): <strong>{hqTime || "—"}</strong>
               </div>
 
-              <div style={pill}>
+              <div className="atlas-header-clock" style={pill}>
                 Local: <strong>{localTime || "—"}</strong>
                 {localTz ? <span style={{ opacity: 0.68 }}>• {localTz}</span> : null}
               </div>
 
-              <button
+              <button className="atlas-header-logout"
                 onClick={() => {
                   logout();
                   nav("/login");
@@ -560,7 +590,8 @@ export default function AppLayout() {
             </div>
           </div>
 
-          <div
+          <div className="atlas-mobile-page-label">{currentPage}</div>
+          <nav id="atlas-main-navigation" className="atlas-main-navigation" aria-label="Main navigation" onClick={(event) => { if (event.target.closest("a")) setMobileMenuOpen(false); }}
             style={{
               display: "grid",
               gap: 8,
@@ -677,7 +708,7 @@ export default function AppLayout() {
                 </NavLink>
               )}
             </NavRow>
-          </div>
+          </nav>
         </div>
       </div>
 
