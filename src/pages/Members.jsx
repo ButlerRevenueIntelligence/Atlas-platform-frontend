@@ -287,15 +287,15 @@ export default function Members() {
         }
       `}</style>
 
-      <div style={styles.page}>
+      <div className="atlas-responsive-page" style={styles.page}>
         <div style={styles.container}>
-          <header style={styles.header}>
+          <header className="atlas-responsive-card atlas-responsive-row" style={styles.header}>
             <div>
               <div style={styles.eyebrow}>
                 Workspace administration
               </div>
 
-              <h1 style={styles.title}>Members & Access</h1>
+              <h1 className="atlas-responsive-title" style={styles.title}>Members & Access</h1>
 
               <p style={styles.subtitle}>
                 Manage who can access{" "}
@@ -304,7 +304,7 @@ export default function Members() {
               </p>
             </div>
 
-            <div style={styles.headerActions}>
+            <div className="atlas-responsive-row" style={styles.headerActions}>
               <button
                 type="button"
                 onClick={loadMembers}
@@ -325,14 +325,14 @@ export default function Members() {
           </header>
 
           {error ? (
-            <div style={styles.error}>{error}</div>
+            <div className="atlas-responsive-card" style={styles.error}>{error}</div>
           ) : null}
 
           {success ? (
-            <div style={styles.success}>{success}</div>
+            <div className="atlas-responsive-card" style={styles.success}>{success}</div>
           ) : null}
 
-          <section style={styles.statsGrid}>
+          <section className="atlas-responsive-metrics" style={styles.statsGrid}>
             <MetricCard
               label="Total Members"
               value={stats.total}
@@ -359,7 +359,7 @@ export default function Members() {
           </section>
 
           <section style={styles.membersSection}>
-            <div style={styles.sectionHeader}>
+            <div className="atlas-responsive-row" style={styles.sectionHeader}>
               <div>
                 <div style={styles.sectionEyebrow}>
                   Access directory
@@ -371,7 +371,7 @@ export default function Members() {
               </div>
 
               <div
-                className="member-filters"
+                className="member-filters atlas-responsive-row"
                 style={styles.filters}
               >
                 <input
@@ -473,7 +473,7 @@ export default function Members() {
 
 function MetricCard({ label, value, detail }) {
   return (
-    <div style={styles.metricCard}>
+    <div className="atlas-responsive-card" style={styles.metricCard}>
       <div style={styles.metricLabel}>{label}</div>
       <div style={styles.metricValue}>{value}</div>
       <div style={styles.metricDetail}>{detail}</div>
@@ -495,20 +495,20 @@ function MemberRow({
   ).toLowerCase();
 
   return (
-    <article className="member-row" style={styles.memberRow}>
+    <article className="member-row atlas-responsive-grid atlas-responsive-card" style={styles.memberRow}>
       <div style={styles.identity}>
         <div style={styles.avatar}>
           {getInitials(member?.name)}
         </div>
 
         <div style={styles.identityText}>
-          <div style={styles.nameRow}>
+          <div className="atlas-responsive-row" style={styles.nameRow}>
             <h3 style={styles.memberName}>
               {member?.name || "User"}
             </h3>
 
             {member?.isCurrentUser ? (
-              <span style={styles.youBadge}>You</span>
+              <span className="atlas-responsive-card" style={styles.youBadge}>You</span>
             ) : null}
           </div>
 
@@ -518,7 +518,7 @@ function MemberRow({
         </div>
       </div>
 
-      <div style={styles.accessSummary}>
+      <div className="atlas-responsive-grid" style={styles.accessSummary}>
         <div>
           <div style={styles.accessLabel}>Role</div>
           <RoleBadge role={role} />
@@ -546,7 +546,7 @@ function MemberRow({
         </div>
       </div>
 
-      <div style={styles.rowAction}>
+      <div className="atlas-responsive-row" style={styles.rowAction}>
         {manageable ? (
           <button
             type="button"
@@ -595,7 +595,7 @@ function AccessModal({
           event.stopPropagation()
         }
       >
-        <div style={styles.modalHeader}>
+        <div className="atlas-responsive-row" style={styles.modalHeader}>
           <div>
             <div style={styles.sectionEyebrow}>
               Workspace permissions
@@ -675,14 +675,14 @@ function AccessModal({
               </select>
             </label>
 
-            <div style={styles.securityNote}>
+            <div className="atlas-responsive-card" style={styles.securityNote}>
               These changes apply only to this workspace.
               They do not change the member’s password or
               access to other Atlas workspaces.
             </div>
           </div>
 
-          <div style={styles.modalFooter}>
+          <div className="atlas-responsive-row" style={styles.modalFooter}>
             <button
               type="button"
               onClick={onRemove}

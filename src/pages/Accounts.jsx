@@ -104,21 +104,21 @@ export default function Accounts() {
         }
       `}</style>
 
-      <div style={styles.page}>
+      <div className="atlas-responsive-page" style={styles.page}>
         <div style={styles.wrap}>
-          <header style={styles.hero}>
-            <div className="accounts-hero-top" style={styles.heroTop}>
+          <header className="atlas-responsive-card" style={styles.hero}>
+            <div className="accounts-hero-top atlas-responsive-row" style={styles.heroTop}>
               <div>
                 <div style={styles.eyebrow}>Account Intelligence Foundation</div>
-                <h1 style={styles.h1}>Accounts</h1>
+                <h1 className="atlas-responsive-title" style={styles.h1}>Accounts</h1>
                 <div style={styles.heroText}>
                   Organize the companies in your revenue ecosystem and open a
                   complete intelligence view for every account.
                 </div>
               </div>
 
-              <div className="accounts-hero-actions" style={styles.heroActions}>
-                <div style={styles.badge}>{accounts.length} tracked</div>
+              <div className="accounts-hero-actions atlas-responsive-row" style={styles.heroActions}>
+                <div className="atlas-responsive-card" style={styles.badge}>{accounts.length} tracked</div>
                 <input
                   className="accounts-search"
                   value={q}
@@ -131,7 +131,7 @@ export default function Accounts() {
           </header>
 
           <section style={styles.section}>
-            <div style={styles.sectionHead}>
+            <div className="atlas-responsive-row" style={styles.sectionHead}>
               <div>
                 <div style={styles.sectionSub}>Workspace Record</div>
                 <div style={styles.sectionTitle}>Create Account</div>
@@ -143,25 +143,25 @@ export default function Accounts() {
           </section>
 
           <section style={styles.section}>
-            <div style={styles.sectionHead}>
+            <div className="atlas-responsive-row" style={styles.sectionHead}>
               <div>
                 <div style={styles.sectionSub}>Account Directory</div>
                 <div style={styles.sectionTitle}>Tracked Companies</div>
               </div>
-              <div style={styles.sectionTag}>{filtered.length} shown</div>
+              <div className="atlas-responsive-card" style={styles.sectionTag}>{filtered.length} shown</div>
             </div>
 
             <div style={styles.sectionBody}>
               {loading ? (
-                <div style={styles.emptyState}>Loading account records...</div>
+                <div className="atlas-responsive-card atlas-responsive-row" style={styles.emptyState}>Loading account records...</div>
               ) : filtered.length === 0 ? (
-                <div style={styles.emptyState}>
+                <div className="atlas-responsive-card atlas-responsive-row" style={styles.emptyState}>
                   {q.trim()
                     ? "No accounts match your search."
                     : "No accounts yet. Create your first one above."}
                 </div>
               ) : (
-                <div style={styles.grid}>
+                <div className="atlas-responsive-grid" style={styles.grid}>
                   {filtered.map((account) => {
                     const accountName = account.name || "Untitled Account";
                     const initials = accountName
@@ -178,7 +178,7 @@ export default function Accounts() {
                         onClick={() => nav(`/accounts/${account._id || account.id}`)}
                         style={styles.accountCard}
                       >
-                        <div style={styles.cardTop}>
+                        <div className="atlas-responsive-row" style={styles.cardTop}>
                           <div style={styles.companyIcon}>{initials || "A"}</div>
                           <div style={styles.openLabel}>Open account →</div>
                         </div>

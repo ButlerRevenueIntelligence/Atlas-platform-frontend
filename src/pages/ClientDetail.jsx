@@ -144,11 +144,11 @@ export default function ClientDetail() {
     : "Loading account intelligence profile…";
 
   return (
-    <main style={styles.page}>
+    <main className="atlas-responsive-page" style={styles.page}>
       <div style={styles.wrap}>
-        <header style={styles.hero}>
-          <div style={styles.heroTopRow}>
-            <button type="button" onClick={() => nav("/clients")} style={styles.backButton}>
+        <header className="atlas-responsive-card" style={styles.hero}>
+          <div className="atlas-responsive-row" style={styles.heroTopRow}>
+            <button  type="button" onClick={() => nav("/clients")} style={styles.backButton}>
               <span aria-hidden="true">←</span> Accounts
             </button>
             <div style={styles.switcher}>
@@ -156,15 +156,15 @@ export default function ClientDetail() {
             </div>
           </div>
 
-          <div style={styles.heroContent}>
+          <div className="atlas-responsive-row" style={styles.heroContent}>
             <div>
               <div style={styles.eyebrow}>ACCOUNT INTELLIGENCE / CLIENT PROFILE</div>
-              <h1 style={styles.title}>{client?.name || "Account Profile"}</h1>
+              <h1 className="atlas-responsive-title" style={styles.title}>{client?.name || "Account Profile"}</h1>
               <p style={styles.subtitle}>
                 A unified executive view of ownership, readiness, and expansion potential.
               </p>
             </div>
-            <div style={styles.heroBadges}>
+            <div className="atlas-responsive-row" style={styles.heroBadges}>
               <StatusBadge label="Profile active" color="#34d399" />
               <StatusBadge
                 label={`${derived.accountReadiness}% ready`}
@@ -175,20 +175,20 @@ export default function ClientDetail() {
         </header>
 
         {error ? (
-          <div style={styles.errorBanner} role="alert">
+          <div className="atlas-responsive-card atlas-responsive-row" style={styles.errorBanner} role="alert">
             <div>
               <div style={styles.errorTitle}>Account update needs attention</div>
               <div style={styles.errorText}>{error}</div>
             </div>
             {!loading ? (
-              <button type="button" onClick={() => load()} style={styles.retryButton}>
+              <button  type="button" onClick={() => load()} style={styles.retryButton}>
                 Retry
               </button>
             ) : null}
           </div>
         ) : null}
 
-        <section style={styles.metricGrid} aria-label="Account intelligence summary">
+        <section className="atlas-responsive-metrics" style={styles.metricGrid} aria-label="Account intelligence summary">
           <MetricCard
             label="Engagement score"
             value={loading ? "—" : derived.engagementScore}
@@ -219,7 +219,7 @@ export default function ClientDetail() {
           />
         </section>
 
-        <section style={styles.briefingCard}>
+        <section className="atlas-responsive-grid atlas-responsive-card" style={styles.briefingCard}>
           <div style={styles.briefingAccent} />
           <div>
             <div style={styles.sectionEyebrow}>EXECUTIVE ACCOUNT BRIEFING</div>
@@ -228,7 +228,7 @@ export default function ClientDetail() {
         </section>
 
         <section style={styles.panel}>
-          <div style={styles.panelHeader}>
+          <div className="atlas-responsive-row" style={styles.panelHeader}>
             <div>
               <div style={styles.sectionEyebrow}>ACCOUNT RECORD</div>
               <h2 style={styles.sectionTitle}>Company and ownership details</h2>
@@ -247,7 +247,7 @@ export default function ClientDetail() {
               <LoadingState />
             ) : (
               <form onSubmit={onSave}>
-                <div style={styles.formGridThree}>
+                <div className="atlas-responsive-grid" style={styles.formGridThree}>
                   <Field label="Client name" required>
                     <input
                       style={styles.input}
@@ -276,7 +276,7 @@ export default function ClientDetail() {
 
                 <div style={styles.divider} />
 
-                <div style={styles.formGridTwo}>
+                <div className="atlas-responsive-grid" style={styles.formGridTwo}>
                   <Field label="Account owner">
                     <input
                       style={styles.input}
@@ -298,7 +298,7 @@ export default function ClientDetail() {
 
                 <div style={{ marginTop: 16 }}>
                   <Field label="Strategic account notes">
-                    <textarea
+                    <textarea className="atlas-responsive-card"
                       style={styles.textarea}
                       value={notes}
                       onChange={(event) => setNotes(event.target.value)}
@@ -307,18 +307,18 @@ export default function ClientDetail() {
                   </Field>
                 </div>
 
-                <div style={styles.formFooter}>
+                <div className="atlas-responsive-row" style={styles.formFooter}>
                   <div style={styles.footerNote}>
                     Changes update this account's shared intelligence profile.
                   </div>
-                  <div style={styles.actions}>
-                    <button type="button" style={styles.deleteButton} onClick={onDelete}>
+                  <div className="atlas-responsive-row" style={styles.actions}>
+                    <button  type="button" style={styles.deleteButton} onClick={onDelete}>
                       Delete account
                     </button>
-                    <button type="button" style={styles.secondaryButton} onClick={() => nav("/clients")}>
+                    <button  type="button" style={styles.secondaryButton} onClick={() => nav("/clients")}>
                       Cancel
                     </button>
-                    <button type="submit" style={styles.primaryButton} disabled={saving}>
+                    <button  type="submit" style={styles.primaryButton} disabled={saving}>
                       {saving ? "Saving…" : "Save changes"}
                     </button>
                   </div>
@@ -334,7 +334,7 @@ export default function ClientDetail() {
 
 function StatusBadge({ label, color }) {
   return (
-    <div style={styles.badge}>
+    <div className="atlas-responsive-card" style={styles.badge}>
       <span style={{ ...styles.badgeDot, background: color, boxShadow: `0 0 12px ${color}` }} />
       {label}
     </div>
@@ -343,8 +343,8 @@ function StatusBadge({ label, color }) {
 
 function MetricCard({ label, value, detail, color, progress, compact = false }) {
   return (
-    <article style={styles.metricCard}>
-      <div style={styles.metricTopLine}>
+    <article className="atlas-responsive-card" style={styles.metricCard}>
+      <div className="atlas-responsive-row" style={styles.metricTopLine}>
         <span style={styles.metricLabel}>{label}</span>
         <span style={{ ...styles.metricIndicator, background: color }} />
       </div>
@@ -378,7 +378,7 @@ function Field({ label, required = false, children }) {
 
 function LoadingState() {
   return (
-    <div style={styles.loadingState}>
+    <div className="atlas-responsive-row" style={styles.loadingState}>
       <div style={styles.loadingIcon}>A</div>
       <div>
         <div style={styles.loadingTitle}>Loading account intelligence</div>

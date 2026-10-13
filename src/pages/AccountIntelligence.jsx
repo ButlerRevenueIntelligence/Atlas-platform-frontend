@@ -94,7 +94,7 @@ function Section({ title, subtitle, children }) {
 
 function SmallStat({ label, value, note }) {
   return (
-    <div style={styles.statCard}>
+    <div className="atlas-responsive-card" style={styles.statCard}>
       <div style={styles.statLabel}>{label}</div>
       <div style={styles.statValue}>{value}</div>
       {note ? <div style={styles.statNote}>{note}</div> : null}
@@ -103,7 +103,7 @@ function SmallStat({ label, value, note }) {
 }
 
 function EmptyState({ text = "No live account intelligence data available yet." }) {
-  return <div style={styles.emptyState}>{text}</div>;
+  return <div className="atlas-responsive-card atlas-responsive-row" style={styles.emptyState}>{text}</div>;
 }
 
 function normalizeDeal(d) {
@@ -499,10 +499,10 @@ async function handleGraphIQSearch(event) {
 
   if (loading) {
     return (
-      <div style={styles.page}>
+      <div className="atlas-responsive-page" style={styles.page}>
         <div style={styles.wrap}>
-          <div style={styles.hero}>
-            <h1 style={styles.h1}>Loading Account Intelligence...</h1>
+          <div className="atlas-responsive-card" style={styles.hero}>
+            <h1 className="atlas-responsive-title" style={styles.h1}>Loading Account Intelligence...</h1>
           </div>
         </div>
       </div>
@@ -511,35 +511,35 @@ async function handleGraphIQSearch(event) {
 
   if (error) {
     return (
-      <div style={styles.page}>
+      <div className="atlas-responsive-page" style={styles.page}>
         <div style={styles.wrap}>
-          <div style={styles.errorBox}>{error}</div>
+          <div className="atlas-responsive-card" style={styles.errorBox}>{error}</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={styles.page}>
+    <div className="atlas-responsive-page" style={styles.page}>
       <WorkspaceDataNotice dashboard={dashboard} />
       <div style={styles.wrap}>
-        <div style={styles.hero}>
+        <div className="atlas-responsive-card" style={styles.hero}>
           <div style={styles.eyebrow}>Prioritize the Right Accounts</div>
-          <h1 style={styles.h1}>Account Intelligence</h1>
+          <h1 className="atlas-responsive-title" style={styles.h1}>Account Intelligence</h1>
           <div style={styles.heroText}>
             Atlas identifies which accounts have the best combination of engagement,
             expansion probability, and revenue upside so leadership can focus on the
             right growth opportunities inside <b>{orgName}</b>.
           </div>
 
-          <div style={styles.badgeWrap}>
+          <div className="atlas-responsive-row" style={styles.badgeWrap}>
             {[
               isDemo ? "Demo Account Mode" : "Live Account Mode",
               hasLiveAccountData ? "Opportunity Radar Active" : "Opportunity Radar Waiting",
               hasLiveAccountData ? "Expansion Signals Synced" : "Signals Pending",
               "Atlas AI Monitoring",
             ].map((item) => (
-              <div key={item} style={styles.badge}>
+              <div className="atlas-responsive-card" key={item} style={styles.badge}>
                 {item}
               </div>
             ))}
@@ -552,7 +552,7 @@ async function handleGraphIQSearch(event) {
   title="Company Intelligence Search"
   subtitle="Powered by GraphIQ"
 >
-  <form onSubmit={handleGraphIQSearch} style={styles.graphiqForm}>
+  <form className="atlas-responsive-grid" onSubmit={handleGraphIQSearch} style={styles.graphiqForm}>
     <input
       type="text"
       value={graphiqQuery}
@@ -580,7 +580,7 @@ async function handleGraphIQSearch(event) {
   </div>
 
   {graphiqError ? (
-    <div style={styles.graphiqError}>{graphiqError}</div>
+    <div className="atlas-responsive-card" style={styles.graphiqError}>{graphiqError}</div>
   ) : null}
 
   {!graphiqLoading &&
@@ -593,10 +593,10 @@ async function handleGraphIQSearch(event) {
   ) : null}
 
   {normalizedGraphIQResults.length > 0 ? (
-    <div style={styles.graphiqResults}>
+    <div className="atlas-responsive-grid" style={styles.graphiqResults}>
       {normalizedGraphIQResults.map((organization) => (
-        <div key={organization.id} style={styles.graphiqCard}>
-          <div style={styles.graphiqCardTop}>
+        <div className="atlas-responsive-card" key={organization.id} style={styles.graphiqCard}>
+          <div className="atlas-responsive-row" style={styles.graphiqCardTop}>
             <div>
               <div style={styles.graphiqName}>{organization.name}</div>
 
@@ -607,7 +607,7 @@ async function handleGraphIQSearch(event) {
               ) : null}
             </div>
 
-            <div style={styles.graphiqSource}>GraphIQ</div>
+            <div className="atlas-responsive-card" style={styles.graphiqSource}>GraphIQ</div>
           </div>
 
           {organization.description ? (
@@ -620,9 +620,9 @@ async function handleGraphIQSearch(event) {
             <div style={styles.graphiqTagSection}>
               <div style={styles.graphiqTagLabel}>Industries</div>
 
-              <div style={styles.graphiqTags}>
+              <div className="atlas-responsive-row" style={styles.graphiqTags}>
                 {organization.industries.slice(0, 6).map((industry, index) => (
-                  <div
+                  <div className="atlas-responsive-card"
                     key={`${organization.id}-industry-${index}`}
                     style={styles.graphiqTag}
                   >
@@ -639,11 +639,11 @@ async function handleGraphIQSearch(event) {
             <div style={styles.graphiqTagSection}>
               <div style={styles.graphiqTagLabel}>Capabilities</div>
 
-              <div style={styles.graphiqTags}>
+              <div className="atlas-responsive-row" style={styles.graphiqTags}>
                 {organization.capabilities
                   .slice(0, 8)
                   .map((capability, index) => (
-                    <div
+                    <div className="atlas-responsive-card"
                       key={`${organization.id}-capability-${index}`}
                       style={styles.graphiqTag}
                     >
@@ -664,7 +664,7 @@ async function handleGraphIQSearch(event) {
   ) : null}
 </Section>
 
-        <div style={styles.statsGrid}>
+        <div className="atlas-responsive-metrics" style={styles.statsGrid}>
           {topStats.map((item) => (
             <SmallStat
               key={item.label}
@@ -675,11 +675,11 @@ async function handleGraphIQSearch(event) {
           ))}
         </div>
 
-        <div style={styles.twoCol}>
+        <div className="atlas-responsive-grid" style={styles.twoCol}>
           <Section title="Executive Summary" subtitle="Overview">
             <div style={styles.summaryList}>
               {summaryPoints.map((point) => (
-                <div key={point} style={styles.summaryItem}>
+                <div className="atlas-responsive-card" key={point} style={styles.summaryItem}>
                   {point}
                 </div>
               ))}
@@ -689,7 +689,7 @@ async function handleGraphIQSearch(event) {
           <Section title="Opportunity Radar" subtitle="Signals">
             <div style={styles.summaryList}>
               {opportunityRadar.map((point) => (
-                <div key={point} style={styles.summaryItem}>
+                <div className="atlas-responsive-card" key={point} style={styles.summaryItem}>
                   {point}
                 </div>
               ))}
@@ -697,9 +697,9 @@ async function handleGraphIQSearch(event) {
           </Section>
         </div>
 
-        <div style={styles.twoCol}>
+        <div className="atlas-responsive-grid" style={styles.twoCol}>
           <Section title="Revenue Potential by Account" subtitle="Upside">
-            <div style={styles.chartShell}>
+            <div className="atlas-responsive-card" style={styles.chartShell}>
               {!hasLiveAccountData ? (
                 <EmptyState text="No live account revenue potential yet. Add company-linked opportunities to populate this chart." />
               ) : (
@@ -731,7 +731,7 @@ async function handleGraphIQSearch(event) {
           </Section>
 
           <Section title="Engagement vs Expansion" subtitle="Positioning">
-            <div style={styles.chartShell}>
+            <div className="atlas-responsive-card" style={styles.chartShell}>
               {!hasLiveAccountData ? (
                 <EmptyState text="No live engagement or expansion data yet. Connect opportunities and account activity to activate this view." />
               ) : (
@@ -783,15 +783,15 @@ async function handleGraphIQSearch(event) {
           </Section>
         </div>
 
-        <div style={styles.twoCol}>
+        <div className="atlas-responsive-grid" style={styles.twoCol}>
           <Section title="Top Opportunity Accounts" subtitle="Accounts">
             {!hasLiveAccountData ? (
               <EmptyState text="No live accounts are being surfaced yet." />
             ) : (
               <div style={styles.accountList}>
                 {accounts.map((acct) => (
-                  <div key={acct.name} style={styles.accountCard}>
-                    <div style={styles.accountTop}>
+                  <div className="atlas-responsive-card" key={acct.name} style={styles.accountCard}>
+                    <div className="atlas-responsive-row" style={styles.accountTop}>
                       <div>
                         <div style={styles.accountName}>{acct.name}</div>
                         <div style={styles.accountMeta}>
@@ -801,16 +801,16 @@ async function handleGraphIQSearch(event) {
                       <div style={toneStyle(acct.tone)}>{acct.priority}</div>
                     </div>
 
-                    <div style={styles.accountGrid}>
-                      <div style={styles.mini}>
+                    <div className="atlas-responsive-grid" style={styles.accountGrid}>
+                      <div className="atlas-responsive-card" style={styles.mini}>
                         <div style={styles.miniLabel}>Engagement</div>
                         <div style={styles.miniValue}>{acct.engagement}</div>
                       </div>
-                      <div style={styles.mini}>
+                      <div className="atlas-responsive-card" style={styles.mini}>
                         <div style={styles.miniLabel}>Expansion</div>
                         <div style={styles.miniValue}>{acct.expansion}%</div>
                       </div>
-                      <div style={styles.mini}>
+                      <div className="atlas-responsive-card" style={styles.mini}>
                         <div style={styles.miniLabel}>Revenue Potential</div>
                         <div style={styles.miniValue}>{acct.revenueLabel}</div>
                       </div>
@@ -825,7 +825,7 @@ async function handleGraphIQSearch(event) {
             {!hasLiveAccountData ? (
               <EmptyState text="No live account table data yet." />
             ) : (
-              <div style={styles.tableWrap}>
+              <div className="atlas-responsive-scroll" style={styles.tableWrap}>
                 <table style={styles.table}>
                   <thead>
                     <tr>
@@ -871,7 +871,7 @@ async function handleGraphIQSearch(event) {
         <Section title="Next Best Account Moves" subtitle="Priorities">
           <div style={styles.summaryList}>
             {nextMoves.map((move) => (
-              <div key={move} style={styles.summaryItem}>
+              <div className="atlas-responsive-card" key={move} style={styles.summaryItem}>
                 {move}
               </div>
             ))}

@@ -1,4 +1,5 @@
 import "./AppLayout.css";
+import "./ResponsivePages.css";
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -73,8 +74,10 @@ const label = {
 };
 
 function NavRow({ title, children }) {
+  const [expanded, setExpanded] = useState(title === "CORE");
+  const groupId = `atlas-nav-${title.toLowerCase()}`;
   return (
-    <div className="atlas-nav-row"
+    <div className={`atlas-nav-row${expanded ? " is-expanded" : ""}`}
       style={{
         display: "grid",
         gridTemplateColumns: "88px 1fr",
@@ -83,7 +86,8 @@ function NavRow({ title, children }) {
       }}
     >
       <div className="atlas-nav-label" style={label}>{title}</div>
-      <div className="atlas-nav-links"
+      <button className="atlas-nav-group-toggle" type="button" aria-expanded={expanded} aria-controls={groupId} onClick={() => setExpanded(!expanded)}>{title}<span aria-hidden="true">{expanded ? "−" : "+"}</span></button>
+      <div id={groupId} className="atlas-nav-links"
         style={{
           display: "flex",
           gap: 8,
@@ -712,7 +716,7 @@ export default function AppLayout() {
         </div>
       </div>
 
-      <div
+      <div className="atlas-app-content"
         style={{
           maxWidth: 1440,
           margin: "0 auto",

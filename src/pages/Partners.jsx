@@ -255,13 +255,13 @@ export default function Partners() {
   }
 
   return (
-    <div style={styles.page}>
+    <div className="atlas-responsive-page" style={styles.page}>
       <div style={styles.container}>
-        <section style={styles.hero}>
+        <section className="atlas-responsive-card atlas-responsive-row" style={styles.hero}>
           <div>
             <div style={styles.eyebrow}>Partner ecosystem</div>
 
-            <h1 style={styles.title}>Partner Intelligence</h1>
+            <h1 className="atlas-responsive-title" style={styles.title}>Partner Intelligence</h1>
 
             <p style={styles.subtitle}>
               Track the companies helping influence pipeline and
@@ -269,7 +269,7 @@ export default function Partners() {
             </p>
           </div>
 
-          <div style={styles.heroActions}>
+          <div className="atlas-responsive-row" style={styles.heroActions}>
             <button
               type="button"
               onClick={loadPartners}
@@ -290,10 +290,10 @@ export default function Partners() {
         </section>
 
         {error && !modalOpen ? (
-          <div style={styles.error}>{error}</div>
+          <div className="atlas-responsive-card" style={styles.error}>{error}</div>
         ) : null}
 
-        <section style={styles.statsGrid}>
+        <section className="atlas-responsive-metrics" style={styles.statsGrid}>
           <MetricCard
             label="Total Partners"
             value={stats.total}
@@ -320,13 +320,13 @@ export default function Partners() {
         </section>
 
         <section style={styles.partnerSection}>
-          <div style={styles.sectionHeader}>
+          <div className="atlas-responsive-row" style={styles.sectionHeader}>
             <div>
               <div style={styles.sectionEyebrow}>Workspace records</div>
               <h2 style={styles.sectionTitle}>Partners</h2>
             </div>
 
-            <div style={styles.filters}>
+            <div className="atlas-responsive-row" style={styles.filters}>
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
@@ -414,7 +414,7 @@ export default function Partners() {
 
 function MetricCard({ label, value, detail }) {
   return (
-    <div style={styles.metricCard}>
+    <div className="atlas-responsive-card" style={styles.metricCard}>
       <div style={styles.metricLabel}>{label}</div>
       <div style={styles.metricValue}>{value}</div>
       <div style={styles.metricDetail}>{detail}</div>
@@ -424,26 +424,26 @@ function MetricCard({ label, value, detail }) {
 
 function PartnerCard({ partner, onEdit, onArchive }) {
   return (
-    <article style={styles.partnerCard}>
+    <article className="atlas-responsive-grid atlas-responsive-card" style={styles.partnerCard}>
       <div style={styles.partnerMain}>
         <div style={styles.companyIcon}>
           {getInitials(partner.companyName)}
         </div>
 
         <div style={styles.partnerIdentity}>
-          <div style={styles.partnerTitleRow}>
+          <div className="atlas-responsive-row" style={styles.partnerTitleRow}>
             <h3 style={styles.companyName}>
               {partner.companyName}
             </h3>
 
             <StatusBadge status={partner.status} />
 
-            <span style={styles.typeBadge}>
+            <span className="atlas-responsive-card" style={styles.typeBadge}>
               {TYPE_LABELS[partner.partnershipType] || "Other"}
             </span>
           </div>
 
-          <div style={styles.contactLine}>
+          <div className="atlas-responsive-row" style={styles.contactLine}>
             {partner.contactName || "No primary contact"}
 
             {partner.email ? (
@@ -465,7 +465,7 @@ function PartnerCard({ partner, onEdit, onArchive }) {
         </div>
       </div>
 
-      <div style={styles.partnerMetrics}>
+      <div className="atlas-responsive-grid" style={styles.partnerMetrics}>
         <SmallMetric
           label="Opportunities"
           value={Number(partner.referredOpportunities || 0)}
@@ -505,7 +505,7 @@ function PartnerCard({ partner, onEdit, onArchive }) {
 
 function SmallMetric({ label, value }) {
   return (
-    <div style={styles.smallMetric}>
+    <div className="atlas-responsive-card" style={styles.smallMetric}>
       <div style={styles.smallMetricLabel}>{label}</div>
       <div style={styles.smallMetricValue}>{value}</div>
     </div>
@@ -558,7 +558,7 @@ function PartnerModal({
         style={styles.modal}
         onMouseDown={(event) => event.stopPropagation()}
       >
-        <div style={styles.modalHeader}>
+        <div className="atlas-responsive-row" style={styles.modalHeader}>
           <div>
             <div style={styles.sectionEyebrow}>
               {editing ? "Update record" : "New relationship"}
@@ -582,9 +582,9 @@ function PartnerModal({
 
         <form onSubmit={onSubmit}>
           <div style={styles.formBody}>
-            {error ? <div style={styles.error}>{error}</div> : null}
+            {error ? <div className="atlas-responsive-card" style={styles.error}>{error}</div> : null}
 
-            <div style={styles.twoColumnForm}>
+            <div className="atlas-responsive-grid" style={styles.twoColumnForm}>
               <FormField label="Partner company *">
                 <input
                   name="companyName"
@@ -706,7 +706,7 @@ function PartnerModal({
             </FormField>
           </div>
 
-          <div style={styles.modalFooter}>
+          <div className="atlas-responsive-row" style={styles.modalFooter}>
             <button
               type="button"
               onClick={onClose}

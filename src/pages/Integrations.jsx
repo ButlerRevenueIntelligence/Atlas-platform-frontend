@@ -653,7 +653,7 @@ export default function Integrations() {
         style={{ display: "none" }}
       />
 
-      <div
+      <div className="atlas-responsive-card"
         style={{
           maxWidth: 1380,
           margin: "0 auto 12px",
@@ -695,7 +695,7 @@ export default function Integrations() {
           and detect growth signals across your workspace.
         </div>
 
-        <div
+        <div className="atlas-responsive-row"
           style={{
             marginTop: 12,
             display: "flex",
@@ -703,7 +703,7 @@ export default function Integrations() {
             flexWrap: "wrap",
           }}
         >
-          <div
+          <div className="atlas-responsive-card"
             style={{
               padding: "6px 10px",
               borderRadius: 999,
@@ -716,7 +716,7 @@ export default function Integrations() {
             Active Workspace: {activeOrgName || "Unknown"}
           </div>
 
-          <div
+          <div className="atlas-responsive-card"
             style={{
               padding: "6px 10px",
               borderRadius: 999,
@@ -730,7 +730,7 @@ export default function Integrations() {
             Workspace Mode: {workspaceModeLabel}
           </div>
 
-          <div
+          <div className="atlas-responsive-card"
             style={{
               padding: "6px 10px",
               borderRadius: 999,
@@ -765,7 +765,7 @@ export default function Integrations() {
 
       <div style={{ maxWidth: 1380, margin: "0 auto" }}>
       {error ? (
-        <div
+        <div className="atlas-responsive-card"
           style={{
             marginBottom: 16,
             borderRadius: 12,
@@ -781,7 +781,7 @@ export default function Integrations() {
       ) : null}
 
       {success ? (
-        <div
+        <div className="atlas-responsive-card"
           style={{
             marginBottom: 16,
             borderRadius: 12,
@@ -800,7 +800,7 @@ export default function Integrations() {
         <div style={{ opacity: 0.7, marginBottom: 16 }}>Loading connectors...</div>
       ) : null}
 
-      <div
+      <div className="atlas-responsive-grid"
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(auto-fit, minmax(280px,1fr))",
@@ -864,7 +864,7 @@ export default function Integrations() {
           const syncStatus = live?.lastSyncStatus || "unknown";
 
           return (
-            <div
+            <div className="atlas-responsive-card"
               key={c.id}
               style={{
                 border: "1px solid rgba(255,255,255,0.08)",
@@ -1202,7 +1202,7 @@ export default function Integrations() {
                 </div>
               ) : null}
 
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <div className="atlas-responsive-row" style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                 {c.manual ? (
                   <button
                     onClick={handleExcelClick}
@@ -1258,7 +1258,7 @@ export default function Integrations() {
                     </button>
 
                     {(isGoogleAds || isGA4) && isConnected && live?.mode === "live" && !needsGoogleSelection && !needsGA4Selection ? (
-                      <button onClick={() => handleGoogleSync(c.id)} disabled={!!busyId || uploading} style={{ padding: "8px 12px", borderRadius: 10, color: "#fff", background: "#243249", border: "1px solid #35445e", cursor: "pointer" }}>
+                      <button  onClick={() => handleGoogleSync(c.id)} disabled={!!busyId || uploading} style={{ padding: "8px 12px", borderRadius: 10, color: "#fff", background: "#243249", border: "1px solid #35445e", cursor: "pointer" }}>
                         {busyId === `${c.id}_sync` ? "Syncing..." : "Run Sync"}
                       </button>
                     ) : null}

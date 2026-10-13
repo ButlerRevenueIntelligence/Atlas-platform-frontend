@@ -48,7 +48,7 @@ const clamp = (value, minimum, maximum) =>
 function Section({ title, subtitle, children, action }) {
   return (
     <div style={S.section}>
-      <div style={S.sectionHead}>
+      <div className="atlas-responsive-row" style={S.sectionHead}>
         <div>
           {subtitle ? <div style={S.sectionSub}>{subtitle}</div> : null}
           <div style={S.sectionTitle}>{title}</div>
@@ -62,7 +62,7 @@ function Section({ title, subtitle, children, action }) {
 
 function StatCard({ label, value, note, valueStyle }) {
   return (
-    <div style={S.statCard}>
+    <div className="atlas-responsive-card" style={S.statCard}>
       <div style={S.statLabel}>{label}</div>
       <div style={{ ...S.statValue, ...(valueStyle || {}) }}>{value}</div>
       <div style={S.statNote}>{note}</div>
@@ -426,11 +426,11 @@ export default function Metrics() {
 
   if (loading && !summary && !series.length) {
     return (
-      <div style={S.page}>
+      <div className="atlas-responsive-page" style={S.page}>
         <div style={S.wrap}>
-          <div style={S.hero}>
+          <div className="atlas-responsive-card" style={S.hero}>
             <div style={S.eyebrow}>External Market Intelligence</div>
-            <h1 style={S.h1}>Market Signals</h1>
+            <h1 className="atlas-responsive-title" style={S.h1}>Market Signals</h1>
             <div style={S.heroText}>Loading market intelligence…</div>
           </div>
         </div>
@@ -439,13 +439,13 @@ export default function Metrics() {
   }
 
   return (
-    <div style={S.page}>
+    <div className="atlas-responsive-page" style={S.page}>
       <div style={S.wrap}>
-        <div style={S.hero}>
-          <div style={S.heroTop}>
+        <div className="atlas-responsive-card" style={S.hero}>
+          <div className="atlas-responsive-row" style={S.heroTop}>
             <div>
               <div style={S.eyebrow}>External Market Intelligence</div>
-              <h1 style={S.h1}>Market Signals</h1>
+              <h1 className="atlas-responsive-title" style={S.h1}>Market Signals</h1>
               <div style={S.heroText}>
                 Discover where opportunity is building, identify relevant
                 companies, and connect external market intelligence to the
@@ -453,10 +453,10 @@ export default function Metrics() {
               </div>
             </div>
 
-            <div style={S.controlsWrap}>
-              <div style={S.badge}>Powered by GraphIQ</div>
-              <div style={S.badge}>{isDemo ? "Demo scenario · sample internal data" : "Workspace Signals"}</div>
-              <div style={S.badge}>
+            <div className="atlas-responsive-row" style={S.controlsWrap}>
+              <div className="atlas-responsive-card" style={S.badge}>Powered by GraphIQ</div>
+              <div className="atlas-responsive-card" style={S.badge}>{isDemo ? "Demo scenario · sample internal data" : "Workspace Signals"}</div>
+              <div className="atlas-responsive-card" style={S.badge}>
                 {signalStrength >= 60
                   ? "Signal Strength Elevated"
                   : "Signal Flow Stable"}
@@ -464,7 +464,7 @@ export default function Metrics() {
 
               <div style={{ width: "100%" }} />
 
-              <div style={S.pill}>Window</div>
+              <div className="atlas-responsive-card" style={S.pill}>Window</div>
 
               <select
                 style={S.select}
@@ -477,16 +477,16 @@ export default function Metrics() {
                 <option value={90}>90 days</option>
               </select>
 
-              <button style={S.btn} onClick={load} disabled={loading}>
+              <button  style={S.btn} onClick={load} disabled={loading}>
                 {loading ? "Loading..." : "Refresh"}
               </button>
             </div>
           </div>
         </div>
 
-        {error ? <div style={S.error}>{error}</div> : null}
+        {error ? <div className="atlas-responsive-card" style={S.error}>{error}</div> : null}
 
-        <div style={S.briefingCard}>
+        <div className="atlas-responsive-card" style={S.briefingCard}>
           <div style={S.briefingEyebrow}>Atlas AI Market Outlook</div>
           <div style={S.briefingBody}>{executiveBriefing}</div>
         </div>
@@ -496,13 +496,13 @@ export default function Metrics() {
           subtitle={isDemo && !marketResults.length ? "Fictional company examples · demo only" : "Powered by GraphIQ"}
           action={
             marketTotal > 0 ? (
-              <div style={S.sectionTag}>
+              <div className="atlas-responsive-card" style={S.sectionTag}>
                 {marketTotal.toLocaleString()} matches
               </div>
             ) : null
           }
         >
-          <form onSubmit={handleMarketSearch} style={S.searchForm}>
+          <form className="atlas-responsive-grid" onSubmit={handleMarketSearch} style={S.searchForm}>
             <input
               value={marketQuery}
               onChange={(event) => setMarketQuery(event.target.value)}
@@ -528,22 +528,22 @@ export default function Metrics() {
             use Atlas to decide which markets and accounts deserve attention.
           </div>
 
-          {marketError ? <div style={S.searchError}>{marketError}</div> : null}
+          {marketError ? <div className="atlas-responsive-card" style={S.searchError}>{marketError}</div> : null}
 
           {!marketLoading &&
           marketQuery.trim() &&
           !marketError &&
           organizations.length === 0 ? (
-            <div style={S.emptyStateBox}>
+            <div className="atlas-responsive-card atlas-responsive-row" style={S.emptyStateBox}>
               No organizations were returned for this search.
             </div>
           ) : null}
 
           {organizations.length > 0 ? (
-            <div style={S.companyGrid}>
+            <div className="atlas-responsive-grid" style={S.companyGrid}>
               {organizations.map((organization) => (
-                <div key={organization.id} style={S.companyCard}>
-                  <div style={S.companyTop}>
+                <div className="atlas-responsive-card" key={organization.id} style={S.companyCard}>
+                  <div className="atlas-responsive-row" style={S.companyTop}>
                     <div>
                       <div style={S.companyName}>{organization.name}</div>
                       {organization.website ? (
@@ -552,7 +552,7 @@ export default function Metrics() {
                         </div>
                       ) : null}
                     </div>
-                    <div style={S.opportunityPill}>
+                    <div className="atlas-responsive-card" style={S.opportunityPill}>
                       Potential Opportunity
                     </div>
                   </div>
@@ -566,11 +566,11 @@ export default function Metrics() {
                   {organization.industries.length > 0 ? (
                     <div style={S.tagSection}>
                       <div style={S.tagLabel}>Industries</div>
-                      <div style={S.tags}>
+                      <div className="atlas-responsive-row" style={S.tags}>
                         {organization.industries
                           .slice(0, 5)
                           .map((industry, index) => (
-                            <div
+                            <div className="atlas-responsive-card"
                               key={`${organization.id}-industry-${index}`}
                               style={S.tag}
                             >
@@ -584,11 +584,11 @@ export default function Metrics() {
                   {organization.capabilities.length > 0 ? (
                     <div style={S.tagSection}>
                       <div style={S.tagLabel}>Capabilities</div>
-                      <div style={S.tags}>
+                      <div className="atlas-responsive-row" style={S.tags}>
                         {organization.capabilities
                           .slice(0, 7)
                           .map((capability, index) => (
-                            <div
+                            <div className="atlas-responsive-card"
                               key={`${organization.id}-capability-${index}`}
                               style={S.tag}
                             >
@@ -604,7 +604,7 @@ export default function Metrics() {
           ) : null}
         </Section>
 
-        <div style={S.statsGrid}>
+        <div className="atlas-responsive-metrics" style={S.statsGrid}>
           <StatCard
             label="Companies Discovered"
             value={marketTotal || organizations.length}
@@ -628,9 +628,9 @@ export default function Metrics() {
           />
         </div>
 
-        <div style={S.twoCol}>
+        <div className="atlas-responsive-grid" style={S.twoCol}>
           <Section title="Market Activity Over Time" subtitle="Demand Flow">
-            <div style={S.chartShellLg}>
+            <div className="atlas-responsive-card" style={S.chartShellLg}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartSeries}>
                   <CartesianGrid
@@ -691,7 +691,7 @@ export default function Metrics() {
           </Section>
         </div>
 
-        <div style={S.twoCol}>
+        <div className="atlas-responsive-grid" style={S.twoCol}>
           <Section title="Revenue Opportunity Radar" subtitle="Growth Levers">
             <OpportunityRadar
               openPipeline={summary?.raw ?? 0}
@@ -704,7 +704,7 @@ export default function Metrics() {
 
           <Section title="Industry Mix From Search" subtitle={isDemo && !marketResults.length ? "Example companies · demo only" : "GraphIQ Results"}>
             {industryCounts.length ? (
-              <div style={S.chartShell}>
+              <div className="atlas-responsive-card" style={S.chartShell}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={industryCounts}>
                     <CartesianGrid
@@ -735,7 +735,7 @@ export default function Metrics() {
                 </ResponsiveContainer>
               </div>
             ) : (
-              <div style={S.emptyStateBox}>
+              <div className="atlas-responsive-card atlas-responsive-row" style={S.emptyStateBox}>
                 Run a company search to see the industry mix across the returned
                 organizations.
               </div>
@@ -743,7 +743,7 @@ export default function Metrics() {
           </Section>
         </div>
 
-        <div style={S.twoCol}>
+        <div className="atlas-responsive-grid" style={S.twoCol}>
           <Section title="Revenue Timeline Projection" subtitle="Forward View">
             <RevenueTimeline
               revenue30={totals.avgDailyWon * 30}
@@ -766,7 +766,7 @@ export default function Metrics() {
           </Section>
         </div>
 
-        <div style={S.footerStats}>
+        <div className="atlas-responsive-grid" style={S.footerStats}>
           <StatCard
             label="Average Daily Won Revenue"
             value={money(totals.avgDailyWon)}
