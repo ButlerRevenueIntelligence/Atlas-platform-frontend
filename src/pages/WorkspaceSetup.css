@@ -1,0 +1,70 @@
+.ws-page{max-width:1080px;margin:0 auto;padding:20px 8px 36px;color:#e8f1fc;font-size:14px;line-height:1.6;overflow-wrap:anywhere}
+.ws-page *{box-sizing:border-box;min-width:0}
+.ws-page h1{font-size:34px;line-height:1.2;letter-spacing:-1px;margin:8px 0 12px}
+.ws-page h2{font-size:25px;line-height:1.3;margin:6px 0 18px}
+.ws-page h3{font-size:20px;line-height:1.3;margin:0}
+.ws-page p{color:#b8c9dc;margin:10px 0 18px}
+.ws-page small{font-size:12px;line-height:1.6;color:#aac0d7}
+.ws-page a,.ws-prompt a{color:#a2e4ed}
+.ws-page button,.ws-link-button{font:inherit;min-height:44px;max-width:100%;padding:10px 16px;border:1px solid #527a92;border-radius:9px;background:#18364b;color:#e1f7ff;font-weight:650;cursor:pointer;text-decoration:none}
+.ws-page button:disabled{opacity:.45;cursor:default}
+.ws-page :focus-visible,.ws-prompt :focus-visible{outline:3px solid #9be6ee;outline-offset:4px}
+.ws-page .ws-primary,.ws-page .ws-link-button{background:#b5e8e6;border-color:#b5e8e6;color:#0d2532}
+.ws-page .ws-text-button{border:0;background:transparent;padding-left:0;color:#9edee9}
+.ws-header,.ws-row,.ws-footer,.ws-actions{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.ws-header{margin-bottom:24px}
+.ws-eyebrow{font-size:10px;letter-spacing:1.8px;font-weight:800;color:#a5d6dc}
+.ws-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:22px 0}
+.ws-steps button{display:flex;align-items:center;gap:10px;background:#0e2033;border-color:#66869b40;color:#adc4d9}
+.ws-steps span{display:inline-flex;justify-content:center;align-items:center;min-width:24px;height:24px;border-radius:6px;border:1px solid #88aeb85c;font-size:12px}
+.ws-steps button[aria-current=step]{border-color:#96d6de;background:#254b60;color:#f0fcff}
+.ws-panel{padding:30px;border:1px solid #799fb93b;border-radius:18px;background:linear-gradient(125deg,#142b40,#0d1b2d)}
+.ws-panel>div.ws-row{margin-bottom:10px}
+.ws-panel fieldset{border:0;padding:0;margin:0}
+.ws-panel legend{font-weight:700;color:#d9eaf7;margin-bottom:16px}
+.ws-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:24px}
+.ws-choice{display:flex;gap:14px;align-items:flex-start;min-height:128px;border:1px solid #6b8fa34d;border-radius:12px;padding:20px;cursor:pointer;background:#0c2133}
+.ws-choice.is-selected{border-color:#95d1d7;background:#214655}
+.ws-choice input,.ws-expect input,.ws-ack input{width:20px;height:20px;min-width:20px;accent-color:#a0e4e4;margin-top:4px}
+.ws-choice strong{display:block;font-size:16px;color:#edf8ff}
+.ws-choice small{display:block;margin-top:6px}
+.ws-systems{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:22px 0 8px}
+.ws-system{padding:20px;border:1px solid #799fb933;border-radius:12px;background:#10263a}
+.ws-system strong{font-size:16px}
+.ws-system small{display:block}
+.ws-system a{display:inline-block;min-height:44px;padding:10px 0 0}
+.ws-expect{display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;color:#d1e4f3}
+.ws-system p.ws-source-status{margin:16px 0 4px;font-size:13px;color:#c0d9e9}
+.ws-coverage{display:grid;gap:14px;margin:20px 0}
+.ws-coverage>article{padding:20px;border:1px solid #668da244;border-radius:12px;background:#0b2032}
+.ws-badge{display:inline-flex;font-size:11px;border:1px solid #91b3c64d;border-radius:6px;padding:4px 8px;color:#bad6e9}
+.ws-available{color:#c5f1df;border-color:#82cbb76b}
+.ws-partial,.ws-missing,.ws-sample,.ws-restricted{color:#e5ce9d;border-color:#bca16a66}
+.ws-page .ws-note{font-size:12px;background:#26455745;border-left:2px solid #719baa;padding:12px 16px}
+.ws-page p.ws-sample{background:#7b632a26;border:1px solid #b99b5655;border-radius:10px;padding:14px 18px;font-size:12px;color:#e5d5ae}
+.ws-error,.ws-success{background:#512c3d;padding:14px 18px;border-radius:10px;color:#ffe4eb!important}
+.ws-success{background:#1a443e;color:#d2f4e8!important}
+.ws-error button{margin-left:10px;font-size:12px}
+.ws-details{border-top:1px solid #7193b029;margin:16px 0}
+.ws-details summary{min-height:44px;padding:12px 0;cursor:pointer;color:#b2dfeb;font-weight:650}
+.ws-details article{padding:12px 0;border-bottom:1px solid #ffffff17}
+.ws-gap-review{margin:22px 0;padding:8px 18px 18px;border:1px solid #bea66a55;border-radius:12px;background:#8c672712}
+.ws-gap-review .ws-details{border:0;margin:0}
+.ws-ack{display:flex;align-items:flex-start;gap:12px;font-size:13px;color:#d7e6f2;cursor:pointer;min-height:44px;padding-top:8px}
+.ws-actions{justify-content:flex-start;margin:24px 0 18px}
+.ws-empty{padding:24px;border:1px dashed #7793a566;border-radius:12px;margin:24px 0}
+.ws-briefing{padding:24px;border:1px solid #83bbcc55;border-radius:14px;background:#143348;margin:24px 0}
+.ws-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin:24px 0}
+.ws-metrics span{display:block;font-size:11px;color:#adc6da}
+.ws-metrics strong{display:block;font-size:24px;margin-top:8px;line-height:1.3;letter-spacing:-.5px}
+.ws-priority{padding:20px 0;border-bottom:1px solid #ffffff1c}
+.ws-next{display:flex;gap:24px;flex-wrap:wrap;margin-top:26px;padding-top:20px;border-top:1px solid #ffffff22;font-size:12px}
+.ws-footer{margin-top:22px;font-size:12px;color:#91adc6}
+.ws-footer button{font-size:12px;background:transparent;border-color:#6f8ca255}
+.ws-prompt{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px;padding:12px 16px;border:1px solid #7499b044;border-radius:10px;background:#10283b;color:#bfd6e9;font-size:12px}
+.ws-prompt strong{display:block;font-size:13px;color:#e2f0fb}
+.ws-prompt.is-small{padding:0;background:transparent;border:0;justify-content:flex-end;margin-bottom:10px}
+@media(max-width:700px){.ws-page h1{font-size:28px}.ws-panel{padding:24px 18px}.ws-steps{grid-template-columns:repeat(2,minmax(0,1fr))}.ws-choices,.ws-systems{grid-template-columns:minmax(0,1fr)}.ws-choice{min-height:0}.ws-metrics{grid-template-columns:minmax(0,1fr);gap:14px}.ws-metrics>div{border-bottom:1px solid #ffffff1b;padding-bottom:14px}.ws-briefing{padding:20px 16px}.ws-page{padding:12px 0 28px}.ws-steps button{font-size:13px}.ws-steps button span{min-width:20px;height:20px}.ws-prompt{padding:12px}.ws-expect{min-height:44px}.ws-page h2{font-size:23px}.ws-actions{align-items:stretch}.ws-actions button,.ws-actions .ws-link-button{width:100%;text-align:center}}
+
+.atlas-responsive-card[id^="connector-"]{scroll-margin-top:240px}
+@media(max-width:700px){.atlas-responsive-card[id^="connector-"]{scroll-margin-top:112px}}

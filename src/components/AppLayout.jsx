@@ -1,3 +1,4 @@
+import WorkspaceSetupPrompt from "./WorkspaceSetupPrompt.jsx";
 import "./AppLayout.css";
 import "./ResponsivePages.css";
 import React, { useEffect, useMemo, useState, useRef } from "react";
@@ -215,6 +216,7 @@ export default function AppLayout() {
   }, [mobileMenuOpen]);
   const currentPage = {
     "/overview": "Overview",
+    "/setup": "Workspace Setup",
     "/revenue-planning": "Revenue Planning",
     "/command-center": "Command Center",
     "/deal-war-room": "Deal War Room", "/deal-room": "Deal Room",
@@ -730,7 +732,8 @@ export default function AppLayout() {
           filter: workspaceBlocked && !isBillingPage ? "blur(1px)" : "none",
         }}
       >
-        <Outlet />
+        <WorkspaceSetupPrompt workspaceId={selectedWorkspaceId} enabled={!workspaceBlocked && !isBillingPage && can("command_center.view")} />
+        <Outlet key={selectedWorkspaceId} />
       </div>
 
       {paywallData && !isBillingPage ? (

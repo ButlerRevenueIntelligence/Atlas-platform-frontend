@@ -28,7 +28,7 @@ export default function CreateWorkspace() {
         industry: form.industry.trim(),
       });
 
-      nav("/command-center", { replace: true });
+      nav("/setup", { replace: true });
     } catch (error) {
       console.error("Workspace creation failed:", error);
       setErr(error?.message || "Failed to create workspace. Please try again.");
