@@ -43,12 +43,13 @@ function Evidence({
     {onOpen && !demo && <button type="button" onClick={() => onOpen(deal.id)}>Open source opportunity</button>}
   </details>;
 }
-function ActionCard({
+export function ActionCard({
   action,
   members,
   canEdit,
   onSave,
-  busy
+  busy,
+  showAccountLink = true
 }) {
   const [status, setStatus] = useState(action.status);
   const [outcome, setOutcome] = useState(action.outcome || '');
@@ -57,6 +58,7 @@ function ActionCard({
   return <article className="lb-action">
     <div className="lb-row"><strong>{action.title}</strong><span className={`lb-badge ${late ? 'lb-warn' : ''}`}>{late ? 'Overdue' : states[action.status]}</span></div>
     <p>{action.dealName} · {members.find(m => m.id === String(action.assigneeId))?.name || action.ownerName} · Due {when(action.dueAt)}</p>
+    {showAccountLink && action.dealId && <Link to={`/account-plans?dealId=${encodeURIComponent(action.dealId)}`}>Open related account plan →</Link>}
     <details><summary>Update and outcome</summary>
       <form onSubmit={e => {
         e.preventDefault();

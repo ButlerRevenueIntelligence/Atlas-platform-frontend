@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import React, { useMemo } from "react";
 
 const safeNum = (v) => {
@@ -172,6 +173,7 @@ export default function AtlasDealIntelligencePanel({ deals = [] }) {
                   >
                     {deal.name}
                   </div>
+                  <Link to={`/account-plans?dealId=${encodeURIComponent(deal.id)}`} style={{color:"#a0e7f0",display:"inline-block",padding:"8px 0",fontSize:12}}>Open account action plan →</Link>
 
                   <div
                     style={{

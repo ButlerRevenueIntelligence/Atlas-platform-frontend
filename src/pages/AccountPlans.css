@@ -1,0 +1,363 @@
+.ap-page {
+  max-width:1260px;
+  margin:0 auto;
+  padding:24px;
+  color:#e9f1fc;
+  font-size:14px;
+  line-height:1.6;
+  overflow-wrap:anywhere
+}
+.ap-page * {
+  box-sizing:border-box;
+  min-width:0
+}
+.ap-page h1 {
+  font-size:32px;
+  letter-spacing:-.8px;
+  line-height:1.25;
+  margin:8px 0 12px
+}
+.ap-page h2 {
+  font-size:22px;
+  line-height:1.3;
+  margin:0 0 12px
+}
+.ap-page h3 {
+  font-size:17px;
+  line-height:1.4;
+  margin:0 0 10px
+}
+.ap-page p {
+  color:#b4c6db;
+  margin:8px 0 16px
+}
+.ap-page a {
+  color:#a0e7f0
+}
+.ap-row {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  flex-wrap:wrap
+}
+.ap-header {
+  margin-bottom:24px
+}
+.ap-eyebrow {
+  font-size:10px;
+  letter-spacing:2px;
+  color:#93ddd9;
+  font-weight:800;
+  margin-top:12px
+}
+.ap-page button,.ap-page input,.ap-page select,.ap-page textarea {
+  font:inherit;
+  min-height:44px;
+  max-width:100%;
+  border-radius:9px
+}
+.ap-page button {
+  padding:10px 15px;
+  border:1px solid #568297;
+  background:#193c51;
+  color:#def8ff;
+  font-weight:650;
+  cursor:pointer
+}
+.ap-page button:disabled {
+  opacity:.5;
+  cursor:default
+}
+.ap-page :focus-visible {
+  outline:3px solid #8fe0eb;
+  outline-offset:3px
+}
+.ap-page input,.ap-page select,.ap-page textarea {
+  width:100%;
+  background:#0c1c2d;
+  border:1px solid #55738c;
+  color:#eef5ff;
+  padding:11px;
+  color-scheme:dark
+}
+.ap-page textarea {
+  min-height:90px;
+  resize:vertical
+}
+.ap-page label {
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  margin-bottom:16px;
+  color:#c5d7e9;
+  font-weight:600
+}
+.ap-page fieldset {
+  border:0;
+  padding:0;
+  margin:0
+}
+.ap-directory {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:18px;
+  margin:24px 0
+}
+.ap-account-card {
+  display:block;
+  padding:24px;
+  border:1px solid #638ca63d;
+  border-radius:16px;
+  background:linear-gradient(135deg,#162d43,#0f1d31);
+  text-decoration:none!important;
+  color:#e9f1fc!important
+}
+.ap-account-card:hover {
+  border-color:#8dc9d2;
+  background:#19364b
+}
+.ap-account-card h2 {
+  font-size:20px;
+  margin:0
+}
+.ap-account-card>strong {
+  font-size:24px;
+  letter-spacing:-.5px
+}
+.ap-card-footer {
+  display:flex;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:10px;
+  border-top:1px solid #ffffff1b;
+  padding-top:14px;
+  margin-top:18px;
+  font-size:12px;
+  color:#b1cede
+}
+.ap-badge {
+  font-size:11px;
+  border:1px solid #7195ad66;
+  background:#395d7926;
+  padding:4px 8px;
+  border-radius:7px;
+  white-space:nowrap;
+  color:#cae2f4
+}
+.ap-stats {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:18px;
+  border:1px solid #ffffff1e;
+  border-radius:16px;
+  background:#112239;
+  padding:22px;
+  margin:20px 0
+}
+.ap-stats span,.ap-stats small {
+  display:block;
+  font-size:12px;
+  color:#a8bfd7
+}
+.ap-stats strong {
+  display:block;
+  font-size:24px;
+  letter-spacing:-.5px;
+  line-height:1.3;
+  margin:8px 0
+}
+.ap-warning-text {
+  color:#f0ca95!important
+}
+.ap-tabs {
+  display:flex;
+  gap:8px;
+  overflow:auto;
+  margin-bottom:20px
+}
+.ap-tabs button {
+  white-space:nowrap;
+  background:transparent;
+  border-color:transparent;
+  color:#b3c7db
+}
+.ap-tabs button[aria-pressed=true] {
+  background:#204a62;
+  border-color:#6795a7;
+  color:#e8ffff
+}
+.ap-panel {
+  background:linear-gradient(130deg,#12283e,#0c192b);
+  padding:26px;
+  border:1px solid #6593ad3b;
+  border-radius:18px;
+  margin:20px 0
+}
+.ap-two-col {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:24px;
+  margin:20px 0
+}
+.ap-objective {
+  font-size:19px;
+  line-height:1.65;
+  white-space:pre-wrap;
+  max-width:960px
+}
+.ap-item {
+  padding:18px 0;
+  border-bottom:1px solid #ffffff1a
+}
+.ap-item:last-child {
+  border:0
+}
+.ap-prewrap {
+  white-space:pre-wrap
+}
+.ap-page summary {
+  cursor:pointer;
+  min-height:44px;
+  padding:10px 0;
+  color:#a6dfe9;
+  font-weight:650
+}
+.ap-editor {
+  border-color:#79b8c2;
+  background:#17374b
+}
+.ap-editor-card {
+  border:1px solid #ffffff21;
+  border-radius:12px;
+  padding:18px;
+  margin-bottom:16px;
+  background:#071a2a60
+}
+.ap-editor-card .ap-two-col {
+  gap:16px;
+  margin:12px 0
+}
+.ap-form-actions {
+  justify-content:flex-start;
+  border-top:1px solid #ffffff26;
+  padding-top:18px;
+  margin-top:22px
+}
+.ap-assignment {
+  border:1px solid #659bb055;
+  background:#20465c33;
+  border-radius:12px;
+  padding:12px 18px;
+  margin:20px 0
+}
+.ap-small {
+  font-size:12px!important;
+  color:#a4bdd5!important
+}
+.ap-demo {
+  font-size:12px;
+  padding:12px 16px;
+  border-radius:10px;
+  background:#82641b21;
+  border:1px solid #b4954e55;
+  color:#d9c58f!important
+}
+.ap-empty {
+  padding:24px;
+  border:1px dashed #6a829b77;
+  border-radius:12px;
+  color:#b2c8dd;
+  margin:18px 0
+}
+.ap-error,.ap-notice {
+  padding:12px 16px;
+  border-radius:10px;
+  background:#59293b;
+  color:#ffdfeb!important
+}
+.ap-notice {
+  background:#194a41;
+  color:#d7fff0!important
+}
+.ap-footer {
+  display:flex;
+  justify-content:space-between;
+  gap:18px;
+  flex-wrap:wrap;
+  margin:24px 0;
+  color:#a0b8cd;
+  font-size:12px
+}
+.ap-page .lb-action {
+  padding:22px 0
+}
+.ap-page .lb-action>details {
+  font-size:13px
+}
+.ap-page .lb-action form {
+  margin-top:12px
+}
+.ap-page .lb-action .lb-row {
+  gap:12px
+}
+.ap-page .lb-action .lb-evidence {
+  max-width:100%
+}
+@media(max-width:850px) {
+  .ap-two-col {
+    grid-template-columns:minmax(0,1fr)
+  }
+  .ap-stats {
+    grid-template-columns:minmax(0,1fr);
+    gap:14px
+  }
+  .ap-stats>div {
+    border-bottom:1px solid #ffffff15;
+    padding-bottom:12px
+  }
+  .ap-stats>div:last-child {
+    border:0;
+    padding-bottom:0
+  }
+  .ap-directory {
+    grid-template-columns:minmax(0,1fr)
+  }
+}
+@media(max-width:600px) {
+  .ap-page {
+    padding:8px 0
+  }
+  .ap-page h1 {
+    font-size:27px
+  }
+  .ap-panel {
+    padding:20px 16px;
+    border-radius:14px
+  }
+  .ap-account-card {
+    padding:20px
+  }
+  .ap-page input,.ap-page select,.ap-page textarea {
+    font-size:16px
+  }
+  .ap-tabs button {
+    font-size:13px
+  }
+  .ap-editor-card {
+    padding:14px
+  }
+  .ap-footer {
+    display:grid;
+    gap:12px
+  }
+  .ap-badge {
+    white-space:normal
+  }
+  .ap-page .lb-evidence dl>div {
+    display:block
+  }
+  .ap-page .lb-evidence dd {
+    text-align:left
+  }
+}

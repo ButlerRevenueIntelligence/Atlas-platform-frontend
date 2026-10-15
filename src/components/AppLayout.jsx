@@ -219,6 +219,7 @@ export default function AppLayout() {
     "/command-center": "Command Center",
     "/deal-war-room": "Deal War Room", "/deal-room": "Deal Room",
     "/data-connectors": "Data Connectors", "/integrations": "Data Connectors",
+    "/account-plans": "Account Plans",
     "/accounts": "Accounts", "/partners": "Partners", "/growth-engine": "Growth Engine",
     "/account-intelligence": "Account Intelligence", "/market-signals": "Market Signals",
     "/global-revenue-map": "Global Revenue Map", "/atlas-ai-operator": "Atlas AI Operator",

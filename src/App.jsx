@@ -19,6 +19,7 @@ import Pipeline from "./pages/Pipeline.jsx";
 import Metrics from "./pages/Metrics.jsx";
 import Clients from "./pages/Clients.jsx";
 import ClientDetail from "./pages/ClientDetail.jsx";
+import AccountPlans from "./pages/AccountPlans.jsx";
 import Partners from "./pages/Partners.jsx";
 import Workspaces from "./pages/Workspaces.jsx";
 import Invites from "./pages/Invites.jsx";
@@ -554,6 +555,8 @@ export default function App() {
         />
 
         <Route path="/clients/:id" element={<ClientDetail />} />
+        <Route path="/account-plans" element={<RequirePerm perm="clients.view"><AccountPlans /></RequirePerm>} />
+        <Route path="/account-plans/:accountKey" element={<RequirePerm perm="clients.view"><AccountPlans /></RequirePerm>} />
 
         <Route
           path="/deal-war-room"
