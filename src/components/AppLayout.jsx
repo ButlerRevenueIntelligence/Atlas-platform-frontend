@@ -214,7 +214,9 @@ export default function AppLayout() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [mobileMenuOpen]);
   const currentPage = {
-    "/overview": "Overview", "/command-center": "Command Center",
+    "/overview": "Overview",
+    "/revenue-planning": "Revenue Planning",
+    "/command-center": "Command Center",
     "/deal-war-room": "Deal War Room", "/deal-room": "Deal Room",
     "/data-connectors": "Data Connectors", "/integrations": "Data Connectors",
     "/accounts": "Accounts", "/partners": "Partners", "/growth-engine": "Growth Engine",
@@ -615,6 +617,7 @@ export default function AppLayout() {
                   Overview
                 </NavLink>
               )}
+              {can("dashboard.view") && <NavLink to="/revenue-planning" style={navLinkStyle}>Revenue Planning</NavLink>}
               {can("command_center.view") && (
                 <NavLink to="/command-center" style={navLinkStyle}>
                   Command Center

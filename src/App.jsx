@@ -13,6 +13,7 @@ import Welcome from "./pages/Welcome.jsx";
 import Billing from "./pages/Billing.jsx";
 
 import Dashboard from "./pages/Dashboard.jsx";
+import RevenuePlanning from "./pages/RevenuePlanning.jsx";
 import RevenueIntel from "./pages/RevenueIntel.jsx";
 import Pipeline from "./pages/Pipeline.jsx";
 import Metrics from "./pages/Metrics.jsx";
@@ -459,6 +460,8 @@ export default function App() {
             </RequirePerm>
           }
         />
+
+        <Route path="/revenue-planning" element={<RequirePerm perm="dashboard.view"><RevenuePlanning /></RequirePerm>} />
 
         <Route
           path="/command-center"

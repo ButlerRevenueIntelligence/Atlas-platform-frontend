@@ -1,3 +1,4 @@
+import GoalTrackingSummary from "../components/GoalTrackingSummary.jsx";
 import WorkspaceDataNotice from "../components/WorkspaceDataNotice.jsx";
   import React, { useEffect, useMemo, useState } from "react";
 import {
@@ -988,34 +989,6 @@ export default function Dashboard() {
 
   const orgName = dashboard?.org?.name || dashboard?.orgName || "Atlas Workspace";
 
-  const targets = useMemo(() => {
-    const monthlyRevenueGoal =
-      safeNum(dashboard?.targets?.monthlyRevenueGoal) ||
-      safeNum(dashboard?.monthlyGoal) ||
-      (isDemo ? 75000 : 0);
-
-    const quarterlyRevenueGoal =
-      safeNum(dashboard?.targets?.quarterlyRevenueGoal) ||
-      (monthlyRevenueGoal > 0 ? monthlyRevenueGoal * 3 : 0);
-
-    const currentMonthRevenue = safeNum(kpis.revenue30);
-    const currentQuarterForecast = safeNum(kpis.forecast90);
-
-    const monthPct =
-      monthlyRevenueGoal > 0 ? (currentMonthRevenue / monthlyRevenueGoal) * 100 : 0;
-    const quarterPct =
-      quarterlyRevenueGoal > 0 ? (currentQuarterForecast / quarterlyRevenueGoal) * 100 : 0;
-
-    return {
-      monthlyRevenueGoal,
-      quarterlyRevenueGoal,
-      sampleGoals: isDemo && !safeNum(dashboard?.targets?.monthlyRevenueGoal) && !safeNum(dashboard?.monthlyGoal),
-      currentMonthRevenue,
-      currentQuarterForecast,
-      monthPct: Math.max(0, monthPct),
-      quarterPct: Math.max(0, quarterPct),
-    };
-  }, [dashboard, kpis, isDemo]);
 
   const liveRevenueSnapshot = useMemo(() => {
     if (!hasLiveData) {
@@ -2661,53 +2634,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div style={S.card}>
-            <div style={S.sectionTitle}>Goal Tracking</div>
-            {targets.sampleGoals && <div style={{ fontSize: 11, opacity: 0.75, marginBottom: 12 }}>Sample planning targets · demo only</div>}
-
-            <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 6 }}>30-Day Revenue vs Goal</div>
-              <div className="atlas-responsive-row"
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: 8,
-                  fontSize: 13,
-                }}
-              >
-                <span>{money(targets.currentMonthRevenue)}</span>
-                <span>{targets.monthlyRevenueGoal > 0 ? `Goal: ${money(targets.monthlyRevenueGoal)}` : "Goal not set"}</span>
-              </div>
-              {targets.monthlyRevenueGoal > 0 ? <>
-                <div role="progressbar" aria-label="30-day revenue goal progress" aria-valuenow={Math.min(100, targets.monthPct)} aria-valuemin={0} aria-valuemax={100} style={S.progressWrap}>
-                  <div style={S.progressBar(targets.monthPct)} />
-                </div>
-                <div style={{ fontSize: 11, opacity: 0.8, marginTop: 6 }}>{Math.round(targets.monthPct)}% achieved · {targets.currentMonthRevenue >= targets.monthlyRevenueGoal ? "Goal achieved" : `${money(targets.monthlyRevenueGoal - targets.currentMonthRevenue)} remaining`}</div>
-              </> : <div style={{ fontSize: 11, opacity: 0.75 }}>A revenue target is needed to measure progress.</div>}
-            </div>
-
-            <div>
-              <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 6 }}>90-Day Forecast vs Goal</div>
-              <div className="atlas-responsive-row"
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: 8,
-                  fontSize: 13,
-                }}
-              >
-                <span>{money(targets.currentQuarterForecast)}</span>
-                <span>{targets.quarterlyRevenueGoal > 0 ? `Goal: ${money(targets.quarterlyRevenueGoal)}` : "Goal not set"}</span>
-              </div>
-              {targets.quarterlyRevenueGoal > 0 ? <>
-                <div role="progressbar" aria-label="90-day forecast goal coverage" aria-valuenow={Math.min(100, targets.quarterPct)} aria-valuemin={0} aria-valuemax={100} style={S.progressWrap}>
-                  <div style={S.progressBar(targets.quarterPct)} />
-                </div>
-                <div style={{ fontSize: 11, opacity: 0.8, marginTop: 6 }}>{Math.round(targets.quarterPct)}% projected · {targets.currentQuarterForecast >= targets.quarterlyRevenueGoal ? "Forecast meets goal" : `${money(targets.quarterlyRevenueGoal - targets.currentQuarterForecast)} forecast gap`}</div>
-              </> : <div style={{ fontSize: 11, opacity: 0.75 }}>A forecast target is needed to measure coverage.</div>}
-              <div style={{ fontSize: 10, opacity: 0.65, marginTop: 8 }}>Rolling 90-day projection; this is not closed revenue or a calendar-quarter actual.</div>
-            </div>
-          </div>
+          <GoalTrackingSummary />
 
           <div style={S.card}>
             <div style={S.sectionTitle}>Connected Integrations</div>
