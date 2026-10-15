@@ -1,3 +1,4 @@
+import {Link,useLocation} from "react-router-dom";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import * as XLSX from "xlsx";
 import {
@@ -97,9 +98,17 @@ function getActiveOrgId() {
 }
 
 export default function Integrations() {
+  const location=useLocation();
   const [integrations, setIntegrations] = useState({});
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState("");
+  useEffect(()=>{
+    const id=location.hash.replace(/^#connector-/, '');
+    if(loading || !connectorCatalog.some(c=>c.id === id))return;
+    const frame=requestAnimationFrame(()=>document.getElementById(`connector-${id}`)?.scrollIntoView({block:'start'}));
+    return()=>cancelAnimationFrame(frame);
+  },[loading,location.hash]);
+
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -645,6 +654,7 @@ export default function Integrations() {
           "radial-gradient(900px 500px at 15% 0%, rgba(37,99,235,0.18), transparent 55%), radial-gradient(900px 500px at 85% 0%, rgba(124,92,255,0.14), transparent 55%), linear-gradient(180deg, #050814 0%, #070b18 100%)",
       }}
     >
+      <div style={{display:"flex",justifyContent:"flex-end",marginBottom:12,fontSize:13}}><Link to="/setup" style={{color:"#a2e4ed",padding:"10px 0"}}>Continue workspace setup →</Link></div>
       <input
         ref={fileInputRef}
         type="file"
@@ -866,6 +876,7 @@ export default function Integrations() {
           return (
             <div className="atlas-responsive-card"
               key={c.id}
+              id={`connector-${c.id}`}
               style={{
                 border: "1px solid rgba(255,255,255,0.08)",
                 borderRadius: 16,

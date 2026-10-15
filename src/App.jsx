@@ -10,6 +10,7 @@ import PaymentSuccess from "./pages/PaymentSuccess.jsx";
 import CreateWorkspace from "./pages/CreateWorkspace.jsx";
 import Members from "./pages/Members.jsx";
 import Welcome from "./pages/Welcome.jsx";
+import WorkspaceSetup from "./pages/WorkspaceSetup.jsx";
 import Billing from "./pages/Billing.jsx";
 
 import Dashboard from "./pages/Dashboard.jsx";
@@ -627,6 +628,7 @@ export default function App() {
         <Route path="/metrics" element={<Navigate to="/market-signals" replace />} />
         <Route path="/clients" element={<Navigate to="/accounts" replace />} />
         <Route path="/welcome" element={<Welcome />} />
+        <Route path="/setup" element={<RequirePerm perm="command_center.view"><WorkspaceSetup /></RequirePerm>} />
         <Route path="/growth" element={<Navigate to="/growth-engine" replace />} />
         <Route path="/ai-operator" element={<Navigate to="/atlas-ai-operator" replace />} />
       </Route>
