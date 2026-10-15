@@ -4,6 +4,7 @@ import {
   getRevenueIntelBoard,
 } from "../api";
 import DealDrawer from "../components/DealDrawer.jsx";
+import LeadershipBriefing from "../components/LeadershipBriefing.jsx";
 
 const safeNum = (v) => {
   const n = Number(v);
@@ -559,23 +560,10 @@ export default function RevenueIntel() {
           </div>
         </div>
 
-        <div className="atlas-responsive-row" style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-          <div className="atlas-responsive-card" style={S.pill}>
-            Win rate: <b>{Math.round(safeNum(wl.winRate))}%</b>
-          </div>
-          <div className="atlas-responsive-card" style={S.pill}>
-            Weighted pipeline: <b>{money(weightedValue)}</b>
-          </div>
-          <div className="atlas-responsive-card" style={S.pill}>
-            Board value: <b>{moneyCompact(totalPipeline)}</b>
-          </div>
 
-          <button  onClick={load} disabled={loading} style={S.btn}>
-            {loading ? "Loading..." : "Refresh"}
-          </button>
-
-        </div>
       </div>
+
+      <LeadershipBriefing onOpenDeal={openDealDrawerById} />
 
       {atlasDemoWorkspace ? (
         <div className="atlas-responsive-card" style={S.demoBanner}>
@@ -585,6 +573,24 @@ export default function RevenueIntel() {
 
       {error ? <div className="atlas-responsive-card" style={S.error}>{error}</div> : null}
 
+      <details className="lb-execution-board">
+        <summary>Execution board · follow-ups, reactivation, and win/loss</summary>
+        <div className="atlas-responsive-row" style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+          <div className="atlas-responsive-card" style={S.pill}>
+            Win rate: <b>{Math.round(safeNum(wl.winRate))}%</b>
+          </div>
+          <div className="atlas-responsive-card" style={S.pill}>
+            Queue weighted value: <b>{money(weightedValue)}</b>
+          </div>
+          <div className="atlas-responsive-card" style={S.pill}>
+            Queue value: <b>{moneyCompact(totalPipeline)}</b>
+          </div>
+
+          <button  onClick={load} disabled={loading} style={S.btn}>
+            {loading ? "Loading..." : "Refresh execution board"}
+          </button>
+
+        </div>
       <div className="atlas-responsive-card" style={S.heroCard}>
         <div className="atlas-responsive-grid" style={S.heroGrid}>
           <div>
@@ -913,6 +919,8 @@ export default function RevenueIntel() {
           </div>
         </div>
       </div>
+
+      </details>
 
       {atlasDemoWorkspace ? (drawerOpen && <div role="dialog" aria-modal="true" aria-label="Sample opportunity details" style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,.75)", display: "grid", placeItems: "center", padding: 24 }} onClick={closeDrawer}>
         <div className="atlas-responsive-card" style={{ background: "#0b1730", color: "#fff", borderRadius: 16, padding: 24, maxWidth: 600, width: "100%" }} onClick={event => event.stopPropagation()}>
