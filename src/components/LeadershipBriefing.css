@@ -375,3 +375,22 @@
   outline:3px solid #79deed;
   outline-offset:3px
 }
+
+/* Decision tracking stays within the existing leadership workspace. */
+.do-card {border:1px solid #648eab50;border-radius:14px;padding:24px;margin:20px 0;background:#10243a;overflow-wrap:anywhere}
+.do-card h4 {font-size:14px;color:#d1e6f4}
+.do-text {white-space:pre-wrap}
+.do-section {border-top:1px solid #ffffff16;margin-top:16px;padding-top:4px}
+.do-section>summary {cursor:pointer;min-height:44px;padding:12px 0;color:#a6e2ec;font-weight:650}
+.do-section form {margin:12px 0}
+.do-observation {background:#1d3c4c70;border-radius:10px;padding:8px 18px;margin-top:18px}
+.do-observation ul {padding-left:18px;color:#b7c8dc}
+.do-card fieldset,.lb-assignment fieldset {border:0;padding:0;margin:0;min-width:0}
+.do-card legend {font-size:13px;color:#b7c8dc;margin:8px 0}
+.lb-shell label.do-checkbox {display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:10px;min-height:44px;font-size:13px;font-weight:400}
+.lb-shell .do-checkbox input {width:20px;height:20px;flex:0 0 20px}
+.do-track-link {display:inline-block;padding:8px 0;font-size:12px}
+.do-summary {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:18px 0 8px}
+.do-summary span {border:1px solid #ffffff20;border-radius:8px;padding:10px;color:#b7c8dc;font-size:12px}
+.do-summary b {display:block;font-size:22px;color:#edf7ff}
+@media(max-width:600px){.do-card{padding:18px 14px}.do-observation{padding:8px 12px}.do-card .lb-badge{white-space:normal}.do-card button{max-width:100%}}

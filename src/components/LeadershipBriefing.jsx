@@ -1,3 +1,4 @@
+import DecisionOutcomes, { MeetingChanges } from './DecisionOutcomes.jsx';
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { apiGet, apiPost, apiPatch } from '../api';
@@ -59,6 +60,7 @@ export function ActionCard({
     <div className="lb-row"><strong>{action.title}</strong><span className={`lb-badge ${late ? 'lb-warn' : ''}`}>{late ? 'Overdue' : states[action.status]}</span></div>
     <p>{action.dealName} · {members.find(m => m.id === String(action.assigneeId))?.name || action.ownerName} · Due {when(action.dueAt)}</p>
     {showAccountLink && action.dealId && <Link to={`/account-plans?dealId=${encodeURIComponent(action.dealId)}`}>Open related account plan →</Link>}
+    <Link className="do-track-link" to={`/command-center?leadership=decisions&dealId=${encodeURIComponent(action.dealId)}&actionId=${encodeURIComponent(action._id)}`}>Track the leadership decision behind this action →</Link>
     <details><summary>Update and outcome</summary>
       <form onSubmit={e => {
         e.preventDefault();
@@ -89,7 +91,7 @@ export default function LeadershipBriefing({
     [error, setError] = useState(''),
     [busy, setBusy] = useState(false);
   const [params] = useSearchParams();
-  const [tab, setTab] = useState(['actions', 'scenario', 'context'].includes(params.get('leadership')) ? params.get('leadership') : 'briefing'),
+  const [tab, setTab] = useState(['actions', 'decisions', 'scenario', 'context'].includes(params.get('leadership')) ? params.get('leadership') : 'briefing'),
     [checkpointId, setCheckpointId] = useState(''),
     [label, setLabel] = useState('');
   const [notice, setNotice] = useState(''),
@@ -106,6 +108,9 @@ export default function LeadershipBriefing({
       target: ''
     }),
     [result, setResult] = useState(null);
+  useEffect(() => {
+    if (['actions', 'decisions', 'scenario', 'context'].includes(params.get('leadership'))) setTab(params.get('leadership'));
+  }, [params]);
   const generation = useRef(0);
   async function load(selected = checkpointId) {
     const id = ++generation.current;
@@ -145,7 +150,7 @@ export default function LeadershipBriefing({
         setNotice('Briefing refreshed from current workspace records.');
       })}>Refresh briefing</button></div>
     {demo && <p className="lb-demo">Fictional opportunities from the shared Atlas demo. Dates roll forward each day. Assignments and meeting checkpoints you save are real workspace records.</p>}
-    <div className="lb-tabs" role="group" aria-label="Leadership views">{[['briefing', 'Meeting briefing'], ['actions', `Recovery plan · ${active.length}`], ['scenario', 'Deal-slip scenario'], ['context', 'Account context']].map(([key, title]) => <button key={key} type="button" aria-pressed={tab === key} onClick={() => {
+    <div className="lb-tabs" role="group" aria-label="Leadership views">{[['briefing', 'Meeting briefing'], ['actions', `Recovery plan · ${active.length}`], ['decisions', 'Decisions & results'], ['scenario', 'Deal-slip scenario'], ['context', 'Account context']].map(([key, title]) => <button key={key} type="button" aria-pressed={tab === key} onClick={() => {
         setTab(key);
         setNotice('');
       }}>{title}</button>)}</div>
@@ -161,12 +166,13 @@ export default function LeadershipBriefing({
             }}><option value="">{demo && !data.checkpoints.length ? 'Illustrative sample meeting' : 'Latest saved meeting'}</option>{data.checkpoints.map(c => <option key={c._id} value={c._id}>{c.label} · {when(c.createdAt)}</option>)}</select></label>
           {!data.checkpoint ? <p className="lb-empty">Save your first meeting checkpoint to begin tracking changes. Atlas will compare future workspace records against that saved view.</p> : <>
             <p>{data.checkpoint.label} · {when(data.checkpoint.createdAt)}{data.checkpoint.isIllustrative ? ' · Illustrative comparison' : ''}</p>
-            <p className="lb-delta">Open pipeline change: <b>{money(data.summary.pipeline - data.previousSummary.pipeline)}</b> · 90-day weighted change: <b>{money(data.summary.weighted - data.previousSummary.weighted)}</b></p>
+            {data.pipelineComparisonAvailable === false ? <p className="lb-empty">This checkpoint belongs to a different data mode. Save a new checkpoint before comparing pipeline or execution.</p> : <><p className="lb-delta">Open pipeline change: <b>{money(data.summary.pipeline - data.previousSummary.pipeline)}</b> · 90-day weighted change: <b>{money(data.summary.weighted - data.previousSummary.weighted)}</b></p>
             {data.changes.length === 0 ? <p className="lb-empty">No recorded deal changes since this checkpoint.</p> : <div className="lb-change-list">{data.changes.map(c => <article key={c.dealId} className="lb-change"><strong>{c.name}</strong><span>{money(c.amount)}</span>
               {c.kind === 'added' ? <p>Newly visible since the saved meeting.</p> : c.kind === 'no_longer_visible' ? <p>No longer visible in the current dataset; this does not establish a win or loss.</p> : <ul>{c.fields.map(f => <li key={f.field}><b>{fieldNames[f.field]}:</b> {valueLabel(f.field, f.before)} → {valueLabel(f.field, f.after)}</li>)}</ul>}
               {data.deals.find(d => d.id === c.dealId) && <Evidence deal={data.deals.find(d => d.id === c.dealId)} asOf={data.asOf} demo={demo} onOpen={onOpenDeal} />}
-            </article>)}</div>}
+            </article>)}</div>}</>}
           </>}
+          {data.checkpoint && !data.checkpoint.isIllustrative && <MeetingChanges changes={data.meetingChanges} onShowActions={() => setTab('actions')} onShowDecisions={() => setTab('decisions')} />}
           {data.canManage && <form className="lb-checkpoint" onSubmit={e => {
             e.preventDefault();
             mutate(async () => {
@@ -196,6 +202,13 @@ export default function LeadershipBriefing({
       </div>
       <details className="lb-evidence"><summary>Data freshness and limits</summary><p>Read from Atlas on {when(data.asOf)}. A successful sync does not guarantee every provider field is present. {data.summary.undatedCount} open opportunities lack a close date and are excluded from the dated outlook.</p>{data.integrations.length ? data.integrations.map(i => <p key={i.provider}>{i.provider}: {i.status} · Last sync {when(i.lastSyncAt)} · Result {i.lastSyncStatus || 'Not recorded'}</p>) : <p>{demo ? 'Sample data; no live provider freshness implied.' : 'No provider sync metadata available.'}</p>}<p>Changes compare saved Atlas records, not a complete provider audit log. Both snapshots use the current 90-day cutoff. Monetary totals include USD opportunity records only.</p></details>
     </div>}
+    {tab === 'decisions' && <DecisionOutcomes data={data} busy={busy} run={mutate} refresh={load} onAssign={deal => {
+      setActionFor(deal);
+      setActionTitle(deal.nextAction || '');
+      setAssignee('');
+      setDue('');
+      setTab('actions');
+    }} />}
     {tab === 'actions' && <div className="lb-body">
       <div className="lb-row"><div><h3>Revenue recovery plan</h3><p>Assign a real workspace member, record the outcome, and review progress at the next meeting.</p></div><label>Show<select value={filter} onChange={e => setFilter(e.target.value)}><option value="active">Active actions</option><option value="mine">Assigned to me</option><option value="completed">Completed actions</option></select></label></div>
       {actionFor && <form className="lb-assignment" onSubmit={e => {
