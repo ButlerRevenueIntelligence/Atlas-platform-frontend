@@ -1,6 +1,6 @@
 // frontend/src/pages/Clients.jsx
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   createClient,
   deleteClient,
@@ -299,6 +299,7 @@ export default function Clients() {
             </div>
 
             <div className="atlas-responsive-row" style={styles.headerActions}>
+              <Link to="/account-plans" style={{color:"#a0e7f0",padding:"10px 0"}}>Shared account plans →</Link>
               <button
                 type="button"
                 onClick={loadAccounts}

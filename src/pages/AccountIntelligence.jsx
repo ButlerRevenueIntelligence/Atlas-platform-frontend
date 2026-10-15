@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import WorkspaceDataNotice from "../components/WorkspaceDataNotice.jsx";
 import React, { useEffect, useMemo, useState } from "react";
 import {
@@ -110,6 +111,7 @@ function normalizeDeal(d) {
   if (!d) return null;
   return {
     id: d?._id || d?.id || "",
+    clientId: String(d?.clientId?._id || d?.clientId || ""),
     name: d?.name || d?.title || d?.accountName || "Opportunity",
     company:
       d?.accountName ||
@@ -307,10 +309,11 @@ async function handleGraphIQSearch(event) {
     const map = new Map();
 
     deals.forEach((deal) => {
-      const key = String(deal.company || "Account").trim();
+      const key = deal.clientId || String(deal.company || "Account").trim();
       if (!map.has(key)) {
         map.set(key, {
-          name: key,
+          name: String(deal.company || "Account").trim(),
+          planDealId: String(deal.id || ""),
           engagement: 0,
           expansion: 0,
           industry: "Connected Account",
@@ -363,7 +366,7 @@ async function handleGraphIQSearch(event) {
 
       return {
         ...row,
-        id: row.name,
+        id: row.planDealId || row.name,
         engagement: isDemo ? row.engagement : engagementBase,
         expansion: isDemo ? row.expansion : expansionBase,
         revenueLabel: moneyCompact(row.revenuePotential),
@@ -790,10 +793,11 @@ async function handleGraphIQSearch(event) {
             ) : (
               <div style={styles.accountList}>
                 {accounts.map((acct) => (
-                  <div className="atlas-responsive-card" key={acct.name} style={styles.accountCard}>
+                  <div className="atlas-responsive-card" key={acct.id} style={styles.accountCard}>
                     <div className="atlas-responsive-row" style={styles.accountTop}>
                       <div>
                         <div style={styles.accountName}>{acct.name}</div>
+                        {acct.planDealId && <Link to={`/account-plans?dealId=${encodeURIComponent(acct.planDealId)}`} style={{color:"#a0e7f0",display:"inline-block",padding:"8px 0"}}>Open shared account plan →</Link>}
                         <div style={styles.accountMeta}>
                           {acct.industry} • {acct.buyingSignal}
                         </div>
@@ -838,7 +842,7 @@ async function handleGraphIQSearch(event) {
                   </thead>
                   <tbody>
                     {accounts.map((acct, idx) => (
-                      <tr key={acct.name}>
+                      <tr key={acct.id}>
                         <td style={styles.td}>
                           <div style={{ fontWeight: 800, color: "#fff" }}>{acct.name}</div>
                           <div style={{ marginTop: 6, color: "rgba(203,213,225,0.72)" }}>

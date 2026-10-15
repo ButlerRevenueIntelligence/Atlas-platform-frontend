@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import OrgSwitcher from "../components/OrgSwitcher";
 import { getClient, updateClient, deleteClient } from "../api";
 
@@ -160,6 +160,7 @@ export default function ClientDetail() {
             <div>
               <div style={styles.eyebrow}>ACCOUNT INTELLIGENCE / CLIENT PROFILE</div>
               <h1 className="atlas-responsive-title" style={styles.title}>{client?.name || "Account Profile"}</h1>
+              <Link to={`/account-plans?accountRef=${encodeURIComponent(`client:${id}`)}`} style={{color:"#a0e7f0",display:"inline-block",padding:"10px 0"}}>Open shared account plan →</Link>
               <p style={styles.subtitle}>
                 A unified executive view of ownership, readiness, and expansion potential.
               </p>

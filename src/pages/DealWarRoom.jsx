@@ -451,6 +451,8 @@ const isDemo = workspaceMode === "demo";
       const risk = age >= 7 || probability < 40 ? "High" : (deal.risk || probability < 65) ? "Medium" : "Low";
 
       return {
+        id: String(deal?._id || deal?.id || ""),
+        amount,
         name: deal?.name || `Deal ${idx + 1}`,
         owner:
           deal?.ownerName ||
@@ -716,6 +718,7 @@ const isDemo = workspaceMode === "demo";
               <div style={styles.eyebrow}>Executive Command Center</div>
               <h1 className="atlas-responsive-title" style={styles.h1}>Deal War Room</h1>
               <Link to="/command-center?leadership=scenario" style={{color: "#9ee8f3", display: "inline-block", padding: "8px 0"}}>Explore a deal-slip scenario →</Link>
+              <Link to="/account-plans" style={{color:"#a0e7f0",display:"inline-block",padding:"8px 12px"}}>Shared account plans →</Link>
               <div style={styles.heroText}>
                 A focused operating view for leadership to manage late-stage deal
                 movement, forecast concentration, blocker resolution, and next-best
