@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import WorkspaceDataNotice from "../components/WorkspaceDataNotice.jsx";
 import React, { useEffect, useMemo, useState } from "react";
 import {
@@ -1352,6 +1353,7 @@ export default function AtlasAIOperator() {
             <div>
               <div style={styles.eyebrow}>Revenue Intelligence Copilot</div>
               <h1 className="atlas-responsive-title" style={styles.h1}>Atlas AI Operator</h1>
+              <Link to="/command-center?leadership=actions" style={{color: "#9ee8f3", display: "inline-block", padding: "8px 0"}}>Track decisions in the recovery plan →</Link>
               <div style={styles.heroText}>
                 Atlas AI Operator turns revenue signals into decisions. It monitors
                 forecast risk, surfaces execution pressure, and recommends what

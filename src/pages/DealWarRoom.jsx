@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 // frontend/src/pages/DealWarRoom.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import {
@@ -714,6 +715,7 @@ const isDemo = workspaceMode === "demo";
             <div>
               <div style={styles.eyebrow}>Executive Command Center</div>
               <h1 className="atlas-responsive-title" style={styles.h1}>Deal War Room</h1>
+              <Link to="/command-center?leadership=scenario" style={{color: "#9ee8f3", display: "inline-block", padding: "8px 0"}}>Explore a deal-slip scenario →</Link>
               <div style={styles.heroText}>
                 A focused operating view for leadership to manage late-stage deal
                 movement, forecast concentration, blocker resolution, and next-best
