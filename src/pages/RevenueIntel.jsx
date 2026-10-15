@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import {
   getRevenueIntelBoard,
 } from "../api";
@@ -555,6 +555,7 @@ export default function RevenueIntel() {
       <div className="atlas-responsive-row" style={S.headerRow}>
         <div>
           <h2 className="atlas-responsive-title" style={S.title}>Atlas Revenue Command Center</h2>
+          <Link to="/revenue-planning" style={{color:"#9ee8f3",display:"inline-block",padding:"8px 0"}}>Review targets & forecast history →</Link>
           <div style={S.subtitle}>
             Real-time revenue execution, deal follow-up pressure, win/loss visibility, and reactivation intelligence across the active board.
           </div>
