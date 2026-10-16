@@ -144,6 +144,7 @@ export default function RevenuePlanning() {
   });
   return <main className="rp-page"><header className="rp-header rp-row"><div><div className="rp-eyebrow">REVENUE PLANNING</div><h1>The target. The exposure. The result.</h1><p>Set a clear goal and keep a record of what you expected to happen.</p></div><Link to="/command-center?leadership=actions">Open recovery plan →</Link></header>
  {demo && <div className="rp-demo">Atlas demo · fictional opportunities and sample revenue. Demo dates roll forward. Saved targets and forecasts are real workspace records labeled as demo.</div>}
+ <p><Link to="/revenue-to-cash">Trace opportunities, invoices & receipts →</Link></p>
  <section className="rp-controls" aria-label="Planning period and measure"><label>Calendar period<select disabled={busy} value={period} onChange={e => choose(e.target.value, metric)}>{options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></label><label>Measure<select disabled={busy} value={metric} onChange={e => choose(period, e.target.value)}>{metrics.map(m => <option key={m.key} value={m.key}>{m.label}</option>)}</select></label><button disabled={busy} onClick={() => run(async () => {
         await load();
         setNotice('Refreshed from current workspace records.');

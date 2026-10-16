@@ -221,6 +221,7 @@ export default function AppLayout() {
     "/command-center": "Command Center",
     "/deal-war-room": "Deal War Room", "/deal-room": "Deal Room",
     "/data-connectors": "Data Connectors", "/integrations": "Data Connectors",
+    "/revenue-to-cash": "Revenue to Cash",
     "/account-plans": "Account Plans",
     "/accounts": "Accounts", "/partners": "Partners", "/growth-engine": "Growth Engine",
     "/account-intelligence": "Account Intelligence", "/market-signals": "Market Signals",

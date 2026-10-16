@@ -556,6 +556,7 @@ export default function RevenueIntel() {
         <div>
           <h2 className="atlas-responsive-title" style={S.title}>Atlas Revenue Command Center</h2>
           <Link to="/revenue-planning" style={{color:"#9ee8f3",display:"inline-block",padding:"8px 0"}}>Review targets & forecast history →</Link>
+          <Link to="/revenue-to-cash" style={{color:"#9ee8f3",display:"inline-block",padding:"8px 16px"}}>Trace revenue to cash →</Link>
           <div style={S.subtitle}>
             Real-time revenue execution, deal follow-up pressure, win/loss visibility, and reactivation intelligence across the active board.
           </div>
