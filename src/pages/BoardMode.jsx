@@ -601,7 +601,7 @@ export default function BoardMode() {
                       : styles.liveBadge
                   }
                 >
-                  {isDemo ? "Demo data" : "Live workspace"}
+                  {isDemo ? "Workspace overview" : "Live workspace"}
                 </span>
               </div>
 

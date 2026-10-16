@@ -145,7 +145,7 @@ export default function RevenueToCash() {
           setOffset(0);
         }} placeholder="Customer, invoice or opportunity" /></label><button disabled={busy || Boolean(draft)} onClick={load}>Refresh evidence</button></section>
  {busy && <p role="status">Loading financial evidence…</p>}
- {data?.workspaceMode === 'demo' && <p className="rtc-banner">Atlas demo · fictional invoices and payments linked to sample opportunities. Reviews you save are real workspace records.</p>}
+
  {data && <p className="rtc-caption">{providerName(data.provider)} · connection: {data.source.status} · detail import: {data.source.detailStatus} · snapshot: {date(data.snapshot?.capturedAt)}. One financial source at a time; totals cover the imported snapshot, not a calendar reporting period.</p>}
  {data?.snapshot?.environment === 'test' && <p className="rtc-alert">Sandbox financial evidence · excluded from live opportunity matching.</p>}
  {data?.snapshot && data.workspaceMode !== 'demo' && (data.source.status !== 'connected' || data.source.detailStatus !== 'success' || Date.now() - new Date(data.snapshot.capturedAt).getTime() > 86400000) && <p className="rtc-alert">This is a previously captured snapshot. Check the connection and run a successful detail sync before relying on it for current balances.</p>}

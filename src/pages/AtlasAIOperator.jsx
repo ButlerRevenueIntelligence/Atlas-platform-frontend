@@ -1091,8 +1091,8 @@ export default function AtlasAIOperator() {
       },
       {
         label: "Operator Mode",
-        value: isDemo ? "Demo" : "Live",
-        note: isDemo ? "Monitoring simulated data" : "Monitoring workspace data",
+        value: isDemo ? "Active" : "Live",
+        note: isDemo ? "Monitoring workspace data" : "Monitoring workspace data",
       },
     ],
     [hasLiveData, isDemo, riskBreakdown, activeAlerts.length, operatorMoves.length]
@@ -1363,7 +1363,7 @@ export default function AtlasAIOperator() {
 
             <div className="atlas-responsive-row" style={styles.badgeWrap}>
               {[
-                isDemo ? "Operator Demo" : "Operator Live",
+                isDemo ? "Operator Active" : "Operator Live",
                 hasLiveData ? "Monitoring Forecast" : "Awaiting Signals",
                 "External Intelligence Active",
                 "Atlas AI Active",

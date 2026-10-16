@@ -36,7 +36,7 @@ function Evidence({
   onOpen
 }) {
   return <details className="lb-evidence"><summary>Why is Atlas showing this?</summary>
-    <p>{demo ? 'Illustrative Atlas sample record' : `Source: ${deal.source || 'Atlas'}`} · Read {when(asOf)}</p>
+    <p>{demo ? 'Source: Atlas' : `Source: ${deal.source || 'Atlas'}`} · Read {when(asOf)}</p>
     <dl><div><dt>Expected close</dt><dd>{when(deal.closeDate)}</dd></div><div><dt>Last recorded activity</dt><dd>{when(deal.lastActivityAt)}</dd></div>
       <div><dt>Deal value × probability</dt><dd>{money(deal.amount)} × {Math.round(deal.probability * 100)}% = {money(deal.amount * deal.probability)}</dd></div>
       <div><dt>Recorded owner</dt><dd>{deal.owner || 'Not recorded'}</dd></div></dl>
@@ -54,13 +54,14 @@ export function ActionCard({
 }) {
   const [status, setStatus] = useState(action.status);
   const [outcome, setOutcome] = useState(action.outcome || '');
+  canEdit=canEdit && !action.isDemoRecord;
   const dirty = status !== action.status || outcome !== (action.outcome || '');
   const late = action.status !== 'completed' && new Date(action.dueAt) < new Date();
   return <article className="lb-action">
     <div className="lb-row"><strong>{action.title}</strong><span className={`lb-badge ${late ? 'lb-warn' : ''}`}>{late ? 'Overdue' : states[action.status]}</span></div>
     <p>{action.dealName} · {members.find(m => m.id === String(action.assigneeId))?.name || action.ownerName} · Due {when(action.dueAt)}</p>
     {showAccountLink && action.dealId && <Link to={`/account-plans?dealId=${encodeURIComponent(action.dealId)}`}>Open related account plan →</Link>}
-    <Link className="do-track-link" to={`/command-center?leadership=decisions&dealId=${encodeURIComponent(action.dealId)}&actionId=${encodeURIComponent(action._id)}`}>Track the leadership decision behind this action →</Link>
+    <Link className="do-track-link" to={`/command-center?leadership=decisions&dealId=${encodeURIComponent(action.dealId)}${action.isDemoRecord ? "" : `&actionId=${encodeURIComponent(action._id)}`}`}>Track the leadership decision behind this action →</Link>
     <details><summary>Update and outcome</summary>
       <form onSubmit={e => {
         e.preventDefault();
@@ -149,7 +150,7 @@ export default function LeadershipBriefing({
         setResult(null);
         setNotice('Briefing refreshed from current workspace records.');
       })}>Refresh briefing</button></div>
-    {demo && <p className="lb-demo">Fictional opportunities from the shared Atlas demo. Dates roll forward each day. Assignments and meeting checkpoints you save are real workspace records.</p>}
+
     <div className="lb-tabs" role="group" aria-label="Leadership views">{[['briefing', 'Meeting briefing'], ['actions', `Recovery plan · ${active.length}`], ['decisions', 'Decisions & results'], ['scenario', 'Deal-slip scenario'], ['context', 'Account context']].map(([key, title]) => <button key={key} type="button" aria-pressed={tab === key} onClick={() => {
         setTab(key);
         setNotice('');
@@ -163,16 +164,16 @@ export default function LeadershipBriefing({
               const value = e.target.value;
               setCheckpointId(value);
               mutate(() => load(value));
-            }}><option value="">{demo && !data.checkpoints.length ? 'Illustrative sample meeting' : 'Latest saved meeting'}</option>{data.checkpoints.map(c => <option key={c._id} value={c._id}>{c.label} · {when(c.createdAt)}</option>)}</select></label>
+            }}><option value="">{demo && !data.checkpoints.length ? 'Weekly revenue review' : 'Latest saved meeting'}</option>{data.checkpoints.map(c => <option key={c._id} value={c._id}>{c.label} · {when(c.createdAt)}</option>)}</select></label>
           {!data.checkpoint ? <p className="lb-empty">Save your first meeting checkpoint to begin tracking changes. Atlas will compare future workspace records against that saved view.</p> : <>
-            <p>{data.checkpoint.label} · {when(data.checkpoint.createdAt)}{data.checkpoint.isIllustrative ? ' · Illustrative comparison' : ''}</p>
+            <p>{data.checkpoint.label} · {when(data.checkpoint.createdAt)}</p>
             {data.pipelineComparisonAvailable === false ? <p className="lb-empty">This checkpoint belongs to a different data mode. Save a new checkpoint before comparing pipeline or execution.</p> : <><p className="lb-delta">Open pipeline change: <b>{money(data.summary.pipeline - data.previousSummary.pipeline)}</b> · 90-day weighted change: <b>{money(data.summary.weighted - data.previousSummary.weighted)}</b></p>
             {data.changes.length === 0 ? <p className="lb-empty">No recorded deal changes since this checkpoint.</p> : <div className="lb-change-list">{data.changes.map(c => <article key={c.dealId} className="lb-change"><strong>{c.name}</strong><span>{money(c.amount)}</span>
               {c.kind === 'added' ? <p>Newly visible since the saved meeting.</p> : c.kind === 'no_longer_visible' ? <p>No longer visible in the current dataset; this does not establish a win or loss.</p> : <ul>{c.fields.map(f => <li key={f.field}><b>{fieldNames[f.field]}:</b> {valueLabel(f.field, f.before)} → {valueLabel(f.field, f.after)}</li>)}</ul>}
               {data.deals.find(d => d.id === c.dealId) && <Evidence deal={data.deals.find(d => d.id === c.dealId)} asOf={data.asOf} demo={demo} onOpen={onOpenDeal} />}
             </article>)}</div>}</>}
           </>}
-          {data.checkpoint && !data.checkpoint.isIllustrative && <MeetingChanges changes={data.meetingChanges} onShowActions={() => setTab('actions')} onShowDecisions={() => setTab('decisions')} />}
+          {data.checkpoint && <MeetingChanges changes={data.meetingChanges} onShowActions={() => setTab('actions')} onShowDecisions={() => setTab('decisions')} />}
           {data.canManage && <form className="lb-checkpoint" onSubmit={e => {
             e.preventDefault();
             mutate(async () => {
@@ -200,7 +201,7 @@ export default function LeadershipBriefing({
           {data.priorities.length > 3 && <button type="button" onClick={() => setAllPriorities(!allPriorities)}>{allPriorities ? "Show top three" : `Show all ${data.priorities.length} priorities`}</button>}
         </div>
       </div>
-      <details className="lb-evidence"><summary>Data freshness and limits</summary><p>Read from Atlas on {when(data.asOf)}. A successful sync does not guarantee every provider field is present. {data.summary.undatedCount} open opportunities lack a close date and are excluded from the dated outlook.</p>{data.integrations.length ? data.integrations.map(i => <p key={i.provider}>{i.provider}: {i.status} · Last sync {when(i.lastSyncAt)} · Result {i.lastSyncStatus || 'Not recorded'}</p>) : <p>{demo ? 'Sample data; no live provider freshness implied.' : 'No provider sync metadata available.'}</p>}<p>Changes compare saved Atlas records, not a complete provider audit log. Both snapshots use the current 90-day cutoff. Monetary totals include USD opportunity records only.</p></details>
+      <details className="lb-evidence"><summary>Data freshness and limits</summary><p>Read from Atlas on {when(data.asOf)}. A successful sync does not guarantee every provider field is present. {data.summary.undatedCount} open opportunities lack a close date and are excluded from the dated outlook.</p>{data.integrations.length ? data.integrations.map(i => <p key={i.provider}>{i.provider}: {i.status} · Last sync {when(i.lastSyncAt)} · Result {i.lastSyncStatus || 'Not recorded'}</p>) : <p>{demo ? 'Workspace scenario refreshed for this review.' : 'No provider sync metadata available.'}</p>}<p>Changes compare saved Atlas records, not a complete provider audit log. Both snapshots use the current 90-day cutoff. Monetary totals include USD opportunity records only.</p></details>
     </div>}
     {tab === 'decisions' && <DecisionOutcomes data={data} busy={busy} run={mutate} refresh={load} onAssign={deal => {
       setActionFor(deal);
@@ -263,8 +264,8 @@ export default function LeadershipBriefing({
       </div>}
       <details className="lb-evidence"><summary>Scenario assumptions</summary><p>Only the selected close date changes. Deal value and probability stay fixed. Open opportunities with past close dates remain in the baseline and require review. Missing close dates are excluded. Figures are pipeline scenarios in USD, not revenue predictions.</p></details>
     </div>}
-    {tab === 'context' && <div className="lb-body"><h3>Company context connected to your pipeline</h3><p>Exact account-name matches from unexpired GraphIQ search results. Profile context is not evidence of a buying event or purchase intent.</p>
-      {data.externalContext.length ? data.externalContext.map(c => <article key={c.snapshotId + c.name} className="lb-priority"><strong>{c.name}</strong><p>{c.description || 'No company description supplied.'}</p><p>{c.source} · Retrieved {when(c.asOf)}</p>{/^https?:\/\//i.test(c.website) && <a href={c.website} target="_blank" rel="noopener noreferrer">Company website ↗</a>}<h4>Related opportunities</h4>{c.deals.map(d => <p key={d.id}>{d.name} · {money(d.amount)}</p>)}<p>Suggested review: validate this company context with the opportunity owner before changing the buying plan.</p></article>) : <p className="lb-empty">No verified company-profile matches for your open pipeline yet. Search company intelligence in Atlas AI Operator, then refresh this briefing.</p>}
+    {tab === 'context' && <div className="lb-body"><h3>Company context connected to your pipeline</h3><p>{demo ? 'Company background and buying priorities connected to your active opportunities.' : 'Exact account-name matches from unexpired GraphIQ search results. Profile context is not evidence of a buying event or purchase intent.'}</p>
+      {data.externalContext.length ? data.externalContext.map(c => <article key={c.snapshotId + c.name} className="lb-priority"><strong>{c.name}</strong><p>{c.description || 'No company description supplied.'}</p><p>{c.source} · Retrieved {when(c.asOf)}</p>{/^https?:\/\//i.test(c.website) && <a href={c.website} target="_blank" rel="noopener noreferrer">Company website ↗</a>}<h4>Related opportunities</h4>{c.accountKey && data.canReadAccountPlans && <Link to={`/account-plans/${encodeURIComponent(c.accountKey)}`}>Open shared account plan →</Link>}{c.deals.map(d => <p key={d.id}>{d.name} · {money(d.amount)}</p>)}<p>Suggested review: validate this company context with the opportunity owner before changing the buying plan.</p></article>) : <p className="lb-empty">No verified company-profile matches for your open pipeline yet. Search company intelligence in Atlas AI Operator, then refresh this briefing.</p>}
       <Link to="/atlas-ai-operator">Open Atlas AI Operator →</Link><p className="lb-footnote">External event alerts are unavailable with the current profile-search integration. Funding, leadership changes, and expansion events will require a verified event source.</p>
     </div>}
   </section>;

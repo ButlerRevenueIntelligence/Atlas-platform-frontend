@@ -32,5 +32,5 @@ export const demoMarketCompanies = [
   ["Westhaven Advisory", "Professional Services", "Healthcare growth consulting", "Phoenix, AZ"],
 ].map(([name, industry, capability, location], index) => ({
   id: `demo-market-${index}`, name, industries: [industry], capabilities: [capability],
-  locations: [location], description: `Fictional demo company. Example focus: ${capability.toLowerCase()}.`,
+  locations: [location], description: `Business focus: ${capability.toLowerCase()}.`,
 }));

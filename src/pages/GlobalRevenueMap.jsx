@@ -321,7 +321,7 @@ export default function GlobalRevenueMap() {
         </div>
         <div className="grm-header-status">
           <span className="grm-status-dot" />
-          {isDemo ? "Demo data" : "Live workspace data"}
+          {isDemo ? "Workspace overview" : "Live workspace data"}
         </div>
       </header>
 

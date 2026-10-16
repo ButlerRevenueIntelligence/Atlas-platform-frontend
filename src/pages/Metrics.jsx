@@ -493,7 +493,7 @@ export default function Metrics() {
 
         <Section
           title="External Opportunity Discovery"
-          subtitle={isDemo && !marketResults.length ? "Fictional company examples · demo only" : "Powered by GraphIQ"}
+          subtitle={isDemo && !marketResults.length ? "Company opportunities" : "Powered by GraphIQ"}
           action={
             marketTotal > 0 ? (
               <div className="atlas-responsive-card" style={S.sectionTag}>

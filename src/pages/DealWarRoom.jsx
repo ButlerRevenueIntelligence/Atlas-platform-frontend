@@ -730,7 +730,7 @@ const isDemo = workspaceMode === "demo";
               {[
                 isDemo ? "Demo War Room" : "Live War Room",
                 "Forecast Monitoring",
-                isDemo ? "Sample deals · fictional owners" : "Deal Pressure Live",
+                isDemo ? "Deal priorities" : "Deal Pressure Live",
                 "Executive Review Active",
               ].map((item) => (
                 <div className="atlas-responsive-card" key={item} style={styles.badge}>

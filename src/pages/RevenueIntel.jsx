@@ -567,11 +567,7 @@ export default function RevenueIntel() {
 
       <LeadershipBriefing onOpenDeal={openDealDrawerById} />
 
-      {atlasDemoWorkspace ? (
-        <div className="atlas-responsive-card" style={S.demoBanner}>
-          Sample execution scenario · fictional deals and owners, shared with Deal War Room and Account Intelligence. Demo dates roll forward with today; viewing this board does not create database records.
-        </div>
-      ) : null}
+
 
       {error ? <div className="atlas-responsive-card" style={S.error}>{error}</div> : null}
 
