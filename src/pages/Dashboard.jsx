@@ -2774,7 +2774,7 @@ export default function Dashboard() {
 
         <div style={S.card}>
           <div style={S.sectionTitle}>Revenue Timeline Projection</div>
-          {isDemo && <div style={S.pillMeta}>Sample scenario · illustrative 78% confidence assumption</div>}
+
           <RevenueTimeline
             revenue30={kpis.revenue30}
             weightedPipeline={weightedOpenPipeline}

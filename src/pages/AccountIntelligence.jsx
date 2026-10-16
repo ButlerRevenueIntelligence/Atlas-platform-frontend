@@ -413,14 +413,14 @@ async function handleGraphIQSearch(event) {
         label: "Highest Engagement",
         value: String(topEngagement),
         note: hasLiveAccountData
-          ? isDemo ? "Illustrative demo engagement score" : "Current live peak score"
+          ? isDemo ? "Engagement score" : "Current live peak score"
           : "Waiting for account activity",
       },
       {
         label: "Best Expansion Signal",
         value: `${topExpansion}%`,
         note: hasLiveAccountData
-          ? isDemo ? "Illustrative demo expansion score" : "Strongest account fit"
+          ? isDemo ? "Expansion score" : "Strongest account fit"
           : "No expansion signal yet",
       },
       {
@@ -451,7 +451,7 @@ async function handleGraphIQSearch(event) {
       `Total tracked revenue potential across surfaced accounts is ${moneyCompact(
         accounts.reduce((sum, a) => sum + safeNum(a.revenuePotential, 0), 0)
       )}.`,
-      isDemo ? "Atlas is prioritizing sample accounts using deal concentration and opportunity count; engagement and expansion scores are illustrative." : "Atlas is prioritizing accounts using live opportunity value and count.",
+      isDemo ? "Atlas is prioritizing accounts using deal concentration and opportunity count." : "Atlas is prioritizing accounts using live opportunity value and count.",
     ];
   }, [accounts, hasLiveAccountData, isDemo]);
 
@@ -549,7 +549,7 @@ async function handleGraphIQSearch(event) {
           </div>
         </div>
 
-        {isDemo && <div style={{ padding: 12, color: "#bfefff", fontSize: 12 }}>Sample account scenario · fictional accounts and owners. Engagement and expansion scores are illustrative, not validated predictions.</div>}
+
         <AtlasAccountExpansionSignals sampleMode={isDemo} clients={isDemo ? accounts.map(account => ({...account, engagementScore: account.engagement, expansionScore: account.expansion, revenue: account.revenuePotential})) : accounts} />
         <Section
   title="Company Intelligence Search"

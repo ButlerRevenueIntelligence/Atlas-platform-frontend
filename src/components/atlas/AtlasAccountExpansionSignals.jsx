@@ -163,7 +163,7 @@ export default function AtlasAccountExpansionSignals({ clients = [], sampleMode 
 
                 <div>
                   <div style={{ fontSize: 10, color: "#94a3b8" }}>
-                    {sampleMode ? "Illustrative 25% Upside Scenario" : "Potential Upside"}
+                    {sampleMode ? "25% Upside Scenario" : "Potential Upside"}
                   </div>
                   <div style={{ fontSize: 18, fontWeight: 800, color: "#86efac" }}>
                     {moneyCompact(account.expansionPotential)}
