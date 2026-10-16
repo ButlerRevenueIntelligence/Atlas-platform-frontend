@@ -14,6 +14,7 @@ import WorkspaceSetup from "./pages/WorkspaceSetup.jsx";
 import Billing from "./pages/Billing.jsx";
 
 import Dashboard from "./pages/Dashboard.jsx";
+import RevenueToCash from "./pages/RevenueToCash.jsx";
 import RevenuePlanning from "./pages/RevenuePlanning.jsx";
 import RevenueIntel from "./pages/RevenueIntel.jsx";
 import Pipeline from "./pages/Pipeline.jsx";
@@ -463,6 +464,7 @@ export default function App() {
           }
         />
 
+        <Route path="/revenue-to-cash" element={<RequirePerm perm="dashboard.view"><RequirePerm perm="command_center.view"><RevenueToCash /></RequirePerm></RequirePerm>} />
         <Route path="/revenue-planning" element={<RequirePerm perm="dashboard.view"><RevenuePlanning /></RequirePerm>} />
 
         <Route
