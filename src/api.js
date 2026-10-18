@@ -507,10 +507,15 @@ export const getOperatorSignals = () => apiGet("/operator/signals");
 
 // -------------------- GraphIQ --------------------
 export const getSharedCompanyIntelligence = () => apiGet("/graphiq/context");
-export const searchGraphIQOrganizations = (organization) =>
-  apiPost("/graphiq/organizations/search", {
-    organization,
-  });
+export const publishGraphIQNotification = (result,orgId) => {
+  if(result?.slackNotification && typeof window!=="undefined" && orgId===getActiveOrgId())window.dispatchEvent(new CustomEvent("atlas:graphiq-slack",{detail:{orgId,delivery:result.slackNotification}}));
+};
+export const searchGraphIQOrganizations = async (organization,sourcePage) => {
+  const orgId=getActiveOrgId();
+  const result=await apiPost("/graphiq/organizations/search",{organization,sourcePage});
+  publishGraphIQNotification(result,orgId);
+  return result;
+};
 // -------------------- Integrations (Extended) --------------------
 export const syncHubSpot = () =>
   apiPost("/integrations/hubspot/sync", {});

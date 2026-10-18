@@ -219,7 +219,7 @@ export default function Metrics() {
 
       const response = await searchGraphIQOrganizations({
         capabilities: [query],
-      });
+      },"market-signals");
 
       const rawData = response?.data ?? response;
 
@@ -492,7 +492,7 @@ export default function Metrics() {
           <div style={S.briefingBody}>{executiveBriefing}</div>
         </div>
 
-        <GraphIQResearch />
+        <GraphIQResearch sourcePage="market-signals" />
         <Section
           title="External Opportunity Discovery"
           subtitle={isDemo && !marketResults.length ? "Company opportunities" : "Powered by GraphIQ"}
