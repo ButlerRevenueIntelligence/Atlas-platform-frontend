@@ -256,8 +256,8 @@ async function handleGraphIQSearch(event) {
     setGraphiqResults([]);
 
     const response = await searchGraphIQOrganizations({
-  capabilities: [query],
-});
+      capabilities: [query],
+    }, "account-intelligence");
 
     const rawData = response?.data ?? response;
 
@@ -551,7 +551,7 @@ async function handleGraphIQSearch(event) {
         </div>
 
 
-        <GraphIQResearch />
+        <GraphIQResearch sourcePage="account-intelligence" />
         <AtlasAccountExpansionSignals sampleMode={isDemo} clients={isDemo ? accounts.map(account => ({...account, engagementScore: account.engagement, expansionScore: account.expansion, revenue: account.revenuePotential})) : accounts} />
         <Section
   title="Company Intelligence Search"
