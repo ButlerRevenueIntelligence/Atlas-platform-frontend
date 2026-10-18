@@ -1,3 +1,4 @@
+import GraphIQResearch from "../components/GraphIQResearch.jsx";
 // frontend/src/pages/Metrics.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import {
@@ -491,6 +492,7 @@ export default function Metrics() {
           <div style={S.briefingBody}>{executiveBriefing}</div>
         </div>
 
+        <GraphIQResearch />
         <Section
           title="External Opportunity Discovery"
           subtitle={isDemo && !marketResults.length ? "Company opportunities" : "Powered by GraphIQ"}
