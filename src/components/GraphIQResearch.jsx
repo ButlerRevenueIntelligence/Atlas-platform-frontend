@@ -1,3 +1,4 @@
+import GraphIQMonitoring from './GraphIQMonitoring';
 import React, { useEffect, useRef, useState } from 'react';
 import { apiGet, apiPost, apiPut, getActiveOrgId, publishGraphIQNotification } from '../api';
 import './GraphIQResearch.css';
@@ -104,11 +105,12 @@ export default function GraphIQResearch({
         query: query.trim()
       });
     }}><label>Research type<select value={kind} disabled={busy} onChange={e => setKind(e.target.value)}><option value="news">Company news</option><option value="companies">Company research</option></select></label><label>Search<input value={query} disabled={busy} onChange={e => setQuery(e.target.value)} required maxLength={500} placeholder={kind === 'news' ? 'Company name, topic and timeframe' : 'Companies, capabilities or market'} /></label><button disabled={busy || !query.trim() || status?.configured === false}>{busy ? 'Working…' : 'Search GraphIQ'}</button></form>
+ {['market-signals', 'account-intelligence'].includes(sourcePage) && <GraphIQMonitoring sourcePage={sourcePage} kind={kind} query={query} slack={slack} configured={status?.configured} />}
  {busy && <p role="status">Contacting GraphIQ MCP…</p>}
  {research && <div className="gqr-results"><div className="gqr-heading"><div><h3>{research.kind === 'news' ? 'News search' : 'Company search'}: {research.query}</h3><p className="gqr-meta">Source: GraphIQ MCP · Retrieved {when(research.asOf)}</p></div>{research.kind === 'news' && onUseNews && <button type="button" onClick={() => onUseNews(research)}>Use this news in Atlas answers</button>}</div>
  {!research.records?.length && !research.text && <p>No results were returned for this search.</p>}
  {research.records?.map((record, n) => <article className="gqr-result" key={`${record.id}-${n}`}><h4>{record.title || record.name}</h4>{(record.summary || record.description) && <p>{record.summary || record.description}</p>}{research.kind === 'news' && <p className="gqr-meta">{record.publisher || 'Publisher not supplied'} · Published {when(record.publishedAt)}</p>}{/^https?:\/\//i.test(record.url || record.website || '') && <a href={record.url || record.website} target="_blank" rel="noopener noreferrer">Open original source ↗</a>}</article>)}
  {research.text && <details><summary>Inspect provider response</summary><pre>{research.text}</pre></details>}</div>}
- <p className="gqr-meta">Showing up to 20 records per search. Searches run when requested. New results from Market Signals and Account Intelligence can notify the connected Slack channel. Continuous news monitoring is not enabled. Reporting and company profiles do not establish buying intent or a verified match to a CRM account.</p>
+ <p className="gqr-meta">Showing up to 20 records per search. Searches run when requested. New results from Market Signals and Account Intelligence can notify the connected Slack channel. Saved searches can also run on a schedule while you are away. Reporting and company profiles do not establish buying intent or a verified match to a CRM account.</p>
  </section>;
 }
