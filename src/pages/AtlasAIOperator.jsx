@@ -1,3 +1,4 @@
+import GraphIQResearch from "../components/GraphIQResearch.jsx";
 import { Link } from "react-router-dom";
 import WorkspaceDataNotice from "../components/WorkspaceDataNotice.jsx";
 import React, { useEffect, useMemo, useState } from "react";
@@ -721,6 +722,8 @@ export default function AtlasAIOperator() {
   const [loadError, setLoadError] = useState("");
   const [externalIntelUsed, setExternalIntelUsed] = useState(false);
   const [externalCompanyCount, setExternalCompanyCount] = useState(0);
+  const [externalNews, setExternalNews] = useState(null);
+  const [mcpCompanies, setMcpCompanies] = useState(null);
 
   useEffect(() => {
     let mounted = true;
@@ -1208,9 +1211,9 @@ export default function AtlasAIOperator() {
       setExternalIntelUsed(false);
       setExternalCompanyCount(0);
 
-      let graphiqContext = null;
+      let graphiqContext = mcpCompanies;
 
-      if (shouldUseGraphIQ(finalQuestion)) {
+      if (!graphiqContext && shouldUseGraphIQ(finalQuestion)) {
         try {
           const graphiqQuery =
             cleanGraphIQQuery(finalQuestion) || finalQuestion;
@@ -1299,8 +1302,9 @@ export default function AtlasAIOperator() {
           alerts: activeAlerts,
           actions: operatorMoves,
           externalCompanyIntelligence: graphiqContext,
-          operatorInstructions: graphiqContext
-            ? "Use the GraphIQ external company intelligence included in this context when answering. Clearly distinguish external company intelligence from Atlas internal revenue data. Do not invent information that is not present in the supplied GraphIQ results."
+          externalNews: externalNews ? {snapshotId:externalNews.snapshotId} : null,
+          operatorInstructions: graphiqContext || externalNews
+            ? "Use only server-verified external company/news context when supplied. Clearly distinguish external reporting from internal Atlas records and cite source links when present."
             : "Answer using the internal Atlas revenue and operator context supplied.",
         },
       });
@@ -1616,8 +1620,13 @@ export default function AtlasAIOperator() {
                       ? ` ${externalCompanyCount} external companies were used in this answer.`
                       : ""}
                   </div>
+
                 </div>
               </div>
+
+                <GraphIQResearch onUseNews={setExternalNews} onUseCompanies={setMcpCompanies} />
+                {mcpCompanies && <p style={{color:"#a9c6df",fontSize:12}}>Company context selected: {mcpCompanies.query}. <button type="button" onClick={()=>setMcpCompanies(null)}>Clear company context</button></p>}
+                {externalNews && <p style={{color:"#a9c6df",fontSize:12}}>News context selected: {externalNews.query}. <button type="button" onClick={()=>setExternalNews(null)}>Clear news context</button></p>}
 
               {atlasResponse ? (
                 <div className="atlas-responsive-card" style={styles.askResponse}>

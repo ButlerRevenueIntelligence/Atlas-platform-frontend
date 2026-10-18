@@ -1,3 +1,4 @@
+import GraphIQResearch from "../components/GraphIQResearch.jsx";
 import { Link } from "react-router-dom";
 import WorkspaceDataNotice from "../components/WorkspaceDataNotice.jsx";
 import React, { useEffect, useMemo, useState } from "react";
@@ -550,6 +551,7 @@ async function handleGraphIQSearch(event) {
         </div>
 
 
+        <GraphIQResearch />
         <AtlasAccountExpansionSignals sampleMode={isDemo} clients={isDemo ? accounts.map(account => ({...account, engagementScore: account.engagement, expansionScore: account.expansion, revenue: account.revenuePotential})) : accounts} />
         <Section
   title="Company Intelligence Search"
