@@ -723,6 +723,7 @@ export default function AtlasAIOperator() {
   const [externalIntelUsed, setExternalIntelUsed] = useState(false);
   const [externalCompanyCount, setExternalCompanyCount] = useState(0);
   const [externalNews, setExternalNews] = useState(null);
+  const [answerEvidence, setAnswerEvidence] = useState(null);
   const [mcpCompanies, setMcpCompanies] = useState(null);
 
   useEffect(() => {
@@ -1207,6 +1208,7 @@ export default function AtlasAIOperator() {
     try {
       setAsking(true);
       setRiskBriefing(null);
+      setAnswerEvidence(null);
       setAtlasResponse("");
       setExternalIntelUsed(false);
       setExternalCompanyCount(0);
@@ -1309,6 +1311,9 @@ export default function AtlasAIOperator() {
         },
       });
 
+      setAnswerEvidence(res?.evidence || null);
+      setExternalIntelUsed(Boolean(res?.intelligence?.external));
+      setExternalCompanyCount(Number(res?.intelligence?.externalCompaniesUsed || 0));
       setRiskBriefing(res?.briefing?.type === "revenue-risk" ? res.briefing : null);
       setAtlasResponse(
         res?.result ||
@@ -1590,7 +1595,9 @@ export default function AtlasAIOperator() {
                   style={styles.askTextarea}
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
-                  placeholder="Ask about your revenue, pipeline, accounts, or market — or ask Atlas to find companies based on what they make, sell, or provide..."
+                  placeholder="Ask about a specific account, deal, metric or time period—for example, which deals may slip this month?"
+                  aria-label="Ask Atlas question"
+                  maxLength={2000}
                 />
 
                 <div className="atlas-responsive-row" style={styles.askActionRow}>
@@ -1608,6 +1615,7 @@ export default function AtlasAIOperator() {
                       setQuestion("");
                       setAtlasResponse("");
                       setRiskBriefing(null);
+                      setAnswerEvidence(null);
                     }}
                     disabled={asking}
                   >
@@ -1615,7 +1623,7 @@ export default function AtlasAIOperator() {
                   </button>
 
                   <div style={styles.askMuted}>
-                    Atlas can combine your internal revenue data with external company intelligence from GraphIQ.
+                    Answers use recorded workspace evidence and optional selected GraphIQ research.
                     {externalIntelUsed && externalCompanyCount > 0
                       ? ` ${externalCompanyCount} external companies were used in this answer.`
                       : ""}
@@ -1624,13 +1632,28 @@ export default function AtlasAIOperator() {
                 </div>
               </div>
 
-                <GraphIQResearch onUseNews={setExternalNews} onUseCompanies={setMcpCompanies} />
-                {mcpCompanies && <p style={{color:"#a9c6df",fontSize:12}}>Company context selected: {mcpCompanies.query}. <button type="button" onClick={()=>setMcpCompanies(null)}>Clear company context</button></p>}
-                {externalNews && <p style={{color:"#a9c6df",fontSize:12}}>News context selected: {externalNews.query}. <button type="button" onClick={()=>setExternalNews(null)}>Clear news context</button></p>}
 
               {atlasResponse ? (
                 <div className="atlas-responsive-card" style={styles.askResponse}>
                   <div style={styles.askResponseTitle}>Atlas Response</div>
+                  {answerEvidence && (
+                    <div style={{ ...styles.askMuted, marginBottom: 14 }}>
+                      <span>Scope: {answerEvidence.scope} · {answerEvidence.period} · {answerEvidence.dealsEvaluated} opportunity records</span>
+                      <details>
+                        <summary>Evidence &amp; freshness</summary>
+                        <p>
+                          Analysis time: {new Date(answerEvidence.asOf).toLocaleString()}.
+                          Source data: {answerEvidence.dataAsOf ? new Date(answerEvidence.dataAsOf).toLocaleString() : "Last source update not recorded"}.
+                        </p>
+                        <ul>
+                          {(answerEvidence.references || [])
+                            .filter((reference) => atlasResponse.includes(`[${reference.ref}]`))
+                            .map((reference) => <li key={reference.ref}>[{reference.ref}] {reference.label}</li>)}
+                        </ul>
+                        {answerEvidence.warnings?.map((warning, index) => <p key={index}>{warning}</p>)}
+                      </details>
+                    </div>
+                  )}
                   {riskBriefing ? (
                     <RevenueRiskResponse briefing={riskBriefing} />
                   ) : parseDealPriorityResponse(atlasResponse) ? (
@@ -1643,6 +1666,20 @@ export default function AtlasAIOperator() {
             </div>
           </Section>
         </div>
+
+        <section aria-label="External Intelligence" style={{ marginTop: 24 }}>
+          <GraphIQResearch onUseNews={setExternalNews} onUseCompanies={setMcpCompanies} />
+          {mcpCompanies && (
+            <p style={{ color: "#a9c6df", fontSize: 12 }}>
+              Company context selected: {mcpCompanies.query}. <button type="button" onClick={() => setMcpCompanies(null)}>Clear company context</button>
+            </p>
+          )}
+          {externalNews && (
+            <p style={{ color: "#a9c6df", fontSize: 12 }}>
+              News context selected: {externalNews.query}. <button type="button" onClick={() => setExternalNews(null)}>Clear news context</button>
+            </p>
+          )}
+        </section>
 
         <div className="atlas-responsive-grid" style={styles.twoCol}>
           <Section title="Executive Summary" subtitle="Overview">
