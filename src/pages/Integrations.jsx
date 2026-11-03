@@ -556,6 +556,23 @@ export default function Integrations() {
     }
   }
 
+  async function handleGoogleAdsRefreshAccounts() {
+    try {
+      setBusyId("google_ads_accounts");
+      setError("");
+      setSuccess("");
+      const data = await apiPost("/integrations/google_ads/refresh-accounts", {});
+      const map = normalizeIntegrationMap(data?.integrations);
+      setIntegrations(map);
+      setSelectedGoogleAccounts((previous) => ({ ...previous, google_ads: map.google_ads?.externalAccountId || "" }));
+      setSuccess(data?.message || "Google Ads accounts refreshed");
+    } catch (err) {
+      setError(err?.message || "Could not refresh Google Ads accounts");
+    } finally {
+      setBusyId("");
+    }
+  }
+
   async function handleGoogleAdsSelectAccount() {
     try {
       const customerId = selectedGoogleAccounts.google_ads;
@@ -859,13 +876,9 @@ export default function Integrations() {
           const isBitrix24 = c.id === "bitrix24";
           const isSlack = c.id === "slack";
 
-          const needsGoogleSelection =
-            isGoogleAds &&
-            isConnected &&
-            live?.mode === "live" &&
-            live?.needsSelection &&
-            Array.isArray(live?.accessibleCustomers) &&
-            live.accessibleCustomers.length > 0;
+          const showGoogleAccounts = isGoogleAds && isConnected && live?.mode === "live";
+          const googleAdvertisers = (live?.advertiserAccounts || []).filter((account) => account.manager === false && account.status === "ENABLED");
+          const needsGoogleSelection = showGoogleAccounts && (live?.needsSelection || !live?.accountsDiscoveredAt || !live?.externalAccountId);
 
           const needsGA4Selection =
             isGA4 &&
@@ -1099,68 +1112,42 @@ export default function Integrations() {
                 </div>
               ) : null}
 
-              {needsGoogleSelection ? (
-                <div
-                  style={{
-                    marginBottom: 14,
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 8,
-                  }}
-                >
-                  <select
-                    value={selectedGoogleAccounts.google_ads || ""}
-                    onChange={(e) =>
-                      setSelectedGoogleAccounts((prev) => ({
-                        ...prev,
-                        google_ads: e.target.value,
-                      }))
-                    }
-                    style={{
-                      width: "100%",
-                      padding: "10px 12px",
-                      borderRadius: 10,
-                      border: "1px solid rgba(255,255,255,0.10)",
-                      background: "rgba(255,255,255,0.05)",
-                      color: "#fff",
-                      fontSize: 12,
-                      outline: "none",
-                    }}
-                  >
-                    <option value="" style={{ color: "#111" }}>
-                      Select Google Ads account
-                    </option>
-                    {live.accessibleCustomers.map((item) => {
-                      const customerId = customerIdFromResourceName(item);
-                      return (
-                        <option key={item} value={customerId} style={{ color: "#111" }}>
-                          Google Ads {customerId}
-                        </option>
-                      );
-                    })}
-                  </select>
-
-                  <button
-                    onClick={handleGoogleAdsSelectAccount}
-                    disabled={!!busyId || uploading || !selectedGoogleAccounts.google_ads}
-                    style={{
-                      padding: "8px 12px",
-                      borderRadius: 10,
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      background: "rgba(255,255,255,0.05)",
-                      color: "#fff",
-                      fontWeight: 700,
-                      fontSize: 12,
-                      cursor:
-                        !!busyId || uploading || !selectedGoogleAccounts.google_ads
-                          ? "not-allowed"
-                          : "pointer",
-                      opacity:
-                        !!busyId || uploading || !selectedGoogleAccounts.google_ads ? 0.7 : 1,
-                    }}
-                  >
-                    {busyId === "google_ads_select" ? "Saving..." : "Use Selected Account"}
+              {showGoogleAccounts ? (
+                <div style={{ marginBottom: 14, display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div style={{ fontSize: 12, opacity: 0.85 }}>
+                    Choose the advertiser account that owns the campaigns. Manager accounts provide access to linked advertisers.
+                  </div>
+                  <button type="button" onClick={handleGoogleAdsRefreshAccounts} disabled={!!busyId || uploading} style={{ padding: "8px 12px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.06)", color: "#fff", fontWeight: 700, fontSize: 12 }}>
+                    {busyId === "google_ads_accounts" ? "Finding accounts..." : "Refresh Ad Accounts"}
                   </button>
+                  {googleAdvertisers.length > 0 ? (
+                    <>
+                      <select
+                        aria-label="Google Ads advertiser account"
+                        value={selectedGoogleAccounts.google_ads || ""}
+                        onChange={(event) => setSelectedGoogleAccounts((previous) => ({ ...previous, google_ads: event.target.value }))}
+                        disabled={!!busyId || uploading}
+                        style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.10)", background: "rgba(255,255,255,0.05)", color: "#fff", fontSize: 12 }}
+                      >
+                        <option value="" style={{ color: "#111" }}>Select advertiser account</option>
+                        {googleAdvertisers.map((account) => (
+                          <option key={account.id} value={account.id} style={{ color: "#111" }}>
+                            {account.name} ({account.id})
+                          </option>
+                        ))}
+                      </select>
+                      <button type="button" onClick={handleGoogleAdsSelectAccount} disabled={!!busyId || uploading || !googleAdvertisers.some((account) => account.id === selectedGoogleAccounts.google_ads)} style={{ padding: "8px 12px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.06)", color: "#fff", fontWeight: 700, fontSize: 12 }}>
+                        {busyId === "google_ads_select" ? "Saving..." : "Use Selected Account"}
+                      </button>
+                    </>
+                  ) : (
+                    <p style={{ fontSize: 12, margin: 0 }}>
+                      {live?.accountsDiscoveredAt
+                        ? "No enabled advertisers were found. Link an advertiser account in Google Ads or connect with a Google user who can access one, then refresh."
+                        : "Refresh Ad Accounts to find the advertisers available through your Google login."}
+                    </p>
+                  )}
+                  {(live?.accountDiscoveryWarnings || []).map((warning, index) => <p key={index} role="status" style={{ fontSize: 12, margin: 0 }}>{warning}</p>)}
                 </div>
               ) : null}
 
