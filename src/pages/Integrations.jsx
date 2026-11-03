@@ -1046,6 +1046,14 @@ export default function Integrations() {
                   : ""}
               </div>
 
+              {["google_ads", "linkedin_ads"].includes(c.id) &&
+              ["failed", "error"].includes(syncStatus) && live?.lastError ? (
+                <div role="status" style={{fontSize: 12, color: "#fda4af", lineHeight: 1.5, marginBottom: 12, overflowWrap: "anywhere"}}>
+                  <strong>{isConnected ? "Connection retained. Last sync failed: " : "Connection needs attention: "}</strong>
+                  {live.lastError}
+                </div>
+              ) : null}
+
               {!isManualImport && isConnected && live?.mode === "live" ? (
                 <div
                   style={{
@@ -1062,7 +1070,7 @@ export default function Integrations() {
                   {syncStatus === "error" || syncStatus === "failed" ? (
                     <span style={{ color: "#fb7185" }}>❌ Sync failed</span>
                   ) : null}
-                  {syncStatus === "syncing" ? (
+                  {["syncing", "running"].includes(syncStatus) ? (
                     <span style={{ color: "#facc15" }}>🔄 Syncing...</span>
                   ) : null}
                   {syncStatus === "never" ? (
