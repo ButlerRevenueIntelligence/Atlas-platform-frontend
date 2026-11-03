@@ -495,7 +495,7 @@ export const uploadSpreadsheetData = (payload) =>
 
 // -------------------- Dashboard --------------------
 export const getDashboard = () => apiGet("/dashboard");
-export const getIntegrations = () => apiGet("/integrations");
+export const getIntegrations = () => request("/integrations", { method: "GET", cache: "no-store" });
 export const connectIntegration = (id) =>
   apiPost("/integrations/connect", { id });
 export const disconnectIntegration = (id) =>
