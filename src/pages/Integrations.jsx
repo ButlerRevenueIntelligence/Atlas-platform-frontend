@@ -118,6 +118,16 @@ export default function Integrations() {
   const location=useLocation();
   const [integrations, setIntegrations] = useState({});
   const [loading, setLoading] = useState(true);
+  const [inventoryReady, setInventoryReady] = useState(false);
+  const inventoryRequest = useRef(0);
+  const inventoryMounted = useRef(false);
+  useEffect(() => {
+    inventoryMounted.current = true;
+    return () => {
+      inventoryMounted.current = false;
+      inventoryRequest.current += 1;
+    };
+  }, []);
   const [busyId, setBusyId] = useState("");
   useEffect(()=>{
     const id=location.hash.replace(/^#connector-/, '');
@@ -151,7 +161,22 @@ export default function Integrations() {
     setWorkspaceModeLabel(getWorkspaceModeLabel(workspace));
   }, [loading]);
 
+  function commitIntegrationUpdate(map) {
+    if (!inventoryMounted.current) return;
+    if (!map || Object.keys(map).length === 0) {
+      throw new Error("Atlas could not confirm the updated connection status. Click Refresh to check again.");
+    }
+    // A completed connect/disconnect/test supersedes any older inventory read.
+    inventoryRequest.current += 1;
+    setIntegrations(map);
+    setInventoryReady(true);
+    setLoading(false);
+  }
+
   async function load() {
+    const requestId = ++inventoryRequest.current;
+    const orgId = getActiveOrgId();
+    const isCurrent = () => inventoryMounted.current && requestId === inventoryRequest.current && orgId === getActiveOrgId();
     try {
       setLoading(true);
       setError("");
@@ -161,8 +186,13 @@ export default function Integrations() {
       setWorkspaceModeLabel(getWorkspaceModeLabel(workspace));
 
       const data = await getIntegrations();
-      const map = normalizeIntegrationMap(data?.integrations);
+      if (!isCurrent()) return;
+      if (!Array.isArray(data?.integrations) || data.integrations.length === 0) {
+        throw new Error("Connection status is unavailable. Refresh to check again; saved connections have not been changed.");
+      }
+      const map = normalizeIntegrationMap(data.integrations);
       setIntegrations(map);
+      setInventoryReady(true);
 
       const googleAds = map.google_ads;
       if (googleAds?.selectedCustomer) {
@@ -211,10 +241,11 @@ export default function Integrations() {
         }));
       }
     } catch (err) {
+      if (!isCurrent()) return;
       console.error(err);
-      setError(err?.message || "Failed to load connectors");
+      setError(err?.message || "Failed to load connectors. Showing the last confirmed connection status.");
     } finally {
-      setLoading(false);
+      if (isCurrent()) setLoading(false);
     }
   }
 
@@ -229,7 +260,6 @@ export default function Integrations() {
 
     if (connected) {
       setSuccess(`${prettifyProviderLabel(connected)} connected successfully`);
-      load();
 
       const url = new URL(window.location.href);
       url.searchParams.delete("connected");
@@ -262,7 +292,7 @@ export default function Integrations() {
         }
 
         const data = await connectBitrix24Webhook(webhookUrl);
-        setIntegrations(normalizeIntegrationMap(data?.integrations));
+        commitIntegrationUpdate(normalizeIntegrationMap(data?.integrations));
         setSuccess("Bitrix24 connected");
         return;
       }
@@ -326,7 +356,7 @@ export default function Integrations() {
       }
 
       const data = await connectIntegration(id);
-      setIntegrations(normalizeIntegrationMap(data?.integrations));
+      commitIntegrationUpdate(normalizeIntegrationMap(data?.integrations));
       setSuccess(`${connector?.name || id} connected`);
     } catch (err) {
       console.error(err);
@@ -343,7 +373,7 @@ export default function Integrations() {
       setSuccess("");
 
       const data = await disconnectIntegration(id);
-      setIntegrations(normalizeIntegrationMap(data?.integrations));
+      commitIntegrationUpdate(normalizeIntegrationMap(data?.integrations));
       setSuccess(`${connectorCatalog.find((c) => c.id === id)?.name || id} disconnected`);
     } catch (err) {
       console.error(err);
@@ -545,7 +575,7 @@ export default function Integrations() {
       setSuccess("");
 
       const data = await apiPost("/integrations/slack/test", {});
-      setIntegrations(normalizeIntegrationMap(data?.integrations));
+      commitIntegrationUpdate(normalizeIntegrationMap(data?.integrations));
       setSuccess(data?.message || "Slack test alert sent successfully");
     } catch (err) {
       console.error(err);
@@ -563,7 +593,7 @@ export default function Integrations() {
       setSuccess("");
       const data = await apiPost("/integrations/google_ads/refresh-accounts", {});
       const map = normalizeIntegrationMap(data?.integrations);
-      setIntegrations(map);
+      commitIntegrationUpdate(map);
       setSelectedGoogleAccounts((previous) => ({ ...previous, google_ads: map.google_ads?.externalAccountId || "" }));
       setSuccess(data?.message || "Google Ads accounts refreshed");
     } catch (err) {
@@ -589,7 +619,7 @@ export default function Integrations() {
       });
 
       const map = normalizeIntegrationMap(data?.integrations);
-      setIntegrations(map);
+      commitIntegrationUpdate(map);
       setSuccess("Google Ads account selected");
     } catch (err) {
       console.error(err);
@@ -612,7 +642,7 @@ export default function Integrations() {
 
       const data = await selectGA4Property(propertyId);
       const map = normalizeIntegrationMap(data?.integrations);
-      setIntegrations(map);
+      commitIntegrationUpdate(map);
       setSuccess("GA4 property selected");
     } catch (err) {
       console.error(err);
@@ -784,7 +814,7 @@ export default function Integrations() {
               fontWeight: 700,
             }}
           >
-            Connected: {connectedCount}
+            {inventoryReady ? `Connected: ${connectedCount}` : "Connections: Checking..."}
           </div>
 
           <button
@@ -840,11 +870,13 @@ export default function Integrations() {
         </div>
       ) : null}
 
+      {error && inventoryReady && !loading ? <p role="status">Showing the last confirmed connection status. Click Refresh to check again.</p> : null}
       {loading ? (
-        <div style={{ opacity: 0.7, marginBottom: 16 }}>Loading connectors...</div>
+        <div role="status" aria-live="polite" style={{ opacity: 0.7, marginBottom: 16 }}>Checking saved connections...</div>
       ) : null}
 
-      <div className="atlas-responsive-grid"
+      {inventoryReady ? <div className="atlas-responsive-grid"
+        aria-busy={loading}
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(auto-fit, minmax(280px,1fr))",
@@ -1117,7 +1149,7 @@ export default function Integrations() {
                   <div style={{ fontSize: 12, opacity: 0.85 }}>
                     Choose the advertiser account that owns the campaigns. Manager accounts provide access to linked advertisers.
                   </div>
-                  <button type="button" onClick={handleGoogleAdsRefreshAccounts} disabled={!!busyId || uploading} style={{ padding: "8px 12px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.06)", color: "#fff", fontWeight: 700, fontSize: 12 }}>
+                  <button type="button" onClick={handleGoogleAdsRefreshAccounts} disabled={loading || !!busyId || uploading} style={{ padding: "8px 12px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.06)", color: "#fff", fontWeight: 700, fontSize: 12 }}>
                     {busyId === "google_ads_accounts" ? "Finding accounts..." : "Refresh Ad Accounts"}
                   </button>
                   {googleAdvertisers.length > 0 ? (
@@ -1126,7 +1158,7 @@ export default function Integrations() {
                         aria-label="Google Ads advertiser account"
                         value={selectedGoogleAccounts.google_ads || ""}
                         onChange={(event) => setSelectedGoogleAccounts((previous) => ({ ...previous, google_ads: event.target.value }))}
-                        disabled={!!busyId || uploading}
+                        disabled={loading || !!busyId || uploading}
                         style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.10)", background: "rgba(255,255,255,0.05)", color: "#fff", fontSize: 12 }}
                       >
                         <option value="" style={{ color: "#111" }}>Select advertiser account</option>
@@ -1136,7 +1168,7 @@ export default function Integrations() {
                           </option>
                         ))}
                       </select>
-                      <button type="button" onClick={handleGoogleAdsSelectAccount} disabled={!!busyId || uploading || !googleAdvertisers.some((account) => account.id === selectedGoogleAccounts.google_ads)} style={{ padding: "8px 12px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.06)", color: "#fff", fontWeight: 700, fontSize: 12 }}>
+                      <button type="button" onClick={handleGoogleAdsSelectAccount} disabled={loading || !!busyId || uploading || !googleAdvertisers.some((account) => account.id === selectedGoogleAccounts.google_ads)} style={{ padding: "8px 12px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.06)", color: "#fff", fontWeight: 700, fontSize: 12 }}>
                         {busyId === "google_ads_select" ? "Saving..." : "Use Selected Account"}
                       </button>
                     </>
@@ -1195,7 +1227,7 @@ export default function Integrations() {
 
                   <button
                     onClick={handleGA4SelectProperty}
-                    disabled={!!busyId || uploading || !selectedGA4Properties.ga4}
+                    disabled={loading || !!busyId || uploading || !selectedGA4Properties.ga4}
                     style={{
                       padding: "8px 12px",
                       borderRadius: 10,
@@ -1239,7 +1271,7 @@ export default function Integrations() {
                 ) : !isConnected ? (
                   <button
                     onClick={() => handleConnect(c.id)}
-                    disabled={!!busyId || uploading}
+                    disabled={loading || !!busyId || uploading}
                     style={{
                       padding: "8px 12px",
                       borderRadius: 10,
@@ -1273,14 +1305,14 @@ export default function Integrations() {
                     </button>
 
                     {(isGoogleAds || isGA4) && isConnected && live?.mode === "live" && !needsGoogleSelection && !needsGA4Selection ? (
-                      <button  onClick={() => handleGoogleSync(c.id)} disabled={!!busyId || uploading} style={{ padding: "8px 12px", borderRadius: 10, color: "#fff", background: "#243249", border: "1px solid #35445e", cursor: "pointer" }}>
+                      <button  onClick={() => handleGoogleSync(c.id)} disabled={loading || !!busyId || uploading} style={{ padding: "8px 12px", borderRadius: 10, color: "#fff", background: "#243249", border: "1px solid #35445e", cursor: "pointer" }}>
                         {busyId === `${c.id}_sync` ? "Syncing..." : "Run Sync"}
                       </button>
                     ) : null}
                     {isHubSpotLive ? (
                       <button
                         onClick={handleHubSpotSync}
-                        disabled={!!busyId || uploading}
+                        disabled={loading || !!busyId || uploading}
                         style={{
                           padding: "8px 12px",
                           borderRadius: 10,
@@ -1300,7 +1332,7 @@ export default function Integrations() {
                     {isZohoLive ? (
                       <button
                         onClick={handleZohoSync}
-                        disabled={!!busyId || uploading}
+                        disabled={loading || !!busyId || uploading}
                         style={{
                           padding: "8px 12px",
                           borderRadius: 10,
@@ -1320,7 +1352,7 @@ export default function Integrations() {
                     {isPipedriveLive ? (
                       <button
                         onClick={handlePipedriveSync}
-                        disabled={!!busyId || uploading}
+                        disabled={loading || !!busyId || uploading}
                         style={{
                           padding: "8px 12px",
                           borderRadius: 10,
@@ -1340,7 +1372,7 @@ export default function Integrations() {
                     {isBitrix24Live ? (
                       <button
                         onClick={handleBitrix24Sync}
-                        disabled={!!busyId || uploading}
+                        disabled={loading || !!busyId || uploading}
                         style={{
                           padding: "8px 12px",
                           borderRadius: 10,
@@ -1360,7 +1392,7 @@ export default function Integrations() {
                     {isStripeLive ? (
                       <button
                         onClick={handleStripeSync}
-                        disabled={!!busyId || uploading}
+                        disabled={loading || !!busyId || uploading}
                         style={{
                           padding: "8px 12px",
                           borderRadius: 10,
@@ -1380,7 +1412,7 @@ export default function Integrations() {
                     {isShopifyLive ? (
                       <button
                         onClick={handleShopifySync}
-                        disabled={!!busyId || uploading}
+                        disabled={loading || !!busyId || uploading}
                         style={{
                           padding: "8px 12px",
                           borderRadius: 10,
@@ -1400,7 +1432,7 @@ export default function Integrations() {
                     {isQuickBooksLive ? (
                       <button
                         onClick={handleQuickBooksSync}
-                        disabled={!!busyId || uploading}
+                        disabled={loading || !!busyId || uploading}
                         style={{
                           padding: "8px 12px",
                           borderRadius: 10,
@@ -1420,7 +1452,7 @@ export default function Integrations() {
                     {isSalesforceLive ? (
                       <button
                         onClick={handleSalesforceSync}
-                        disabled={!!busyId || uploading}
+                        disabled={loading || !!busyId || uploading}
                         style={{
                           padding: "8px 12px",
                           borderRadius: 10,
@@ -1440,7 +1472,7 @@ export default function Integrations() {
                     {isMetaAdsLive ? (
   <button
     onClick={handleMetaAdsSync}
-    disabled={!!busyId || uploading}
+    disabled={loading || !!busyId || uploading}
     style={{
       padding: "8px 12px",
       borderRadius: 10,
@@ -1459,7 +1491,7 @@ export default function Integrations() {
                     {isLinkedInAdsLive ? (
                       <button
                         onClick={handleLinkedInAdsSync}
-                        disabled={!!busyId || uploading}
+                        disabled={loading || !!busyId || uploading}
                         style={{
                           padding: "8px 12px",
                           borderRadius: 10,
@@ -1479,7 +1511,7 @@ export default function Integrations() {
                     {isSlackLive ? (
                       <button
                         onClick={handleSlackTest}
-                        disabled={!!busyId || uploading}
+                        disabled={loading || !!busyId || uploading}
                         style={{
                           padding: "8px 12px",
                           borderRadius: 10,
@@ -1498,7 +1530,7 @@ export default function Integrations() {
 
                     <button
                       onClick={() => handleDisconnect(c.id)}
-                      disabled={!!busyId || uploading}
+                      disabled={loading || !!busyId || uploading}
                       style={{
                         padding: "8px 12px",
                         borderRadius: 10,
@@ -1519,7 +1551,7 @@ export default function Integrations() {
             </div>
           );
         })}
-      </div>
+      </div> : !loading ? <p role="status">Connection status could not be checked. Click Refresh to retry.</p> : null}
       </div>
     </div>
   );
