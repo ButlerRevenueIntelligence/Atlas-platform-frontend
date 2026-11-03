@@ -81,6 +81,23 @@ function customerIdFromResourceName(value) {
   return String(value || "").replace("customers/", "");
 }
 
+const GOOGLE_ADS_CONNECTION_ERRORS = {
+  google_ads_callback_failed: "Google Ads could not finish connecting. Try Connect again. If it fails, check the Google Ads callback entry in Render logs.",
+  google_ads_access_denied: "Google Ads access was not approved. Connect again and allow Atlas access to the Google Ads account.",
+  google_ads_consent_failed: "Google did not complete authorization. Start a new connection attempt.",
+  google_ads_authorization_expired: "The Google authorization expired or was already used. Click Connect again to start a fresh attempt.",
+  google_ads_oauth_configuration_error: "Google rejected Atlas's OAuth client configuration. The Atlas administrator needs to check the Google client credentials in Render.",
+  google_ads_token_exchange_failed: "Atlas could not exchange the Google authorization. Try Connect again; if it persists, the administrator should check Render logs.",
+  google_ads_developer_token_missing: "The Google Ads developer token is missing from the backend configuration. The Atlas administrator needs to set it in Render.",
+  google_ads_developer_token_rejected: "Google rejected the Ads developer token. The Atlas administrator needs to check its approval and access level in Google Ads API Center.",
+  google_ads_api_disabled: "The Google Ads API is disabled for Atlas's Google Cloud project. The Atlas administrator needs to enable it.",
+  google_ads_no_accessible_accounts: "No Google Ads accounts were found for this Google login. Connect with a Google user who has access to the ad account.",
+  google_ads_account_access_denied: "Google denied access to the Ads accounts. Check the Google user's account permissions and Atlas's Google Ads API access, then reconnect.",
+  google_ads_account_discovery_failed: "Atlas could not retrieve Google Ads accounts. Try again; if it persists, the administrator should check the account_discovery entry in Render logs.",
+  google_ads_offline_access_required: "Google did not grant background access. Click Connect again and approve access so Atlas can sync while you are away.",
+  google_ads_connection_save_failed: "Atlas could not save the Google Ads connection. The administrator should check backend storage and token-encryption configuration in Render, then retry.",
+};
+
 function prettifyProviderLabel(value) {
   return String(value || "")
     .replace(/_/g, " ")
@@ -222,7 +239,7 @@ export default function Integrations() {
     }
 
     if (errorParam) {
-      setError(prettifyProviderLabel(errorParam));
+      setError(GOOGLE_ADS_CONNECTION_ERRORS[errorParam] || prettifyProviderLabel(errorParam));
       const url = new URL(window.location.href);
       url.searchParams.delete("error");
       window.history.replaceState({}, "", url.toString());
