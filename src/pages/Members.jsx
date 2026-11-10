@@ -1,3 +1,6 @@
+import useAdminDialog from '../components/admin/useAdminDialog';
+import AdminNav from '../components/admin/AdminNav';
+import { adminStyles } from '../components/admin/adminStyles';
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -287,9 +290,9 @@ export default function Members() {
         }
       `}</style>
 
-      <div className="atlas-responsive-page" style={styles.page}>
+      <div className="atlas-responsive-page atlas-admin" style={styles.page}>
         <div style={styles.container}>
-          <header className="atlas-responsive-card atlas-responsive-row" style={styles.header}>
+          <header className="admin-header" style={styles.header}>
             <div>
               <div style={styles.eyebrow}>
                 Workspace administration
@@ -323,16 +326,17 @@ export default function Members() {
               </button>
             </div>
           </header>
+          <AdminNav />
 
           {error ? (
-            <div className="atlas-responsive-card" style={styles.error}>{error}</div>
+            <div className="atlas-responsive-card" role="alert" style={styles.error}>{error}</div>
           ) : null}
 
           {success ? (
-            <div className="atlas-responsive-card" style={styles.success}>{success}</div>
+            <div className="atlas-responsive-card" role="status" style={styles.success}>{success}</div>
           ) : null}
 
-          <section className="atlas-responsive-metrics" style={styles.statsGrid}>
+          <section className="atlas-responsive-metrics admin-metrics" style={styles.statsGrid}>
             <MetricCard
               label="Total Members"
               value={stats.total}
@@ -375,7 +379,7 @@ export default function Members() {
                 style={styles.filters}
               >
                 <input
-                  value={query}
+                  aria-label="Search members" value={query}
                   onChange={(event) =>
                     setQuery(event.target.value)
                   }
@@ -384,7 +388,7 @@ export default function Members() {
                 />
 
                 <select
-                  value={roleFilter}
+                  aria-label="Filter by role" value={roleFilter}
                   onChange={(event) =>
                     setRoleFilter(event.target.value)
                   }
@@ -400,7 +404,7 @@ export default function Members() {
                 </select>
 
                 <select
-                  value={statusFilter}
+                  aria-label="Filter by status" value={statusFilter}
                   onChange={(event) =>
                     setStatusFilter(event.target.value)
                   }
@@ -495,7 +499,7 @@ function MemberRow({
   ).toLowerCase();
 
   return (
-    <article className="member-row atlas-responsive-grid atlas-responsive-card" style={styles.memberRow}>
+    <article className="member-row admin-data-row" style={styles.memberRow}>
       <div style={styles.identity}>
         <div style={styles.avatar}>
           {getInitials(member?.name)}
@@ -508,7 +512,7 @@ function MemberRow({
             </h3>
 
             {member?.isCurrentUser ? (
-              <span className="atlas-responsive-card" style={styles.youBadge}>You</span>
+              <span style={styles.youBadge}>You</span>
             ) : null}
           </div>
 
@@ -518,7 +522,7 @@ function MemberRow({
         </div>
       </div>
 
-      <div className="atlas-responsive-grid" style={styles.accessSummary}>
+      <div className="admin-access-summary" style={styles.accessSummary}>
         <div>
           <div style={styles.accessLabel}>Role</div>
           <RoleBadge role={role} />
@@ -579,6 +583,7 @@ function AccessModal({
   onRemove,
   onClose,
 }) {
+  const dialogRef = useAdminDialog(onClose, true, saving);
   const availableRoles =
     viewerRole === "owner"
       ? ["admin", "manager", "analyst", "member", "viewer"]
@@ -590,7 +595,7 @@ function AccessModal({
       onMouseDown={onClose}
     >
       <div
-        style={styles.modal}
+        ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Manage member access" style={styles.modal}
         onMouseDown={(event) =>
           event.stopPropagation()
         }
@@ -614,7 +619,7 @@ function AccessModal({
             type="button"
             onClick={onClose}
             disabled={saving}
-            style={styles.closeButton}
+            aria-label="Close manage access" style={styles.closeButton}
           >
             ×
           </button>
@@ -817,7 +822,7 @@ function formatDate(value) {
   });
 }
 
-const styles = {
+const originalStyles = {
   page: {
     minHeight: "100vh",
     padding: "18px 16px 36px",
@@ -1268,3 +1273,5 @@ const styles = {
     cursor: "pointer",
   },
 };
+
+const styles = adminStyles(originalStyles);

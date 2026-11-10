@@ -1,3 +1,6 @@
+import useAdminDialog from '../components/admin/useAdminDialog';
+import AdminNav from '../components/admin/AdminNav';
+import { adminStyles } from '../components/admin/adminStyles';
 // frontend/src/pages/Partners.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import {
@@ -255,13 +258,13 @@ export default function Partners() {
   }
 
   return (
-    <div className="atlas-responsive-page" style={styles.page}>
+    <div className="atlas-responsive-page atlas-admin" style={styles.page}>
       <div style={styles.container}>
-        <section className="atlas-responsive-card atlas-responsive-row" style={styles.hero}>
+        <section className="admin-header" style={styles.hero}>
           <div>
             <div style={styles.eyebrow}>Partner ecosystem</div>
 
-            <h1 className="atlas-responsive-title" style={styles.title}>Partner Intelligence</h1>
+            <h1 className="atlas-responsive-title" style={styles.title}>Partners</h1>
 
             <p style={styles.subtitle}>
               Track the companies helping influence pipeline and
@@ -288,12 +291,13 @@ export default function Partners() {
             </button>
           </div>
         </section>
+          <AdminNav />
 
         {error && !modalOpen ? (
-          <div className="atlas-responsive-card" style={styles.error}>{error}</div>
+          <div className="atlas-responsive-card" role="alert" style={styles.error}>{error}</div>
         ) : null}
 
-        <section className="atlas-responsive-metrics" style={styles.statsGrid}>
+        <section className="atlas-responsive-metrics admin-metrics" style={styles.statsGrid}>
           <MetricCard
             label="Total Partners"
             value={stats.total}
@@ -328,14 +332,14 @@ export default function Partners() {
 
             <div className="atlas-responsive-row" style={styles.filters}>
               <input
-                value={query}
+                aria-label="Search partners" value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Search partners..."
                 style={styles.search}
               />
 
               <select
-                value={statusFilter}
+                aria-label="Filter by status" value={statusFilter}
                 onChange={(event) =>
                   setStatusFilter(event.target.value)
                 }
@@ -424,7 +428,7 @@ function MetricCard({ label, value, detail }) {
 
 function PartnerCard({ partner, onEdit, onArchive }) {
   return (
-    <article className="atlas-responsive-grid atlas-responsive-card" style={styles.partnerCard}>
+    <article className="admin-data-row" style={styles.partnerCard}>
       <div style={styles.partnerMain}>
         <div style={styles.companyIcon}>
           {getInitials(partner.companyName)}
@@ -438,7 +442,7 @@ function PartnerCard({ partner, onEdit, onArchive }) {
 
             <StatusBadge status={partner.status} />
 
-            <span className="atlas-responsive-card" style={styles.typeBadge}>
+            <span style={styles.typeBadge}>
               {TYPE_LABELS[partner.partnershipType] || "Other"}
             </span>
           </div>
@@ -552,10 +556,11 @@ function PartnerModal({
   onClose,
   onSubmit,
 }) {
+  const dialogRef = useAdminDialog(onClose, true, saving);
   return (
     <div style={styles.modalOverlay} onMouseDown={onClose}>
       <div
-        style={styles.modal}
+        ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Partner details" style={styles.modal}
         onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="atlas-responsive-row" style={styles.modalHeader}>
@@ -582,7 +587,7 @@ function PartnerModal({
 
         <form onSubmit={onSubmit}>
           <div style={styles.formBody}>
-            {error ? <div className="atlas-responsive-card" style={styles.error}>{error}</div> : null}
+            {error ? <div className="atlas-responsive-card" role="alert" style={styles.error}>{error}</div> : null}
 
             <div className="atlas-responsive-grid" style={styles.twoColumnForm}>
               <FormField label="Partner company *">
@@ -766,7 +771,7 @@ function getInitials(companyName) {
     .toUpperCase();
 }
 
-const styles = {
+const originalStyles = {
   page: {
     minHeight: "100vh",
     padding: "14px 16px 24px",
@@ -1242,3 +1247,5 @@ const styles = {
     background: "#0a0f1e",
   },
 };
+
+const styles = adminStyles(originalStyles);
