@@ -1,0 +1,44 @@
+.atlas-admin{--admin-border:rgba(148,163,184,.17)}
+.atlas-admin *{box-sizing:border-box}
+.admin-nav{display:flex;gap:26px;border-bottom:1px solid var(--admin-border);overflow-x:auto;margin-top:-14px;scrollbar-width:thin}
+.admin-nav a{flex-shrink:0;color:#8fa6c7;text-decoration:none;font-size:12px;padding:4px 0 15px;border-bottom:2px solid transparent}
+.admin-nav a.selected{color:#d2e3ff;border-bottom-color:#9fc2f7}
+.atlas-admin button:disabled{opacity:.45;cursor:default}
+.atlas-admin :is(button,a,input,select,textarea,summary):focus-visible{outline:2px solid #9fc2f7!important;outline-offset:3px}
+.atlas-admin button:not(:disabled):hover{filter:brightness(1.12)}
+.atlas-admin input::placeholder{color:#7f96b7}
+.atlas-admin :is(input,select,textarea){outline:none;max-width:100%}
+.atlas-admin article:last-child{border-bottom:0!important}
+.atlas-admin .admin-metrics>div:last-child{border-right:0!important}
+.atlas-admin .atlas-billing-summary{border:1px solid var(--admin-border);border-radius:10px;margin-top:22px;gap:0!important;overflow:hidden;background:#0c1626}
+.atlas-admin .atlas-billing-summary>div:last-child{border-right:0!important}
+.atlas-admin .atlas-billing-plans{margin-top:20px}
+.admin-context{display:flex;align-items:center;gap:10px;color:#91a9c9;font-size:12px}
+.admin-context strong{color:#d3e2f8;font-weight:500}
+.admin-status{display:inline-flex;padding:5px 8px;border:1px solid #3e7169;border-radius:5px;color:#89dcc6;font-size:11px;background:#15312d44;white-space:nowrap}
+.admin-directory{border:1px solid var(--admin-border);border-radius:12px;background:#0c1626;overflow:hidden}
+.admin-directory-head{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:22px;border-bottom:1px solid var(--admin-border);flex-wrap:wrap}
+.admin-directory-head h2{font-size:16px;font-weight:600;margin:0}
+.admin-directory-head p{font-size:12px;line-height:1.7;color:#91a9c9;margin:7px 0 0}
+.admin-workspace-row{display:grid;grid-template-columns:minmax(160px,1.3fr) minmax(100px,.6fr) minmax(100px,.6fr) auto;gap:22px;align-items:center;padding:22px;border-bottom:1px solid var(--admin-border)}
+.admin-workspace-row:last-child{border-bottom:0}
+.admin-workspace-row.current{background:#16294255;border-left:2px solid #9fc2f7;padding-left:20px}
+.admin-workspace-row h3{font-size:14px;font-weight:600;margin:0 0 7px;overflow-wrap:anywhere}
+.admin-workspace-row p{font-size:12px;color:#8fa6c7;margin:0;overflow-wrap:anywhere}
+.admin-row-label{font-size:11px;color:#8fa6c7;margin-bottom:7px}
+.admin-row-value{font-size:12px;color:#c5d4e9;text-transform:capitalize}
+.admin-row-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.admin-create{border:1px solid var(--admin-border);border-radius:12px;background:#0c1626}
+.admin-create summary{padding:22px;cursor:pointer;color:#dbe8fa;font-size:14px;font-weight:500}
+.admin-create summary small{font-size:12px;font-weight:400;color:#8fa6c7;margin-left:12px}
+.admin-create form{padding:0 22px 22px}
+.admin-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.admin-form-grid label{display:grid;gap:8px;color:#c5d4e9;font-size:12px}
+.admin-form-footer{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:22px}
+.admin-form-footer p{font-size:12px;color:#8fa6c7;margin:0}
+@media(max-width:1150px){.atlas-admin .admin-data-row{grid-template-columns:minmax(0,1fr)!important;gap:18px!important}.atlas-admin .admin-data-row>div:last-child{justify-content:flex-start}.atlas-admin .admin-data-row .atlas-responsive-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}.atlas-admin .admin-access-summary{grid-template-columns:repeat(4,minmax(0,1fr))!important}}
+@media(max-width:760px){.atlas-admin{padding:20px 12px 40px!important}.admin-nav{gap:22px}.admin-workspace-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;padding:18px}.admin-workspace-row>div:first-child,.admin-row-actions{grid-column:1/-1}.admin-form-grid{grid-template-columns:1fr}.admin-directory-head{padding:18px}.admin-directory-head input{width:100%!important}.admin-create summary small{display:block;margin:8px 0 0}.atlas-admin .admin-data-row{padding:18px!important}.atlas-admin .admin-access-summary{grid-template-columns:repeat(2,minmax(0,1fr))!important}.atlas-admin .admin-metrics{gap:0!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}.atlas-admin .admin-metrics>div{padding:18px!important;border-radius:0!important}.atlas-admin .admin-metrics>div:nth-child(2n){border-right:0!important}.atlas-admin .admin-metrics>div:nth-child(-n+2){border-bottom:1px solid var(--admin-border)}.atlas-admin .admin-header{padding:0 0 8px!important;border:0!important;border-radius:0!important}.atlas-admin .atlas-responsive-card.admin-billing-hero{padding:0!important;border-radius:0!important}.atlas-admin .atlas-billing-summary>div{border-bottom:1px solid var(--admin-border)}.atlas-admin .admin-data-row [style*="white-space"]{white-space:normal!important;overflow-wrap:anywhere}}
+.atlas-admin .admin-data-row{min-width:0}
+.atlas-admin .admin-data-row>div{min-width:0}
+.atlas-admin .admin-data-row a{overflow-wrap:anywhere}
+@media(max-width:760px){.atlas-admin .admin-metrics.admin-workspace-metrics{grid-template-columns:1fr!important}.atlas-admin .admin-metrics.admin-workspace-metrics>div{border-right:0!important;border-bottom:1px solid var(--admin-border)}.atlas-admin .admin-metrics.admin-workspace-metrics>div:last-child{border-bottom:0}}

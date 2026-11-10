@@ -1,3 +1,6 @@
+import useAdminDialog from '../components/admin/useAdminDialog';
+import AdminNav from '../components/admin/AdminNav';
+import { adminStyles } from '../components/admin/adminStyles';
 // frontend/src/pages/Billing.jsx
 import React, {
   useEffect,
@@ -456,6 +459,7 @@ function PlanChangeModal({
   onClose,
   onConfirm,
 }) {
+  const dialogRef = useAdminDialog(onClose, Boolean(selectedPlan), loading);
   if (!selectedPlan) return null;
 
   const direction = changeType(currentPlan, selectedPlan.key);
@@ -469,7 +473,7 @@ function PlanChangeModal({
       role="presentation"
     >
       <div
-        style={styles.modal}
+        ref={dialogRef} tabIndex={-1} style={styles.modal}
         onMouseDown={(event) => event.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -739,7 +743,7 @@ export default function Billing() {
   }
 
   return (
-    <div className="atlas-responsive-page" style={styles.page}>
+    <div className="atlas-responsive-page atlas-admin" style={styles.page}>
       <style>{`
         .atlas-billing-summary {
           display: grid;
@@ -771,7 +775,7 @@ export default function Billing() {
       `}</style>
 
       <div style={styles.container}>
-        <section className="atlas-responsive-card" style={styles.hero}>
+        <section className="admin-billing-hero" style={{...styles.hero, display: "block"}}>
           <div className="atlas-responsive-row" style={styles.heroHeader}>
             <div>
               <div style={styles.eyebrow}>
@@ -818,6 +822,8 @@ export default function Billing() {
             </div>
           </div>
 
+          <div style={{marginTop: 28}}><AdminNav /></div>
+
           {notice ? (
             <div className="atlas-responsive-card" style={styles.notice}>
               {notice}
@@ -825,7 +831,7 @@ export default function Billing() {
           ) : null}
 
           {error ? (
-            <div className="atlas-responsive-card" style={styles.error}>
+            <div className="atlas-responsive-card" role="alert" style={styles.error}>
               {error}
             </div>
           ) : null}
@@ -905,7 +911,7 @@ export default function Billing() {
               </div>
 
               <h2 style={styles.sectionTitle}>
-                Choose the right level of intelligence
+                Available plans
               </h2>
 
               <p style={styles.sectionSubtitle}>
@@ -967,7 +973,7 @@ const basePill = {
   whiteSpace: "nowrap",
 };
 
-const styles = {
+const originalStyles = {
   page: {
     minHeight: "100vh",
     padding: "28px 16px 42px",
@@ -1489,3 +1495,5 @@ const styles = {
     flexWrap: "wrap",
   },
 };
+
+const styles = adminStyles(originalStyles);

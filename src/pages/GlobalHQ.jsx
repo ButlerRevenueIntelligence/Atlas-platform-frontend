@@ -1,79 +1,15 @@
-// frontend/src/pages/GlobalHQ.jsx
-import React, { useEffect, useMemo, useState } from "react";
-import {
-  getWorkspaces,
-  createWorkspace,
-  switchWorkspace,
-  deleteWorkspace,
-} from "../api";
+import React, { useEffect, useMemo, useState } from 'react';
+import { getWorkspaces, createWorkspace, switchWorkspace, deleteWorkspace } from '../api';
+import AdminNav from '../components/admin/AdminNav';
+import { admin } from '../components/admin/adminStyles';
 
-const cardStyle = {
-  border: "1px solid rgba(255,255,255,0.10)",
-  borderRadius: 18,
-  padding: 18,
-  background: "rgba(255,255,255,0.03)",
-  boxShadow: "0 8px 24px rgba(0,0,0,0.18)",
-};
-
-const muted = {
-  color: "rgba(255,255,255,0.72)",
-};
-
-const buttonBase = {
-  border: "1px solid rgba(255,255,255,0.14)",
-  background: "rgba(255,255,255,0.05)",
-  color: "#fff",
-  borderRadius: 12,
-  padding: "10px 14px",
-  fontWeight: 700,
-  cursor: "pointer",
-};
-
-const inputStyle = {
-  width: "100%",
-  padding: "12px 14px",
-  borderRadius: 12,
-  border: "1px solid rgba(255,255,255,0.14)",
-  background: "rgba(255,255,255,0.05)",
-  color: "#fff",
-  outline: "none",
-};
-
-function Badge({ children, active = false, danger = false }) {
-  let background = "rgba(255,255,255,0.08)";
-  let border = "1px solid rgba(255,255,255,0.12)";
-
-  if (active) {
-    background = "rgba(58, 130, 246, 0.18)";
-    border = "1px solid rgba(58, 130, 246, 0.5)";
-  }
-
-  if (danger) {
-    background = "rgba(239, 68, 68, 0.14)";
-    border = "1px solid rgba(239, 68, 68, 0.35)";
-  }
-
-  return (
-    <span className="atlas-responsive-card"
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 6,
-        padding: "6px 10px",
-        borderRadius: 999,
-        fontSize: 12,
-        fontWeight: 800,
-        letterSpacing: 0.3,
-        background,
-        border,
-      }}
-    >
-      {children}
-    </span>
-  );
+function planLabel(value) {
+  const key = String(value || '').toUpperCase();
+  return ({ SCALE: 'Atlas Core', CORE: 'Atlas Core', GROWTH: 'Atlas Growth', ENTERPRISE: 'Atlas Enterprise' })[key] || 'Not available';
 }
 
 export default function GlobalHQ() {
+  const [query, setQuery] = useState("");
   const [workspaces, setWorkspaces] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState("");
@@ -215,338 +151,53 @@ export default function GlobalHQ() {
     }
   }
 
-  return (
-    <div style={{ padding: 20 }}>
-      <div style={{ ...cardStyle, marginBottom: 18 }}>
-        <div className="atlas-responsive-row"
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            gap: 16,
-            flexWrap: "wrap",
-            alignItems: "center",
-          }}
-        >
-          <div>
-            <div
-              style={{
-                fontSize: 12,
-                letterSpacing: 1.2,
-                textTransform: "uppercase",
-                fontWeight: 900,
-                color: "rgba(255,255,255,0.62)",
-                marginBottom: 8,
-              }}
-            >
-              Organization Command Center
-            </div>
-            <div style={{ fontSize: 40, fontWeight: 900, lineHeight: 1 }}>
-              Global HQ
-            </div>
-            <div style={{ ...muted, marginTop: 10, maxWidth: 850 }}>
-              Manage organization context, switch workspaces, create new workspace
-              environments, and control the active operating scope across Atlas.
-            </div>
+  const filtered = workspaces.filter(ws => `${ws.name || ''} ${ws.slug || ''}`.toLowerCase().includes(query.trim().toLowerCase()));
+  return <main className="atlas-admin atlas-responsive-page" style={admin.page}>
+    <div style={admin.container}>
+      <header className="admin-header" style={admin.header}>
+        <div><div style={admin.eyebrow}>Organization management</div><h1 style={admin.title}>Global HQ</h1>
+          <p style={admin.subtitle}>One place to manage your workspaces and move between teams.</p></div>
+        <button style={admin.secondaryButton} onClick={loadWorkspaces} disabled={loading}>{loading ? 'Refreshing…' : 'Refresh'}</button>
+      </header>
+      <AdminNav />
+      {error && <div role="alert" style={{padding:16, border:'1px solid #805266', borderRadius:8, color:'#ffc4cd', background:'#362331'}}>{error}</div>}
+      {success && <div role="status" style={{color:'#89dcc6'}}>{success}</div>}
+      <div className="admin-context"><span className="admin-status">Current workspace</span><strong>{activeWorkspace?.name || activeOrgName || 'None selected'}</strong></div>
+      <section aria-label="Workspace summary" className="admin-metrics admin-workspace-metrics" style={{...admin.statsGrid, gridTemplateColumns:'repeat(3,minmax(0,1fr))'}}>
+        {[
+          ['Workspaces', workspaces.length, 'Across your organization'],
+          ['Owner access', workspaces.filter(ws => ws.role === 'owner').length, 'Workspaces you own'],
+          ['Client workspaces', workspaces.filter(ws => ws.type === 'client').length, 'Client environments'],
+        ].map(([label,value,detail]) => <div key={label} style={admin.metricCard}><div style={admin.metricLabel}>{label}</div><div style={admin.metricValue}>{loading ? '—' : value}</div><div style={admin.metricDetail}>{detail}</div></div>)}
+      </section>
+      <section className="admin-directory">
+        <div className="admin-directory-head"><div><h2>Workspace directory</h2><p>Choose the workspace you want to work in.</p></div>
+          <input style={admin.search} aria-label="Search workspaces" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search workspaces…" /></div>
+        {loading ? <div style={admin.emptyState} role="status">Loading workspaces…</div> : error ? <div style={admin.emptyState}>Workspaces could not be loaded. Use Refresh to try again.</div> : filtered.length === 0 ? <div style={admin.emptyState}>{query ? 'No workspaces match your search.' : 'No workspaces yet. Create your first workspace below.'}</div> : filtered.map(workspace => {
+          const isActive = String(workspace._id) === String(activeOrgId);
+          const isBusy = busyId === workspace._id;
+          return <article key={workspace._id} className={`admin-workspace-row ${isActive ? 'current' : ''}`}>
+            <div><h3>{workspace.name}</h3><p>{workspace.slug || 'No workspace slug'}</p></div>
+            <div><div className="admin-row-label">Plan / type</div><div className="admin-row-value">{planLabel(workspace.plan)}</div><p style={{marginTop:6}}>{workspace.type || 'Client'}</p></div>
+            <div><div className="admin-row-label">Your access</div><div className="admin-row-value">{workspace.role || 'Member'}</div></div>
+            <div className="admin-row-actions">{isActive ? <span className="admin-status">Active workspace</span> : <button style={admin.secondaryButton} disabled={Boolean(busyId)} onClick={() => handleSwitchWorkspace(workspace)}>{isBusy ? 'Working…' : 'Open workspace'}</button>}
+              {!isActive && workspace.role === 'owner' && <button style={admin.archiveButton} disabled={Boolean(busyId)} onClick={() => handleDeleteWorkspace(workspace)}>Delete</button>}</div>
+          </article>;
+        })}
+      </section>
+      <details className="admin-create"><summary>Create a workspace <small>Add a separate environment for a client or agency.</small></summary>
+        <form onSubmit={handleCreateWorkspace}>
+          <div className="admin-form-grid">
+            <label>Workspace name<input style={admin.input} required value={form.name} onChange={e => updateForm('name',e.target.value)} placeholder="Company or team name" /></label>
+            <label>Custom slug (optional)<input style={admin.input} value={form.slug} onChange={e => updateForm('slug',e.target.value)} placeholder="company-name" /></label>
+            <label>Workspace type<select style={admin.input} value={form.type} onChange={e => updateForm('type',e.target.value)}><option value="client">Client</option><option value="agency">Agency</option></select></label>
+            <label>Plan<select style={admin.input} value={form.plan} onChange={e => updateForm('plan',e.target.value)}><option value="SCALE">Atlas Core</option><option value="GROWTH">Atlas Growth</option><option value="ENTERPRISE">Atlas Enterprise</option></select></label>
+            <label>Company website<input style={admin.input} value={form.companyWebsite} onChange={e => updateForm('companyWebsite',e.target.value)} placeholder="https://example.com" /></label>
+            <label>Industry<input style={admin.input} value={form.industry} onChange={e => updateForm('industry',e.target.value)} placeholder="Industry" /></label>
           </div>
-
-          <div style={{ minWidth: 260 }}>
-            <div style={{ ...cardStyle, padding: 14 }}>
-              <div style={{ fontSize: 12, fontWeight: 900, marginBottom: 6, ...muted }}>
-                CURRENT ACTIVE WORKSPACE
-              </div>
-              <div style={{ fontSize: 18, fontWeight: 900 }}>
-                {activeWorkspace?.name || activeOrgName || "No active workspace"}
-              </div>
-              <div style={{ ...muted, marginTop: 6 }}>
-                {activeWorkspace?.slug || "Select a workspace below"}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {(error || success) && (
-        <div
-          style={{
-            ...cardStyle,
-            marginBottom: 18,
-            border: error
-              ? "1px solid rgba(239,68,68,0.35)"
-              : "1px solid rgba(34,197,94,0.35)",
-            background: error
-              ? "rgba(239,68,68,0.08)"
-              : "rgba(34,197,94,0.08)",
-          }}
-        >
-          <strong>{error ? "Error:" : "Success:"}</strong>{" "}
-          {error ? error : success}
-        </div>
-      )}
-
-      <div className="atlas-responsive-grid"
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1.15fr 1fr",
-          gap: 18,
-          alignItems: "start",
-        }}
-      >
-        <div style={cardStyle}>
-          <div
-            style={{
-              fontSize: 12,
-              letterSpacing: 1.2,
-              textTransform: "uppercase",
-              fontWeight: 900,
-              color: "rgba(255,255,255,0.62)",
-              marginBottom: 10,
-            }}
-          >
-            Create Workspace
-          </div>
-
-          <div style={{ fontSize: 28, fontWeight: 900, marginBottom: 14 }}>
-            New Workspace
-          </div>
-
-          <form onSubmit={handleCreateWorkspace}>
-            <div style={{ display: "grid", gap: 12 }}>
-              <div>
-                <div style={{ ...muted, marginBottom: 6 }}>Workspace Name</div>
-                <input
-                  style={inputStyle}
-                  value={form.name}
-                  onChange={(e) => updateForm("name", e.target.value)}
-                  placeholder="Global Emerging Market Manager (GEMM)"
-                />
-              </div>
-
-              <div>
-                <div style={{ ...muted, marginBottom: 6 }}>Custom Slug (optional)</div>
-                <input
-                  style={inputStyle}
-                  value={form.slug}
-                  onChange={(e) => updateForm("slug", e.target.value)}
-                  placeholder="gemm"
-                />
-              </div>
-
-              <div className="atlas-responsive-grid"
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: 12,
-                }}
-              >
-                <div>
-                  <div style={{ ...muted, marginBottom: 6 }}>Workspace Type</div>
-                  <select
-                    style={inputStyle}
-                    value={form.type}
-                    onChange={(e) => updateForm("type", e.target.value)}
-                  >
-                    <option value="client">client</option>
-                    <option value="agency">agency</option>
-                  </select>
-                </div>
-
-                <div>
-                  <div style={{ ...muted, marginBottom: 6 }}>Plan</div>
-                  <select
-                    style={inputStyle}
-                    value={form.plan}
-                    onChange={(e) => updateForm("plan", e.target.value)}
-                  >
-                    <option value="SCALE">SCALE</option>
-                    <option value="GROWTH">GROWTH</option>
-                    <option value="ENTERPRISE">ENTERPRISE</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <div style={{ ...muted, marginBottom: 6 }}>Company Website</div>
-                <input
-                  style={inputStyle}
-                  value={form.companyWebsite}
-                  onChange={(e) => updateForm("companyWebsite", e.target.value)}
-                  placeholder="https://example.com"
-                />
-              </div>
-
-              <div>
-                <div style={{ ...muted, marginBottom: 6 }}>Industry</div>
-                <input
-                  style={inputStyle}
-                  value={form.industry}
-                  onChange={(e) => updateForm("industry", e.target.value)}
-                  placeholder="Finance"
-                />
-              </div>
-
-              <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
-                <button type="submit" disabled={creating} style={buttonBase}>
-                  {creating ? "Creating..." : "Create Workspace"}
-                </button>
-
-                <button
-                  type="button"
-                  style={buttonBase}
-                  onClick={() =>
-                    setForm({
-                      name: "",
-                      slug: "",
-                      type: "client",
-                      plan: "ENTERPRISE",
-                      companyWebsite: "",
-                      industry: "",
-                    })
-                  }
-                >
-                  Clear
-                </button>
-              </div>
-            </div>
-          </form>
-        </div>
-
-        <div style={cardStyle}>
-          <div
-            style={{
-              fontSize: 12,
-              letterSpacing: 1.2,
-              textTransform: "uppercase",
-              fontWeight: 900,
-              color: "rgba(255,255,255,0.62)",
-              marginBottom: 10,
-            }}
-          >
-            Workspace Stats
-          </div>
-
-          <div style={{ display: "grid", gap: 12 }}>
-            <div style={cardStyle}>
-              <div style={{ ...muted, fontWeight: 800 }}>Total Workspaces</div>
-              <div style={{ fontSize: 36, fontWeight: 900 }}>{workspaces.length}</div>
-            </div>
-
-            <div style={cardStyle}>
-              <div style={{ ...muted, fontWeight: 800 }}>Owner Access</div>
-              <div style={{ fontSize: 36, fontWeight: 900 }}>
-                {workspaces.filter((ws) => ws.role === "owner").length}
-              </div>
-            </div>
-
-            <div style={cardStyle}>
-              <div style={{ ...muted, fontWeight: 800 }}>Active Workspace</div>
-              <div style={{ fontSize: 20, fontWeight: 900 }}>
-                {activeWorkspace?.name || activeOrgName || "None selected"}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div style={{ ...cardStyle, marginTop: 18 }}>
-        <div
-          style={{
-            fontSize: 12,
-            letterSpacing: 1.2,
-            textTransform: "uppercase",
-            fontWeight: 900,
-            color: "rgba(255,255,255,0.62)",
-            marginBottom: 10,
-          }}
-        >
-          Workspace Directory
-        </div>
-
-        <div style={{ fontSize: 28, fontWeight: 900, marginBottom: 14 }}>
-          All Workspaces
-        </div>
-
-        {loading ? (
-          <div style={muted}>Loading workspaces...</div>
-        ) : workspaces.length === 0 ? (
-          <div style={muted}>No workspaces found.</div>
-        ) : (
-          <div style={{ display: "grid", gap: 14 }}>
-            {workspaces.map((workspace) => {
-              const isActive = String(workspace._id) === String(activeOrgId);
-              const isBusy = busyId === workspace._id;
-
-              return (
-                <div key={workspace._id} style={cardStyle}>
-                  <div className="atlas-responsive-row"
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      gap: 14,
-                      flexWrap: "wrap",
-                      alignItems: "flex-start",
-                    }}
-                  >
-                    <div>
-                      <div style={{ fontSize: 24, fontWeight: 900 }}>
-                        {workspace.name}
-                      </div>
-
-                      <div style={{ ...muted, marginTop: 8 }}>
-                        Slug: {workspace.slug}
-                      </div>
-
-                      <div style={{ ...muted, marginTop: 4 }}>
-                        Plan: {workspace.plan} • Type: {workspace.type} • Role:{" "}
-                        {workspace.role || "member"}
-                      </div>
-                    </div>
-
-                    <div className="atlas-responsive-row" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      {isActive ? (
-                        <Badge active>Active Workspace</Badge>
-                      ) : (
-                        <Badge>Available Workspace</Badge>
-                      )}
-
-                      {workspace.role === "owner" && <Badge>Owner</Badge>}
-                    </div>
-                  </div>
-
-                  <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
-                    {!isActive ? (
-                      <button
-                        style={buttonBase}
-                        disabled={isBusy}
-                        onClick={() => handleSwitchWorkspace(workspace)}
-                      >
-                        {isBusy ? "Switching..." : "Switch Workspace"}
-                      </button>
-                    ) : (
-                      <button style={{ ...buttonBase, opacity: 0.6 }} disabled>
-                        Active
-                      </button>
-                    )}
-
-                    {!isActive && workspace.role === "owner" ? (
-                      <button
-                        style={{
-                          ...buttonBase,
-                          border: "1px solid rgba(239,68,68,0.35)",
-                          background: "rgba(239,68,68,0.10)",
-                        }}
-                        disabled={isBusy}
-                        onClick={() => handleDeleteWorkspace(workspace)}
-                      >
-                        {isBusy ? "Deleting..." : "Delete"}
-                      </button>
-                    ) : null}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+          <div className="admin-form-footer"><button type="submit" style={admin.primaryButton} disabled={creating}>{creating ? 'Creating…' : 'Create workspace'}</button><button type="button" style={admin.secondaryButton} disabled={creating} onClick={() => setForm({name: '', slug: '', type: 'client', plan: 'ENTERPRISE', companyWebsite: '', industry: ''})}>Clear</button><p>Creating a workspace switches your active workspace.</p></div>
+        </form>
+      </details>
     </div>
-  );
+  </main>;
 }
