@@ -1,3 +1,4 @@
+import { workspaceStyles } from '../components/workspace/workspaceStyles';
 import WorkspaceDataNotice from "../components/WorkspaceDataNotice.jsx";
 import React, { useEffect, useMemo, useState } from "react";
 import RecommendedActions from "../components/atlas/RecommendedActions";
@@ -370,9 +371,9 @@ export default function GrowthEngine() {
 
   if (loading) {
     return (
-      <div className="atlas-responsive-page" style={styles.page}>
+      <div className="atlas-responsive-page atlas-workspace" style={styles.page}>
         <div style={styles.wrap}>
-          <div className="atlas-responsive-card" style={styles.hero}>
+          <div className="workspace-header" style={styles.hero}>
             <div className="atlas-responsive-title" style={styles.h1}>Loading Growth Engine...</div>
           </div>
         </div>
@@ -382,9 +383,9 @@ export default function GrowthEngine() {
 
   if (error) {
     return (
-      <div className="atlas-responsive-page" style={styles.page}>
+      <div className="atlas-responsive-page atlas-workspace" style={styles.page}>
         <div style={styles.wrap}>
-          <div className="atlas-responsive-card" style={styles.errorBox}>{error}</div>
+          <div className="atlas-responsive-card" role="alert" style={styles.errorBox}>{error}</div>
         </div>
       </div>
     );
@@ -393,10 +394,10 @@ export default function GrowthEngine() {
   const showEmptyCharts = !trendData.length && !pipelineValue && !revenue;
 
   return (
-    <div className="atlas-responsive-page" style={styles.page}>
+    <div className="atlas-responsive-page atlas-workspace" style={styles.page}>
       <WorkspaceDataNotice dashboard={dashboard} />
       <div style={styles.wrap}>
-        <div className="atlas-responsive-card" style={styles.hero}>
+        <div className="workspace-header" style={styles.hero}>
           <div className="atlas-responsive-grid" style={styles.heroTop}>
             <div>
               <div style={styles.eyebrow}>Growth Performance</div>
@@ -415,7 +416,7 @@ export default function GrowthEngine() {
                 revenue > 0 ? "Revenue Detected" : "Revenue Waiting",
                 "AI Monitoring",
               ].map((item) => (
-                <div className="atlas-responsive-card" key={item} style={styles.badge}>
+                <div className="workspace-badge" key={item} style={styles.badge}>
                   {item}
                 </div>
               ))}
@@ -423,7 +424,7 @@ export default function GrowthEngine() {
           </div>
         </div>
 
-        <div className="atlas-responsive-metrics" style={styles.statsGrid}>
+        <div className="atlas-responsive-metrics workspace-metrics" style={styles.statsGrid}>
           {summaryStats.map((item) => (
             <SmallStat
               key={item.label}
@@ -675,7 +676,7 @@ export default function GrowthEngine() {
   );
 }
 
-const styles = {
+const originalWorkspaceStyles = {
   page: {
     minHeight: "100vh",
     color: "#fff",
@@ -943,3 +944,5 @@ const styles = {
     fontSize: 14,
   },
 };
+
+const styles = workspaceStyles(originalWorkspaceStyles);

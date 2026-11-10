@@ -1,3 +1,4 @@
+import { workspaceStyles } from '../components/workspace/workspaceStyles';
 import GraphIQResearch from "../components/GraphIQResearch.jsx";
 // frontend/src/pages/Metrics.jsx
 import React, { useEffect, useMemo, useState } from "react";
@@ -427,9 +428,9 @@ export default function Metrics() {
 
   if (loading && !summary && !series.length) {
     return (
-      <div className="atlas-responsive-page" style={S.page}>
+      <div className="atlas-responsive-page atlas-workspace" style={S.page}>
         <div style={S.wrap}>
-          <div className="atlas-responsive-card" style={S.hero}>
+          <div className="workspace-header" style={S.hero}>
             <div style={S.eyebrow}>External Market Intelligence</div>
             <h1 className="atlas-responsive-title" style={S.h1}>Market Signals</h1>
             <div style={S.heroText}>Loading market intelligence…</div>
@@ -440,9 +441,9 @@ export default function Metrics() {
   }
 
   return (
-    <div className="atlas-responsive-page" style={S.page}>
+    <div className="atlas-responsive-page atlas-workspace" style={S.page}>
       <div style={S.wrap}>
-        <div className="atlas-responsive-card" style={S.hero}>
+        <div className="workspace-header" style={S.hero}>
           <div className="atlas-responsive-row" style={S.heroTop}>
             <div>
               <div style={S.eyebrow}>External Market Intelligence</div>
@@ -455,9 +456,9 @@ export default function Metrics() {
             </div>
 
             <div className="atlas-responsive-row" style={S.controlsWrap}>
-              <div className="atlas-responsive-card" style={S.badge}>Powered by GraphIQ</div>
-              <div className="atlas-responsive-card" style={S.badge}>{isDemo ? "Demo scenario · sample internal data" : "Workspace Signals"}</div>
-              <div className="atlas-responsive-card" style={S.badge}>
+              <div className="workspace-badge" style={S.badge}>Powered by GraphIQ</div>
+              <div className="workspace-badge" style={S.badge}>{isDemo ? "Demo scenario · sample internal data" : "Workspace Signals"}</div>
+              <div className="workspace-badge" style={S.badge}>
                 {signalStrength >= 60
                   ? "Signal Strength Elevated"
                   : "Signal Flow Stable"}
@@ -465,7 +466,7 @@ export default function Metrics() {
 
               <div style={{ width: "100%" }} />
 
-              <div className="atlas-responsive-card" style={S.pill}>Window</div>
+              <div className="workspace-badge" style={S.pill}>Window</div>
 
               <select
                 style={S.select}
@@ -504,7 +505,7 @@ export default function Metrics() {
             ) : null
           }
         >
-          <form className="atlas-responsive-grid" onSubmit={handleMarketSearch} style={S.searchForm}>
+          <form className="atlas-responsive-grid workspace-search-form" onSubmit={handleMarketSearch} style={S.searchForm}>
             <input
               value={marketQuery}
               onChange={(event) => setMarketQuery(event.target.value)}
@@ -606,7 +607,7 @@ export default function Metrics() {
           ) : null}
         </Section>
 
-        <div className="atlas-responsive-metrics" style={S.statsGrid}>
+        <div className="atlas-responsive-metrics workspace-metrics" style={S.statsGrid}>
           <StatCard
             label="Companies Discovered"
             value={marketTotal || organizations.length}
@@ -785,7 +786,7 @@ export default function Metrics() {
   );
 }
 
-const S = {
+const originalWorkspaceStyles = {
   page: {
     minHeight: "100vh",
     color: "#EAF0FF",
@@ -1161,3 +1162,5 @@ const S = {
     fontSize: 11,
   },
 };
+
+const S = workspaceStyles(originalWorkspaceStyles);

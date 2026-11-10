@@ -1,3 +1,4 @@
+import { workspaceStyles } from '../components/workspace/workspaceStyles';
 import GraphIQResearch from "../components/GraphIQResearch.jsx";
 import { Link } from "react-router-dom";
 import WorkspaceDataNotice from "../components/WorkspaceDataNotice.jsx";
@@ -503,9 +504,9 @@ async function handleGraphIQSearch(event) {
 
   if (loading) {
     return (
-      <div className="atlas-responsive-page" style={styles.page}>
+      <div className="atlas-responsive-page atlas-workspace" style={styles.page}>
         <div style={styles.wrap}>
-          <div className="atlas-responsive-card" style={styles.hero}>
+          <div className="workspace-header" style={styles.hero}>
             <h1 className="atlas-responsive-title" style={styles.h1}>Loading Account Intelligence...</h1>
           </div>
         </div>
@@ -515,19 +516,19 @@ async function handleGraphIQSearch(event) {
 
   if (error) {
     return (
-      <div className="atlas-responsive-page" style={styles.page}>
+      <div className="atlas-responsive-page atlas-workspace" style={styles.page}>
         <div style={styles.wrap}>
-          <div className="atlas-responsive-card" style={styles.errorBox}>{error}</div>
+          <div className="atlas-responsive-card" role="alert" style={styles.errorBox}>{error}</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="atlas-responsive-page" style={styles.page}>
+    <div className="atlas-responsive-page atlas-workspace" style={styles.page}>
       <WorkspaceDataNotice dashboard={dashboard} />
       <div style={styles.wrap}>
-        <div className="atlas-responsive-card" style={styles.hero}>
+        <div className="workspace-header" style={styles.hero}>
           <div style={styles.eyebrow}>Prioritize the Right Accounts</div>
           <h1 className="atlas-responsive-title" style={styles.h1}>Account Intelligence</h1>
           <div style={styles.heroText}>
@@ -543,7 +544,7 @@ async function handleGraphIQSearch(event) {
               hasLiveAccountData ? "Expansion Signals Synced" : "Signals Pending",
               "Atlas AI Monitoring",
             ].map((item) => (
-              <div className="atlas-responsive-card" key={item} style={styles.badge}>
+              <div className="workspace-badge" key={item} style={styles.badge}>
                 {item}
               </div>
             ))}
@@ -669,7 +670,7 @@ async function handleGraphIQSearch(event) {
   ) : null}
 </Section>
 
-        <div className="atlas-responsive-metrics" style={styles.statsGrid}>
+        <div className="atlas-responsive-metrics workspace-metrics" style={styles.statsGrid}>
           {topStats.map((item) => (
             <SmallStat
               key={item.label}
@@ -887,7 +888,7 @@ async function handleGraphIQSearch(event) {
     </div>
   );
 }
-const styles = {
+const originalWorkspaceStyles = {
   page: {
     minHeight: "100vh",
     color: "#fff",
@@ -1272,3 +1273,5 @@ graphiqTags: {
     fontSize: 11,
   },
 };
+
+const styles = workspaceStyles(originalWorkspaceStyles);
