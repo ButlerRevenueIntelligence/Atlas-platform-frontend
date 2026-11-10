@@ -1,3 +1,4 @@
+import { workspaceStyles } from '../components/workspace/workspaceStyles';
 import WorkspaceDataNotice from "../components/WorkspaceDataNotice.jsx";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -578,14 +579,14 @@ export default function BoardMode() {
       `}</style>
 
       <div
-        className="board-print-root"
+        className="board-print-root atlas-workspace"
         style={{
           ...styles.page,
           ...(presenting ? styles.presentationPage : {}),
         }}
       >
         <div style={styles.container}>
-          <header className="board-header atlas-responsive-card atlas-responsive-row" style={styles.header}>
+          <header className="board-header workspace-header atlas-responsive-row" style={styles.header}>
             <div>
               <div style={styles.eyebrow}>
                 Atlas Executive Intelligence
@@ -656,7 +657,7 @@ export default function BoardMode() {
             </div>
           </header>
 
-          <section className="board-stat-grid atlas-responsive-metrics" style={styles.statGrid}>
+          <section className="board-stat-grid atlas-responsive-metrics workspace-metrics" style={styles.statGrid}>
             <StatCard
               label="Revenue Health"
               value={`${Math.round(boardData.revenueScore)} / 100`}
@@ -849,7 +850,7 @@ function ActionItem({ action }) {
 
 function PageMessage({ message, error, onRetry }) {
   return (
-    <div className="atlas-responsive-page" style={styles.page}>
+    <div className="atlas-responsive-page atlas-workspace" style={styles.page}>
       <div className="atlas-responsive-card" style={styles.messageCard}>
         <div
           style={{
@@ -878,7 +879,7 @@ function PageMessage({ message, error, onRetry }) {
   );
 }
 
-const styles = {
+const originalWorkspaceStyles = {
   page: {
     minHeight: "100vh",
     padding: "14px 16px 24px",
@@ -1204,3 +1205,5 @@ const styles = {
     textAlign: "center",
   },
 };
+
+const styles = workspaceStyles(originalWorkspaceStyles);

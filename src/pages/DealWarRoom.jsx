@@ -1,3 +1,4 @@
+import { workspaceStyles } from '../components/workspace/workspaceStyles';
 import { Link } from "react-router-dom";
 // frontend/src/pages/DealWarRoom.jsx
 import React, { useEffect, useMemo, useState } from "react";
@@ -27,7 +28,7 @@ const tooltipStyle = {
   boxShadow: "0 14px 40px rgba(0,0,0,0.35)",
 };
 
-const styles = {
+const originalWorkspaceStyles = {
   page: {
     minHeight: "100vh",
     color: "#fff",
@@ -687,9 +688,9 @@ const isDemo = workspaceMode === "demo";
 
   if (loading) {
     return (
-      <div className="atlas-responsive-page" style={styles.page}>
+      <div className="atlas-responsive-page atlas-workspace" style={styles.page}>
         <div style={styles.wrap}>
-          <div className="atlas-responsive-card" style={styles.hero}>
+          <div className="workspace-header" style={styles.hero}>
             <h1 className="atlas-responsive-title" style={styles.h1}>Loading Deal War Room...</h1>
           </div>
         </div>
@@ -699,9 +700,9 @@ const isDemo = workspaceMode === "demo";
 
   if (error) {
     return (
-      <div className="atlas-responsive-page" style={styles.page}>
+      <div className="atlas-responsive-page atlas-workspace" style={styles.page}>
         <div style={styles.wrap}>
-          <div className="atlas-responsive-card" style={styles.errorBox}>{error}</div>
+          <div className="atlas-responsive-card" role="alert" style={styles.errorBox}>{error}</div>
         </div>
       </div>
     );
@@ -710,9 +711,9 @@ const isDemo = workspaceMode === "demo";
   const noLiveDeals = !isDemo && !openDeals.length;
 
   return (
-    <div className="atlas-responsive-page" style={styles.page}>
+    <div className="atlas-responsive-page atlas-workspace" style={styles.page}>
       <div style={styles.wrap}>
-        <div className="atlas-responsive-card" style={styles.hero}>
+        <div className="workspace-header" style={styles.hero}>
           <div className="atlas-responsive-grid" style={styles.heroTop}>
             <div>
               <div style={styles.eyebrow}>Executive Command Center</div>
@@ -733,7 +734,7 @@ const isDemo = workspaceMode === "demo";
                 isDemo ? "Deal priorities" : "Deal Pressure Live",
                 "Executive Review Active",
               ].map((item) => (
-                <div className="atlas-responsive-card" key={item} style={styles.badge}>
+                <div className="workspace-badge" key={item} style={styles.badge}>
                   {item}
                 </div>
               ))}
@@ -741,7 +742,7 @@ const isDemo = workspaceMode === "demo";
           </div>
         </div>
 
-        <div className="atlas-responsive-metrics" style={styles.statsGrid}>
+        <div className="atlas-responsive-metrics workspace-metrics" style={styles.statsGrid}>
           {topStats.map((item) => (
             <SmallStat
               key={item.label}
@@ -974,3 +975,5 @@ const isDemo = workspaceMode === "demo";
     </div>
   );
 }
+
+const styles = workspaceStyles(originalWorkspaceStyles);

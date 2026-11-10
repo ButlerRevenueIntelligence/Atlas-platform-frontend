@@ -1,3 +1,4 @@
+import { workspaceStyles } from '../components/workspace/workspaceStyles';
 // frontend/src/pages/Clients.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -279,9 +280,9 @@ export default function Clients() {
         }
       `}</style>
 
-      <div className="atlas-responsive-page" style={styles.page}>
+      <div className="atlas-responsive-page atlas-workspace" style={styles.page}>
         <div style={styles.container}>
-          <header className="atlas-responsive-card atlas-responsive-row" style={styles.header}>
+          <header className="workspace-header atlas-responsive-row" style={styles.header}>
             <div>
               <div style={styles.eyebrow}>
                 Customer portfolio
@@ -331,7 +332,7 @@ export default function Clients() {
             <div className="atlas-responsive-card" style={styles.success}>{success}</div>
           ) : null}
 
-          <section className="atlas-responsive-metrics" style={styles.statsGrid}>
+          <section className="atlas-responsive-metrics workspace-metrics" style={styles.statsGrid}>
             <MetricCard
               label="Total Accounts"
               value={stats.total}
@@ -374,7 +375,7 @@ export default function Clients() {
                 style={styles.filters}
               >
                 <input
-                  value={query}
+                  aria-label="Search customer accounts" value={query}
                   onChange={(event) =>
                     setQuery(event.target.value)
                   }
@@ -383,7 +384,7 @@ export default function Clients() {
                 />
 
                 <select
-                  value={statusFilter}
+                  aria-label="Filter by status" value={statusFilter}
                   onChange={(event) =>
                     setStatusFilter(
                       event.target.value
@@ -406,7 +407,7 @@ export default function Clients() {
                 </select>
 
                 <select
-                  value={industryFilter}
+                  aria-label="Filter accounts by industry" value={industryFilter}
                   onChange={(event) =>
                     setIndustryFilter(
                       event.target.value
@@ -543,7 +544,7 @@ function AccountRow({
 
   return (
     <article
-      className="account-row atlas-responsive-grid atlas-responsive-card"
+      className="account-row workspace-directory-row"
       style={styles.accountRow}
     >
       <div style={styles.identity}>
@@ -960,7 +961,7 @@ function formatDate(value) {
   });
 }
 
-const styles = {
+const originalWorkspaceStyles = {
   page: {
     minHeight: "100vh",
     padding: "18px 16px 36px",
@@ -1428,3 +1429,5 @@ const styles = {
     background: "#0a0f1e",
   },
 };
+
+const styles = workspaceStyles(originalWorkspaceStyles);

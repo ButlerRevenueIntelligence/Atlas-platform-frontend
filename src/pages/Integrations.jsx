@@ -1,3 +1,4 @@
+import { workspace } from '../components/workspace/workspaceStyles';
 import { useDataAccessReview } from "../components/dataAccess/DataAccessReview";
 import {Link,useLocation} from "react-router-dom";
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -116,6 +117,8 @@ function getActiveOrgId() {
 }
 
 export default function Integrations() {
+  const [connectorQuery, setConnectorQuery] = useState("");
+  const [connectorCategory, setConnectorCategory] = useState("all");
   const location=useLocation();
   const dataAccess = useDataAccessReview(getActiveOrgId);
   const [integrations, setIntegrations] = useState({});
@@ -708,24 +711,19 @@ export default function Integrations() {
     }
   }
 
+  const visibleConnectors = connectorCatalog.filter(connector =>
+    (connectorCategory === 'all' || connector.category === connectorCategory) &&
+    `${connector.name} ${connector.category}`.toLowerCase().includes(connectorQuery.trim().toLowerCase())
+  );
+
   const connectedCount = useMemo(() => {
     return Object.values(integrations).filter((i) => i?.status === "connected").length;
   }, [integrations]);
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        padding: "14px 16px 24px",
-        color: "#EAF0FF",
-        background:
-          "radial-gradient(900px 500px at 15% 0%, rgba(37,99,235,0.18), transparent 55%), radial-gradient(900px 500px at 85% 0%, rgba(124,92,255,0.14), transparent 55%), linear-gradient(180deg, #050814 0%, #070b18 100%)",
-      }}
-    >
-      <div style={{display:"flex",justifyContent:"flex-end",marginBottom:12,fontSize:13}}><Link to="/setup" style={{color:"#a2e4ed",padding:"10px 0"}}>Continue workspace setup →</Link></div>
+    <main className="atlas-workspace atlas-connectors atlas-responsive-page" style={workspace.page}>
       {dataAccess.modal}
-      {dataAccess.error && <p role="alert" style={{color:"#ffb9bb"}}>{dataAccess.error}</p>}
-      <p><Link to="/data-privacy" style={{color:"#a2e4ed"}}>Data &amp; Privacy: review access, agreements, and receipts</Link></p>
+      {dataAccess.error && <p role="alert" style={{color:'#ffb9bb'}}>{dataAccess.error}</p>}
       <input
         ref={fileInputRef}
         type="file"
@@ -733,118 +731,22 @@ export default function Integrations() {
         onChange={handleSpreadsheetUpload}
         style={{ display: "none" }}
       />
-
-      <div className="atlas-responsive-card"
-        style={{
-          maxWidth: 1380,
-          margin: "0 auto 12px",
-          padding: "18px 20px",
-          border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: 20,
-          background:
-            "linear-gradient(135deg, rgba(30,64,175,0.18), rgba(37,99,235,0.10), rgba(255,255,255,0.02))",
-          boxShadow: "0 12px 30px rgba(0,0,0,0.18)",
-        }}
-      >
-        <div
-          style={{
-            fontSize: 10,
-            fontWeight: 800,
-            letterSpacing: "0.18em",
-            textTransform: "uppercase",
-            color: "rgba(191,219,254,0.82)",
-            marginBottom: 6,
-          }}
-        >
-          Data Infrastructure
+      <header className="workspace-header" style={{...workspace.header, marginBottom:0}}>
+        <div><div style={workspace.eyebrow}>Workspace data</div>
+          <h1 style={workspace.title}>Data Connectors</h1>
+          <p style={workspace.subtitle}>Connect your business systems and manage the data Atlas uses.</p></div>
+        <button type="button" style={workspace.secondaryButton} onClick={load} disabled={loading || !!busyId || uploading}>{loading ? 'Refreshing…' : 'Refresh connections'}</button>
+      </header>
+      <div className="connectors-context"><span>Workspace <strong>{activeOrgName || 'Unknown'}</strong></span><span style={workspace.badge}>{workspaceModeLabel}</span><span style={workspace.badge}>{inventoryReady ? `${connectedCount} connected` : 'Checking connections…'}</span></div>
+      <div className="connectors-toolbar">
+        <div className="connectors-filters">
+          <input aria-label="Search data connectors" style={{...workspace.searchInput,width:260}} placeholder="Search connectors…" value={connectorQuery} onChange={e => setConnectorQuery(e.target.value)} />
+          <select aria-label="Filter connectors by category" style={workspace.select} value={connectorCategory} onChange={e => setConnectorCategory(e.target.value)}><option value="all">All categories</option>{[...new Set(connectorCatalog.map(c => c.category))].map(category => <option key={category} value={category}>{category}</option>)}</select>
         </div>
-
-        <h1 style={{ fontSize: 28, lineHeight: 1.05, letterSpacing: -0.6, fontWeight: 900, margin: 0 }}>
-          Atlas Data Connectors
-        </h1>
-
-        <div
-          style={{
-            fontSize: 14,
-            color: "rgba(226,232,240,0.7)",
-            marginTop: 8,
-            lineHeight: 1.55,
-            maxWidth: 900,
-          }}
-        >
-          Connect your revenue stack so Atlas can model pipeline, forecast revenue,
-          and detect growth signals across your workspace.
-        </div>
-
-        <div className="atlas-responsive-row"
-          style={{
-            marginTop: 12,
-            display: "flex",
-            gap: 10,
-            flexWrap: "wrap",
-          }}
-        >
-          <div className="atlas-responsive-card"
-            style={{
-              padding: "6px 10px",
-              borderRadius: 999,
-              border: "1px solid rgba(255,255,255,0.08)",
-              background: "rgba(255,255,255,0.05)",
-              fontSize: 11,
-              fontWeight: 700,
-            }}
-          >
-            Active Workspace: {activeOrgName || "Unknown"}
-          </div>
-
-          <div className="atlas-responsive-card"
-            style={{
-              padding: "6px 10px",
-              borderRadius: 999,
-              border: "1px solid rgba(255,255,255,0.08)",
-              background: "rgba(255,255,255,0.05)",
-              fontSize: 11,
-              fontWeight: 700,
-              textTransform: "capitalize",
-            }}
-          >
-            Workspace Mode: {workspaceModeLabel}
-          </div>
-
-          <div className="atlas-responsive-card"
-            style={{
-              padding: "6px 10px",
-              borderRadius: 999,
-              border: "1px solid rgba(255,255,255,0.08)",
-              background: "rgba(255,255,255,0.05)",
-              fontSize: 11,
-              fontWeight: 700,
-            }}
-          >
-            {inventoryReady ? `Connected: ${connectedCount}` : "Connections: Checking..."}
-          </div>
-
-          <button
-            onClick={load}
-            disabled={loading || !!busyId || uploading}
-            style={{
-              padding: "8px 12px",
-              borderRadius: 10,
-              border: "1px solid rgba(255,255,255,0.08)",
-              background: "rgba(255,255,255,0.05)",
-              color: "#fff",
-              fontWeight: 700,
-              fontSize: 12,
-              cursor: loading || !!busyId || uploading ? "not-allowed" : "pointer",
-              opacity: loading || !!busyId || uploading ? 0.7 : 1,
-            }}
-          >
-            {loading ? "Loading..." : "Refresh"}
-          </button>
-        </div>
+        <div className="connectors-links"><Link to="/data-privacy">Data &amp; Privacy</Link><Link to="/setup">Continue workspace setup →</Link></div>
       </div>
-
-      <div style={{ maxWidth: 1380, margin: "0 auto" }}>
+      {inventoryReady && !visibleConnectors.length && <div role="status" style={{...workspace.panel,padding:28,marginBottom:20,color:'#9eb1cb'}}>No connectors match your search or category.</div>}
+      <div>
       {error ? (
         <div className="atlas-responsive-card"
           style={{
@@ -890,7 +792,7 @@ export default function Integrations() {
           gap: 12,
         }}
       >
-        {connectorCatalog.map((c) => {
+        {visibleConnectors.map((c) => {
           const live = integrations[c.id];
           const status = live?.status || "disconnected";
           const color = statusColor[status] || "#64748b";
@@ -943,7 +845,7 @@ export default function Integrations() {
           const syncStatus = live?.lastSyncStatus || "unknown";
 
           return (
-            <div className="atlas-responsive-card"
+            <div className="workspace-connector"
               key={c.id}
               id={`connector-${c.id}`}
               style={{
@@ -954,7 +856,7 @@ export default function Integrations() {
                 boxShadow: "0 10px 24px rgba(0,0,0,0.14)",
               }}
             >
-              <div style={{ fontSize: 17, fontWeight: 800 }}>{c.name}</div>
+              <div className="connector-title"><span className="connector-mark" aria-hidden="true">{c.name.split(/\s+/).slice(0,2).map(word => word[0]).join("")}</span><span>{c.name}</span></div>
 
               <div
                 style={{
@@ -1071,14 +973,14 @@ export default function Integrations() {
                 >
                   {syncStatus === "success" ? (
                     <span style={{ color: "#22c55e" }}>
-                      {isSlack ? "✅ Alert delivered successfully" : "✅ Data synced successfully"}
+                      {isSlack ? "Alert delivered successfully" : "Data synced successfully"}
                     </span>
                   ) : null}
                   {syncStatus === "error" || syncStatus === "failed" ? (
-                    <span style={{ color: "#fb7185" }}>❌ Sync failed</span>
+                    <span style={{ color: "#fb7185" }}>Sync failed</span>
                   ) : null}
                   {["syncing", "running"].includes(syncStatus) ? (
-                    <span style={{ color: "#facc15" }}>🔄 Syncing...</span>
+                    <span style={{ color: "#facc15" }}>Syncing...</span>
                   ) : null}
                   {syncStatus === "never" ? (
                     <span style={{ color: "rgba(226,232,240,0.6)" }}>
@@ -1568,6 +1470,6 @@ export default function Integrations() {
         })}
       </div> : !loading ? <p role="status">Connection status could not be checked. Click Refresh to retry.</p> : null}
       </div>
-    </div>
+    </main>
   );
 }

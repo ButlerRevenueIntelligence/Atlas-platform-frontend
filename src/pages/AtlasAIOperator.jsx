@@ -1,3 +1,4 @@
+import { workspaceStyles } from '../components/workspace/workspaceStyles';
 import GraphIQResearch from "../components/GraphIQResearch.jsx";
 import { Link } from "react-router-dom";
 import WorkspaceDataNotice from "../components/WorkspaceDataNotice.jsx";
@@ -52,7 +53,7 @@ const moneyCompact = (num) => {
   return `$${n}`;
 };
 
-const styles = {
+const originalWorkspaceStyles = {
   page: {
     minHeight: "100vh",
     color: "#EAF0FF",
@@ -1333,9 +1334,9 @@ export default function AtlasAIOperator() {
 
   if (loading) {
     return (
-      <div className="atlas-responsive-page" style={styles.page}>
+      <div className="atlas-responsive-page atlas-workspace" style={styles.page}>
         <div style={styles.wrap}>
-          <div className="atlas-responsive-card" style={styles.hero}>
+          <div className="workspace-header" style={styles.hero}>
             <h1 className="atlas-responsive-title" style={styles.h1}>Loading Atlas AI Operator...</h1>
           </div>
         </div>
@@ -1345,19 +1346,19 @@ export default function AtlasAIOperator() {
 
   if (loadError) {
     return (
-      <div className="atlas-responsive-page" style={styles.page}>
+      <div className="atlas-responsive-page atlas-workspace" style={styles.page}>
         <div style={styles.wrap}>
-          <div className="atlas-responsive-card" style={styles.errorBox}>{loadError}</div>
+          <div className="atlas-responsive-card" role="alert" style={styles.errorBox}>{loadError}</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="atlas-responsive-page" style={styles.page}>
+    <div className="atlas-responsive-page atlas-workspace" style={styles.page}>
       <WorkspaceDataNotice dashboard={dashboard} />
       <div style={styles.wrap}>
-        <div className="atlas-responsive-card" style={styles.hero}>
+        <div className="workspace-header" style={styles.hero}>
           <div className="atlas-responsive-row" style={styles.heroTop}>
             <div>
               <div style={styles.eyebrow}>Revenue Intelligence Copilot</div>
@@ -1377,7 +1378,7 @@ export default function AtlasAIOperator() {
                 "External Intelligence Active",
                 "Atlas AI Active",
               ].map((item) => (
-                <div className="atlas-responsive-card" key={item} style={styles.badge}>
+                <div className="workspace-badge" key={item} style={styles.badge}>
                   {item}
                 </div>
               ))}
@@ -1385,7 +1386,7 @@ export default function AtlasAIOperator() {
           </div>
         </div>
 
-        <div className="atlas-responsive-metrics" style={styles.statsGrid}>
+        <div className="atlas-responsive-metrics workspace-metrics" style={styles.statsGrid}>
           {summaryStats.map((item) => (
             <SmallStat
               key={item.label}
@@ -1714,3 +1715,5 @@ export default function AtlasAIOperator() {
     </div>
   );
 }
+
+const styles = workspaceStyles(originalWorkspaceStyles);
