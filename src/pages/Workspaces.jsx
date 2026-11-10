@@ -1,3 +1,6 @@
+import AdminNav from '../components/admin/AdminNav';
+import { adminStyles, admin } from '../components/admin/adminStyles';
+import useAdminDialog from '../components/admin/useAdminDialog';
 // frontend/src/pages/Workspaces.jsx
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -247,7 +250,7 @@ function StatCard({ label, value, description, accent }) {
     <div
       style={{
         ...styles.statCard,
-        borderColor: accent,
+
       }}
     >
       <div style={styles.statLabel}>{label}</div>
@@ -386,6 +389,7 @@ function CreateWorkspaceModal({
   onClose,
   onSubmit,
 }) {
+  const dialogRef = useAdminDialog(onClose, true, creating);
   return (
     <div className="atlas-responsive-row"
       style={styles.modalBackdrop}
@@ -393,7 +397,7 @@ function CreateWorkspaceModal({
       role="presentation"
     >
       <div
-        style={styles.modal}
+        ref={dialogRef} tabIndex={-1} style={styles.modal}
         onMouseDown={(event) => event.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -790,7 +794,7 @@ export default function Workspaces() {
   }
 
   return (
-    <div className="atlas-responsive-page" style={styles.page}>
+    <div className="atlas-responsive-page atlas-admin" style={styles.page}>
       <style>{`
         .global-hq-stats {
           display: grid;
@@ -838,7 +842,7 @@ export default function Workspaces() {
       `}</style>
 
       <div style={styles.container}>
-        <section className="atlas-responsive-card" style={styles.hero}>
+        <section className="admin-header" style={styles.hero}>
           <div className="atlas-responsive-row" style={styles.heroContent}>
             <div>
               <div style={styles.eyebrow}>
@@ -881,12 +885,13 @@ export default function Workspaces() {
             </div>
           </div>
         </section>
+        <AdminNav />
 
         {error ? (
-          <div className="atlas-responsive-card" style={styles.errorBanner}>{error}</div>
+          <div className="atlas-responsive-card" role="alert" style={styles.errorBanner}>{error}</div>
         ) : null}
 
-        <div className="global-hq-stats">
+        <div className="atlas-responsive-metrics admin-metrics" style={admin.statsGrid}>
           <StatCard
             label="Workspaces"
             value={stats.total}
@@ -920,78 +925,7 @@ export default function Workspaces() {
           />
         </div>
 
-        {activeWorkspace ? (
-          <section className="atlas-responsive-card" style={styles.currentSection}>
-            <div className="atlas-responsive-row" style={styles.currentHeader}>
-              <div>
-                <div style={styles.eyebrow}>
-                  Current Workspace
-                </div>
-
-                <div style={styles.currentName}>
-                  {activeWorkspace.orgName ||
-                    activeOrgName ||
-                    "Workspace"}
-                </div>
-
-                <div style={styles.currentDescription}>
-                  Atlas is currently showing data and insights
-                  for this workspace.
-                </div>
-              </div>
-
-              <div className="atlas-responsive-row" style={styles.pillRow}>
-                <Pill style={styles.activePill}>Active</Pill>
-
-                <Pill
-                  style={roleStyle(activeWorkspace.role)}
-                >
-                  {titleCase(activeWorkspace.role)}
-                </Pill>
-
-                <Pill
-                  style={
-                    getWorkspaceState(activeWorkspace).style
-                  }
-                >
-                  {
-                    getWorkspaceState(activeWorkspace)
-                      .label
-                  }
-                </Pill>
-              </div>
-            </div>
-
-            <div className="global-hq-details">
-              <div className="atlas-responsive-card" style={styles.currentDetail}>
-                <div style={styles.detailLabel}>
-                  Workspace Type
-                </div>
-                <div style={styles.currentDetailValue}>
-                  {titleCase(activeWorkspace.type)}
-                </div>
-              </div>
-
-              <div className="atlas-responsive-card" style={styles.currentDetail}>
-                <div style={styles.detailLabel}>
-                  Current Plan
-                </div>
-                <div style={styles.currentDetailValue}>
-                  {titleCase(activeWorkspace.plan)}
-                </div>
-              </div>
-
-              <div className="atlas-responsive-card" style={styles.currentDetail}>
-                <div style={styles.detailLabel}>
-                  Your Access
-                </div>
-                <div style={styles.currentDetailValue}>
-                  {titleCase(activeWorkspace.role)}
-                </div>
-              </div>
-            </div>
-          </section>
-        ) : null}
+        <div className="admin-context"><span className="admin-status">Current workspace</span><strong>{activeWorkspace?.orgName || activeOrgName || 'None selected'}</strong></div>
 
         <section style={styles.directory}>
           <div className="atlas-responsive-row" style={styles.directoryHeader}>
@@ -1011,7 +945,7 @@ export default function Workspaces() {
             <div className="atlas-responsive-row" style={styles.filters}>
               <input
                 className="global-hq-input"
-                value={search}
+                aria-label="Search workspaces" value={search}
                 onChange={(event) =>
                   setSearch(event.target.value)
                 }
@@ -1021,7 +955,7 @@ export default function Workspaces() {
 
               <select
                 className="global-hq-input"
-                value={stateFilter}
+                aria-label="Filter workspaces by status" value={stateFilter}
                 onChange={(event) =>
                   setStateFilter(event.target.value)
                 }
@@ -1094,7 +1028,7 @@ const basePill = {
   whiteSpace: "nowrap",
 };
 
-const styles = {
+const originalStyles = {
   page: {
     minHeight: "100vh",
     padding: "28px 16px 42px",
@@ -1623,4 +1557,22 @@ const styles = {
     gap: 10,
     flexWrap: "wrap",
   },
+};
+
+const styles = {
+  ...adminStyles(originalStyles),
+  hero: {...admin.header, display: 'block'},
+  heroContent: admin.header,
+  statCard: admin.metricCard, statLabel: admin.metricLabel,
+  statValue: admin.metricValue, statDescription: admin.metricDetail,
+  directory: admin.membersSection,
+  directoryHeader: admin.sectionHeader,
+  directoryBody: {padding: 0},
+  workspaceList: {display: 'grid', gap: 0},
+  workspaceCard: {padding: '22px', border: 0, borderBottom: '1px solid rgba(148,163,184,.17)', borderRadius: 0, background: 'transparent'},
+  activeWorkspaceCard: {borderLeft: '2px solid #9fc2f7', background: '#16294255', boxShadow: 'none'},
+  workspaceName: {color: '#e2ecfa', fontSize: 15, fontWeight: 600},
+  detail: {display: 'grid', gap: 7, minWidth: 130, padding: 0, marginRight: 20, border: 0, background: 'transparent'},
+  detailLabel: {color: '#9eb1cb', fontSize: 11, fontWeight: 500},
+  searchInput: admin.search, filterSelect: admin.select,
 };
