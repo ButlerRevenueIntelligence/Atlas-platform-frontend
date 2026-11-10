@@ -1,3 +1,4 @@
+import { useDataAccessReview } from "../components/dataAccess/DataAccessReview";
 import {Link,useLocation} from "react-router-dom";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import * as XLSX from "xlsx";
@@ -116,6 +117,7 @@ function getActiveOrgId() {
 
 export default function Integrations() {
   const location=useLocation();
+  const dataAccess = useDataAccessReview(getActiveOrgId);
   const [integrations, setIntegrations] = useState({});
   const [loading, setLoading] = useState(true);
   const [inventoryReady, setInventoryReady] = useState(false);
@@ -277,6 +279,7 @@ export default function Integrations() {
   }, []);
 
   async function handleConnect(id) {
+    if (!await dataAccess.requestReview(id)) return;
     try {
       setBusyId(id);
       setError("");
@@ -652,7 +655,8 @@ export default function Integrations() {
     }
   }
 
-  function handleExcelClick() {
+  async function handleExcelClick() {
+    if (!await dataAccess.requestReview("excel_csv")) return;
     setError("");
     setSuccess("");
     fileInputRef.current?.click();
@@ -719,6 +723,9 @@ export default function Integrations() {
       }}
     >
       <div style={{display:"flex",justifyContent:"flex-end",marginBottom:12,fontSize:13}}><Link to="/setup" style={{color:"#a2e4ed",padding:"10px 0"}}>Continue workspace setup →</Link></div>
+      {dataAccess.modal}
+      {dataAccess.error && <p role="alert" style={{color:"#ffb9bb"}}>{dataAccess.error}</p>}
+      <p><Link to="/data-privacy" style={{color:"#a2e4ed"}}>Data &amp; Privacy: review access, agreements, and receipts</Link></p>
       <input
         ref={fileInputRef}
         type="file"

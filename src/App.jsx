@@ -1,3 +1,4 @@
+import DataPrivacy from "./pages/DataPrivacy.jsx";
 // frontend/src/App.jsx
 import React from "react";
 import { Routes, Route, Navigate, useLocation, Link } from "react-router-dom";
@@ -630,6 +631,7 @@ export default function App() {
         <Route path="/metrics" element={<Navigate to="/market-signals" replace />} />
         <Route path="/clients" element={<Navigate to="/accounts" replace />} />
         <Route path="/welcome" element={<Welcome />} />
+        <Route path="/data-privacy" element={<DataPrivacy />} />
         <Route path="/setup" element={<RequirePerm perm="command_center.view"><WorkspaceSetup /></RequirePerm>} />
         <Route path="/growth" element={<Navigate to="/growth-engine" replace />} />
         <Route path="/ai-operator" element={<Navigate to="/atlas-ai-operator" replace />} />
