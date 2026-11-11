@@ -157,7 +157,7 @@ export default function Signup() {
         </div>
         {error && <div className="atlas-auth-error" role="alert">{error}</div>}
         <button type="submit" className="atlas-auth-submit" disabled={loading || inviteLoading || (isInvite && !inviteInfo)}><span>{loading ? (isInvite ? "Creating your account…" : "Creating your workspace…") : (isInvite ? "Join workspace" : "Start free trial")}</span><span aria-hidden="true">→</span></button>
-        {!isInvite && <p className="atlas-auth-hint">Your seven-day trial begins when you create your account.</p>}
+        {!isInvite && <p className="atlas-auth-hint">Your seven-day Atlas Growth trial begins when you create your account.</p>}
       </form>
       <div className="atlas-auth-card-bottom">Already have an account? <Link to={isInvite ? `/login?email=${encodeURIComponent(form.email)}&invite=${encodeURIComponent(inviteToken)}` : "/login"}>Sign in</Link></div>
     </AuthLayout>
