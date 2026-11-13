@@ -1,3 +1,4 @@
+import './ConnectorLogos.css';
 import { workspace } from '../components/workspace/workspaceStyles';
 import { useDataAccessReview } from "../components/dataAccess/DataAccessReview";
 import {Link,useLocation} from "react-router-dom";
@@ -856,7 +857,7 @@ export default function Integrations() {
                 boxShadow: "0 10px 24px rgba(0,0,0,0.14)",
               }}
             >
-              <div className="connector-title"><span className="connector-mark" aria-hidden="true">{c.name.split(/\s+/).slice(0,2).map(word => word[0]).join("")}</span><span>{c.name}</span></div>
+              <div className="connector-title"><span className="connector-mark connector-logo" aria-hidden="true"><img src={`/integrations/${c.id}.svg`} alt="" width="32" height="32" /></span><span>{c.name}</span></div>
 
               <div
                 style={{
