@@ -1,3 +1,4 @@
+import "./ExecutiveWorkspaces.css";
 // frontend/src/pages/Pipeline.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { getDeals, moveDealStage, deleteDeal } from "../api";
@@ -27,6 +28,9 @@ const money = (n) =>
 export default function Pipeline() {
   const [deals, setDeals] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+  const [stageView, setStageView] = useState("open");
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerDealId, setDrawerDealId] = useState("");
@@ -34,6 +38,7 @@ export default function Pipeline() {
 
   async function load() {
     setLoading(true);
+    setError("");
     try {
       const res = await getDeals();
       const arr = Array.isArray(res?.deals)
@@ -42,6 +47,8 @@ export default function Pipeline() {
         ? res
         : [];
       setDeals(arr);
+    } catch (e) {
+      setError(e?.message || "Could not load deals. Please retry.");
     } finally {
       setLoading(false);
     }
@@ -437,7 +444,7 @@ export default function Pipeline() {
 
   if (loading) {
     return (
-      <div className="atlas-responsive-page" style={S.page}>
+      <div className="atlas-responsive-page executive-workspace deal-workspace" style={S.page}>
         <div style={S.titleWrap}>
           <h1 className="atlas-responsive-title" style={S.title}>Deal Room</h1>
           <div style={S.sub}>Loading pipeline intelligence…</div>
@@ -447,12 +454,12 @@ export default function Pipeline() {
   }
 
   return (
-    <div className="atlas-responsive-page" style={S.page}>
+    <div className="atlas-responsive-page executive-workspace deal-workspace" style={S.page}>
       <div className="atlas-responsive-row" style={S.header}>
         <div style={S.titleWrap}>
           <h1 className="atlas-responsive-title" style={S.title}>Deal Room</h1>
           <div style={S.sub}>
-            Manage pipeline movement, review deal pressure, and surface next best actions across the revenue board.
+            Keep every opportunity moving. Review the stage, update the next step, and open the deal for context.
           </div>
         </div>
 
@@ -461,17 +468,10 @@ export default function Pipeline() {
         </button>
       </div>
 
-      <div className="atlas-responsive-grid" style={S.signalStrip}>
-        {signalStrip.map((item, idx) => (
-          <div className="atlas-responsive-card" key={`${item}-${idx}`} style={S.signalPill}>
-            {item}
-          </div>
-        ))}
-      </div>
-
-      <div className="atlas-responsive-metrics" style={S.kpiGrid}>
+      {error && <div role="alert" className="ew-error">{error}</div>}
+      <div className="atlas-responsive-metrics ew-deal-metrics" style={S.kpiGrid}>
         <div className="atlas-responsive-card" style={S.kpi}>
-          <div style={S.kpiLabel}>WEIGHTED PIPELINE</div>
+          <div style={S.kpiLabel}>WEIGHTED DEAL VALUE</div>
           <div style={S.kpiValue}>{money(weightedPipeline)}</div>
           <div style={S.kpiSub}>
             Probability-adjusted value across all active and closed stages.
@@ -479,7 +479,7 @@ export default function Pipeline() {
         </div>
 
         <div className="atlas-responsive-card" style={S.kpi}>
-          <div style={S.kpiLabel}>RAW PIPELINE</div>
+          <div style={S.kpiLabel}>TOTAL DEAL VALUE</div>
           <div style={S.kpiValue}>{money(rawPipeline)}</div>
           <div style={S.kpiSub}>Total deal value represented across the board.</div>
         </div>
@@ -503,13 +503,17 @@ export default function Pipeline() {
         </div>
       </div>
 
-      <div className="atlas-responsive-grid" style={S.mainGrid}>
+      <div className="ew-deal-controls">
+        <div role="group" aria-label="Deal stages">{[["open","Open deals"],["closed","Closed deals"],["all","All stages"]].map(([key,label])=><button className="ew-tab" key={key} aria-pressed={stageView===key} onClick={()=>setStageView(key)}>{label}</button>)}</div>
+        <label className="ew-search">Find a deal<input type="search" placeholder="Search by deal name…" value={search} onChange={e=>setSearch(e.target.value)} /></label>
+      </div>
+      <div className="atlas-responsive-grid ew-deal-layout" style={S.mainGrid}>
         <div style={S.boardWrap}>
-          <div className="atlas-responsive-scroll" style={S.board}>
-            {STAGES.map((stage) => {
-              const list = columns.get(stage) || [];
-              const stageValue = stageStats[stage]?.value || 0;
-              const stageCount = stageStats[stage]?.count || 0;
+          <div className="atlas-responsive-scroll ew-stage-board" style={{...S.board,gridTemplateColumns:`repeat(${stageView==="closed" ? 2 : stageView==="all" ? 6 : 4}, minmax(250px,1fr))`}}>
+            {STAGES.filter(stage=>stageView==="all" || (stageView==="closed" ? stage.startsWith("Closed") : !stage.startsWith("Closed"))).map((stage) => {
+              const list = (columns.get(stage) || []).filter(d=>String(d.name || "").toLowerCase().includes(search.trim().toLowerCase()));
+              const stageValue = list.reduce((sum, deal) => sum + safeNum(deal.amount), 0);
+              const stageCount = list.length;
 
               return (
                 <div className="atlas-responsive-card" key={stage} style={S.column}>
@@ -518,6 +522,7 @@ export default function Pipeline() {
                     {stageCount} deals • {money(stageValue)}
                   </div>
 
+                  {!list.length && <p className="ew-stage-empty">{search ? "No matching deals" : "No deals in this stage"}</p>}
                   {list.map((d) => {
                     const id = d._id || d.id;
 
@@ -527,7 +532,7 @@ export default function Pipeline() {
                         style={S.dealCard}
                         onClick={() => openDealDrawer(id, d)}
                       >
-                        <div style={S.dealTitle}>{d.name || "Deal"}</div>
+                        <button type="button" className="ew-open-deal" style={S.dealTitle} aria-label={`Open ${d.name || "deal"}`}>{d.name || "Deal"}</button>
 
                         <div style={S.dealMeta}>
                           {money(d.amount)} • {safeNum(d.probability)}%
@@ -535,6 +540,7 @@ export default function Pipeline() {
 
                         <select
                           style={S.select}
+                          aria-label={`Stage for ${d.name || "deal"}`}
                           value={d.stage}
                           onClick={(e) => e.stopPropagation()}
                           onChange={(e) => {
@@ -549,15 +555,15 @@ export default function Pipeline() {
                           ))}
                         </select>
 
-                        <div
-                          style={S.btnDelete}
+                        <button type="button"
+                          style={{...S.btnDelete,background:"transparent",border:0,color:"#b0bed1",padding:"6px 0"}}
                           onClick={(e) => {
                             e.stopPropagation();
                             onDeleteDeal(id);
                           }}
                         >
-                          Delete
-                        </div>
+                          Delete deal
+                        </button>
                       </div>
                     );
                   })}
@@ -567,7 +573,7 @@ export default function Pipeline() {
           </div>
         </div>
 
-        <div style={S.rightStack}>
+        <details className="ew-detail ew-deal-insights"><summary>Deal intelligence <span>Signals, risk & recommended actions</span></summary><div className="ew-insight-grid" style={S.rightStack}>
           <div className="atlas-responsive-card" style={S.sideCard}>
             <div style={S.sectionTitle}>AI Deal Signals</div>
             <div style={S.list}>
@@ -612,7 +618,7 @@ export default function Pipeline() {
               ))}
             </div>
           </div>
-        </div>
+        </div></details>
       </div>
 
       <DealDrawer
