@@ -1,3 +1,4 @@
+import "./ExecutiveWorkspaces.css";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
@@ -69,6 +70,7 @@ export default function RevenueIntel() {
 
   const [reactivateAfterDays, setReactivateAfterDays] = useState(30);
   const [data, setData] = useState(null);
+  const [executionView, setExecutionView] = useState("overdue");
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerDealId, setDrawerDealId] = useState("");
@@ -207,7 +209,7 @@ export default function RevenueIntel() {
     if (reactCount > 0) {
       items.push({
         title: "Launch reactivation outreach",
-        body: `${reactCount} closed-lost opportunities are ready for reactivation.`,
+        body: `${reactCount} inactive open opportunities are ready for reactivation.`,
       });
     }
 
@@ -571,354 +573,36 @@ export default function RevenueIntel() {
 
       {error ? <div className="atlas-responsive-card" style={S.error}>{error}</div> : null}
 
-      <details className="lb-execution-board">
-        <summary>Execution board · follow-ups, reactivation, and win/loss</summary>
-        <div className="atlas-responsive-row" style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-          <div className="atlas-responsive-card" style={S.pill}>
-            Win rate: <b>{Math.round(safeNum(wl.winRate))}%</b>
-          </div>
-          <div className="atlas-responsive-card" style={S.pill}>
-            Queue weighted value: <b>{money(weightedValue)}</b>
-          </div>
-          <div className="atlas-responsive-card" style={S.pill}>
-            Queue value: <b>{moneyCompact(totalPipeline)}</b>
-          </div>
-
-          <button  onClick={load} disabled={loading} style={S.btn}>
-            {loading ? "Loading..." : "Refresh execution board"}
-          </button>
-
+      <section className="executive-workspace execution-workspace" aria-label="Execution board">
+        <header className="ew-heading">
+          <div><span className="ew-eyebrow">EXECUTION BOARD</span><h2>Turn priorities into progress.</h2><p>Review the next buyer action, accountable owner, and due date.</p></div>
+          <button className="ew-button" onClick={load} disabled={loading}>{loading ? "Refreshing…" : "Refresh board"}</button>
+        </header>
+        <div className="ew-metrics">
+          <div><span>Queue value</span><strong>{moneyCompact(totalPipeline)}</strong></div>
+          <div><span>Weighted queue</span><strong>{moneyCompact(weightedValue)}</strong></div>
+          <div><span>Execution pressure</span><strong>{executionPressureScore}<small> / 100</small></strong><span>{systemHealthLabel}</span></div>
+          <div><span>Win rate</span><strong>{Math.round(safeNum(wl.winRate))}%</strong></div>
         </div>
-      <div className="atlas-responsive-card" style={S.heroCard}>
-        <div className="atlas-responsive-grid" style={S.heroGrid}>
-          <div>
-            <div style={{ fontWeight: 900, fontSize: 16, marginBottom: 10 }}>
-              Atlas AI Executive Summary
-            </div>
-            <div style={{ fontSize: 14, opacity: 0.92, lineHeight: 1.65 }}>
-              {executiveSummary}
-            </div>
-          </div>
-
-          <div className="atlas-responsive-card" style={S.pressureCard}>
-            <div className="atlas-responsive-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ fontWeight: 900, fontSize: 13 }}>Execution Pressure</div>
-              <div style={S.badge(riskTone)}>{systemHealthLabel}</div>
-            </div>
-            <div style={{ marginTop: 12, fontSize: 30, fontWeight: 900, color: toneColor(riskTone) }}>
-              {executionPressureScore}
-            </div>
-            <div style={{ fontSize: 12, opacity: 0.82, marginTop: 4 }}>
-              Based on overdue, due today, and upcoming action density.
-            </div>
-            <div style={S.pressureTrack}>
-              <div style={S.pressureFill} />
-            </div>
-          </div>
+        <div className="ew-toolbar" role="group" aria-label="Choose execution queue">
+          {[["overdue","Overdue",overdueCount],["today","Due today",dueTodayCount],["upcoming","Upcoming",upcomingCount],["reactivation","Reactivation",reactCount]].map(([key,label,count]) => <button key={key} className="ew-tab" aria-pressed={executionView===key} onClick={()=>setExecutionView(key)}>{label}<span>{count}</span></button>)}
         </div>
-      </div>
-
-      <div className="atlas-responsive-metrics" style={S.kpiGrid}>
-        <div className="atlas-responsive-card" style={S.kpiCard}>
-          <div style={S.kpiLabel}>TOTAL PIPELINE</div>
-          <div style={S.kpiValue}>{money(totalPipeline)}</div>
-          <div style={S.kpiSub}>Combined value of active execution opportunities.</div>
+        <div className="ew-queue" aria-live="polite">
+          <div className="ew-queue-label"><span>Opportunity / next action</span><span>Owner</span><span>Due / last activity</span><span>Deal value</span></div>
+          {(executionView==="overdue" ? exec.overdue || [] : executionView==="today" ? exec.dueToday || [] : executionView==="upcoming" ? exec.upcoming || [] : react.items || []).map((d) => <button className="ew-queue-row" key={d.id || d._id} onClick={()=>openDealDrawerById(d.id || d._id,toDrawerDeal(d))}>
+            <div><strong>{d.name || "Untitled opportunity"}</strong><span>{d.clientName || d.stage || "Account not recorded"}</span><p>{d.nextAction || d.suggested || "Next action not recorded"}</p></div>
+            <div>{d.ownerName || "Owner not recorded"}</div>
+            <div>{executionView==="reactivation" ? `${safeNum(d.lastTouchAgeDays)} days since activity` : formatDate(d.dueAt)}</div>
+            <div className="ew-amount">{money(d.amount)} <span aria-hidden="true">↗</span></div>
+          </button>)}
+          {!(executionView==="overdue" ? exec.overdue || [] : executionView==="today" ? exec.dueToday || [] : executionView==="upcoming" ? exec.upcoming || [] : react.items || []).length && <div className="ew-empty"><strong>No {executionView==="today" ? "actions due today" : executionView==="reactivation" ? "reactivation candidates" : `${executionView} actions`}.</strong><p>Choose another queue to review its opportunities.</p></div>}
         </div>
-
-        <div className="atlas-responsive-card" style={S.kpiCard}>
-          <div style={S.kpiLabel}>WEIGHTED PIPELINE</div>
-          <div style={S.kpiValue}>{money(weightedValue)}</div>
-          <div style={S.kpiSub}>Probability-adjusted value tied to the current board.</div>
+        <div className="ew-two-column">
+          <details className="ew-detail"><summary>Leadership notes <span>Summary & recommendations</span></summary><div className="ew-detail-body"><p>{executiveSummary}</p><details><summary>Supporting signals</summary><div className="ew-note">{signals.map((item,i)=><p key={i}>{item}</p>)}{aiInsights.map((item,i)=><p key={`insight-${i}`}>{item}</p>)}</div></details>{topRecommendations.map((item,i)=><div className="ew-note" key={i}><strong>{item.title}</strong><p>{item.body}</p></div>)}</div></details>
+          <details className="ew-detail"><summary>Outcomes & rules <span>Win/loss & reactivation</span></summary><div className="ew-detail-body"><p>{wl.won} won · {wl.lost} lost · {Math.round(safeNum(wl.winRate))}% win rate</p><p>Average won: {money(wl.avgWon)} · Average lost: {money(wl.avgLost)}</p><label className="ew-rule">Reactivation after <input type="number" min="1" value={reactivateAfterDays} onChange={e=>setReactivateAfterDays(Math.max(1,Number(e.target.value)||1))} /> days without activity</label><button className="ew-button" onClick={load} disabled={loading}>Refresh with threshold</button></div></details>
         </div>
-
-        <div className="atlas-responsive-card" style={S.kpiCard}>
-          <div style={S.kpiLabel}>AVG CLOSE PROBABILITY</div>
-          <div style={S.kpiValue}>{avgProbability.toFixed(0)}%</div>
-          <div style={S.kpiSub}>Average close confidence across active deals.</div>
-        </div>
-
-        <div className="atlas-responsive-card" style={S.kpiCard}>
-          <div style={S.kpiLabel}>REACTIVATION CANDIDATES</div>
-          <div style={S.kpiValue}>{reactCount}</div>
-          <div style={S.kpiSub}>Inactive open opportunities surfaced for re-engagement.</div>
-        </div>
-      </div>
-
-      <div className="atlas-responsive-grid" style={S.mainGrid}>
-        <div style={S.leftStack}>
-          <div className="atlas-responsive-card" style={S.card}>
-            <div style={{ fontWeight: 900, marginBottom: 10 }}>Reactivation Rules</div>
-            <div className="atlas-responsive-row"
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                gap: 12,
-                flexWrap: "wrap",
-                alignItems: "center",
-              }}
-            >
-              <div style={{ fontSize: 13, opacity: 0.86, maxWidth: 720, lineHeight: 1.5 }}>
-                Open opportunities without recorded activity beyond this threshold will surface in the reactivation queue so Atlas can identify revive-worthy revenue.
-              </div>
-
-              <div className="atlas-responsive-row" style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                <div style={{ fontSize: 12, opacity: 0.9 }}>Days since activity ≥</div>
-                <input
-                  type="number"
-                  min="1"
-                  style={S.input}
-                  value={reactivateAfterDays}
-                  onChange={(e) => setReactivateAfterDays(Number(e.target.value || 0))}
-                />
-                <div style={{ fontSize: 12, opacity: 0.9 }}>days</div>
-                <button  style={S.btnGhost} disabled={loading} onClick={load}>
-                  Apply
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="atlas-responsive-grid" style={S.panelGrid}>
-            <div className="atlas-responsive-card" style={S.panel}>
-              <div className="atlas-responsive-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div style={S.panelTitle}>OVERDUE</div>
-                <div style={S.badge("bad")}>{overdueCount}</div>
-              </div>
-
-              {overdueCount ? (
-                (exec.overdue || []).slice(0, 10).map((d) => (
-                  <div className="atlas-responsive-card"
-                    key={d.id || d._id}
-                    style={S.row}
-                    onClick={() => openDealDrawerById(d.id || d._id, toDrawerDeal(d))}
-                    title="Click to open Deal Intelligence"
-                  >
-                    <div style={{ fontWeight: 900, fontSize: 12 }}>
-                      {d.clientName ? `${d.clientName} — ` : ""}
-                      {d.name}
-                    </div>
-                    <div style={S.small}>
-                      Stage: <b>{d.stage || "—"}</b> • Due: <b>{formatDate(d.dueAt)}</b>
-                      <br />
-                      Owner: <b>{d.ownerName || "Owner not recorded"}</b>
-                      <br />
-                      Next: <b>{d.nextAction || "—"}</b>
-                      <br />
-                      Weighted: <b>{money(safeNum(d.amount) * (safeNum(d.probability) / 100))}</b>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div style={{ marginTop: 10, opacity: 0.85, fontSize: 13 }}>
-                  No overdue actions detected.
-                </div>
-              )}
-            </div>
-
-            <div className="atlas-responsive-card" style={S.panel}>
-              <div className="atlas-responsive-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div style={S.panelTitle}>DUE TODAY</div>
-                <div style={S.badge("warn")}>{dueTodayCount}</div>
-              </div>
-
-              {dueTodayCount ? (
-                (exec.dueToday || []).slice(0, 10).map((d) => (
-                  <div className="atlas-responsive-card"
-                    key={d.id || d._id}
-                    style={S.row}
-                    onClick={() => openDealDrawerById(d.id || d._id, toDrawerDeal(d))}
-                    title="Click to open Deal Intelligence"
-                  >
-                    <div style={{ fontWeight: 900, fontSize: 12 }}>
-                      {d.clientName ? `${d.clientName} — ` : ""}
-                      {d.name}
-                    </div>
-                    <div style={S.small}>
-                      Stage: <b>{d.stage || "—"}</b> • Due: <b>{formatDate(d.dueAt)}</b>
-                      <br />
-                      Owner: <b>{d.ownerName || "Owner not recorded"}</b>
-                      <br />
-                      Next: <b>{d.nextAction || "—"}</b>
-                      <br />
-                      Weighted: <b>{money(safeNum(d.amount) * (safeNum(d.probability) / 100))}</b>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div style={{ marginTop: 10, opacity: 0.85, fontSize: 13 }}>
-                  No actions due today.
-                </div>
-              )}
-            </div>
-
-            <div className="atlas-responsive-card" style={S.panel}>
-              <div style={S.panelTitle}>WIN / LOSS + REACTIVATION</div>
-
-              <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
-                <div className="atlas-responsive-card" style={S.rowStatic}>
-                  <div style={{ fontWeight: 900, fontSize: 12 }}>Win / Loss</div>
-                  <div style={S.small}>
-                    Won: <b>{wl.won}</b> • Lost: <b>{wl.lost}</b> • Win rate: <b>{Math.round(safeNum(wl.winRate))}%</b>
-                    <br />
-                    Avg Won: <b>{money(wl.avgWon)}</b> • Avg Lost: <b>{money(wl.avgLost)}</b>
-                    <br />
-                    Cycle Won: <b>{wl.avgCycleDaysWon}d</b> • Cycle Lost: <b>{wl.avgCycleDaysLost}d</b>
-                  </div>
-                </div>
-
-                <div className="atlas-responsive-card" style={S.rowStatic}>
-                  <div style={{ fontWeight: 900, fontSize: 12 }}>
-                    Reactivation Queue <span style={{ opacity: 0.8 }}>(Inactive Open)</span>
-                  </div>
-                  <div style={S.small}>
-                    Candidates: <b>{reactCount}</b> • Threshold:{" "}
-                    <b>{react.reactivateAfterDays || reactivateAfterDays} days</b>
-                  </div>
-                </div>
-
-                {(react.items || []).slice(0, 6).map((d) => (
-                  <div className="atlas-responsive-card"
-                    key={d.id || d._id}
-                    style={S.row}
-                    onClick={() => openDealDrawerById(d.id || d._id, toDrawerDeal(d))}
-                    title="Click to open Deal Intelligence"
-                  >
-                    <div style={{ fontWeight: 900, fontSize: 12 }}>
-                      {d.clientName ? `${d.clientName} — ` : ""}
-                      {d.name}
-                    </div>
-                    <div style={S.small}>
-                      Last touch: <b>{safeNum(d.lastTouchAgeDays)}d</b> ago
-                      <br />
-                      Suggested: <b>{d.suggested || "Re-engage"}</b>
-                      <br />
-                      Value: <b>{money(d.amount)}</b>
-                    </div>
-                  </div>
-                ))}
-
-                {!reactCount ? (
-                  <div style={{ marginTop: 10, opacity: 0.85, fontSize: 13 }}>
-                    No reactivation candidates yet.
-                  </div>
-                ) : null}
-              </div>
-            </div>
-          </div>
-
-          <div className="atlas-responsive-card" style={S.card}>
-            <div style={{ fontWeight: 900, marginBottom: 10 }}>Upcoming Execution Queue</div>
-            {upcomingCount ? (
-              <div style={{ display: "grid", gap: 10 }}>
-                {(exec.upcoming || []).slice(0, 8).map((d) => (
-                  <div className="atlas-responsive-card"
-                    key={d.id || d._id}
-                    style={S.row}
-                    onClick={() => openDealDrawerById(d.id || d._id, toDrawerDeal(d))}
-                    title="Click to open Deal Intelligence"
-                  >
-                    <div style={{ fontWeight: 900, fontSize: 12 }}>
-                      {d.clientName ? `${d.clientName} — ` : ""}
-                      {d.name}
-                    </div>
-                    <div style={S.small}>
-                      Stage: <b>{d.stage || "—"}</b> • Due: <b>{formatDate(d.dueAt)}</b>
-                      <br />
-                      Owner: <b>{d.ownerName || "Owner not recorded"}</b>
-                      <br />
-                      Next: <b>{d.nextAction || "—"}</b>
-                      <br />
-                      Amount: <b>{money(d.amount)}</b>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div style={{ opacity: 0.85, fontSize: 13 }}>No upcoming actions queued.</div>
-            )}
-          </div>
-        </div>
-
-        <div style={S.rightStack}>
-          <div className="atlas-responsive-card" style={S.insightCard}>
-            <div style={{ fontWeight: 900, marginBottom: 10 }}>Atlas AI Insights</div>
-            <div style={{ display: "grid", gap: 10 }}>
-              {aiInsights.map((item, idx) => (
-                <div key={idx} style={{ fontSize: 13, opacity: 0.9, lineHeight: 1.55 }}>
-                  • {item}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="atlas-responsive-card" style={S.insightCard}>
-            <div style={{ fontWeight: 900, marginBottom: 10 }}>Signals</div>
-            <div style={{ display: "grid", gap: 10 }}>
-              {signals.map((item, idx) => (
-                <div key={idx} style={{ fontSize: 13, opacity: 0.9, lineHeight: 1.55 }}>
-                  {item}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="atlas-responsive-card" style={S.insightCard}>
-            <div style={{ fontWeight: 900, marginBottom: 10 }}>Recommended Actions</div>
-            <div style={{ display: "grid", gap: 12 }}>
-              {topRecommendations.map((item, idx) => (
-                <div key={`${item.title}-${idx}`}>
-                  <div style={{ fontWeight: 900, fontSize: 13 }}>{item.title}</div>
-                  <div style={{ marginTop: 6, fontSize: 12, opacity: 0.84, lineHeight: 1.55 }}>
-                    {item.body}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="atlas-responsive-card" style={S.insightCard}>
-            <div style={{ fontWeight: 900, marginBottom: 10 }}>Board Snapshot</div>
-            <div style={{ display: "grid", gap: 10 }}>
-              <div style={{ fontSize: 13, opacity: 0.9 }}>
-                Overdue: <b>{overdueCount}</b>
-              </div>
-              <div style={{ fontSize: 13, opacity: 0.9 }}>
-                Due Today: <b>{dueTodayCount}</b>
-              </div>
-              <div style={{ fontSize: 13, opacity: 0.9 }}>
-                Upcoming: <b>{upcomingCount}</b>
-              </div>
-              <div style={{ fontSize: 13, opacity: 0.9 }}>
-                Reactivation Queue: <b>{reactCount}</b>
-              </div>
-              <div style={S.divider} />
-              <div style={{ fontSize: 13, opacity: 0.9 }}>
-                Health: <b style={{ color: toneColor(riskTone) }}>{systemHealthLabel}</b>
-              </div>
-            </div>
-          </div>
-
-          <div className="atlas-responsive-card" style={S.insightCard}>
-            <div style={{ fontWeight: 900, marginBottom: 10 }}>Quick Navigation</div>
-            <div style={{ display: "grid", gap: 10 }}>
-              <button  style={S.btnGhost} onClick={() => nav("/deal-war-room")}>
-                Open Deal War Room
-              </button>
-              <button  style={S.btnGhost} onClick={() => nav("/growth-engine")}>
-                Open Growth Engine
-              </button>
-              <button  style={S.btnGhost} onClick={() => nav("/account-intelligence")}>
-                Open Account Intelligence
-              </button>
-              <button  style={S.btnGhost} onClick={() => nav("/atlas-ai-operator")}>
-                Open Atlas AI Operator
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      </details>
+        <footer className="ew-links"><Link to="/deal-room">Deal Room →</Link><Link to="/board-mode">Executive Board →</Link><Link to="/atlas-ai-operator">Ask Atlas →</Link></footer>
+      </section>
 
       {atlasDemoWorkspace ? (drawerOpen && <div role="dialog" aria-modal="true" aria-label="Sample opportunity details" style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,.75)", display: "grid", placeItems: "center", padding: 24 }} onClick={closeDrawer}>
         <div className="atlas-responsive-card" style={{ background: "#0b1730", color: "#fff", borderRadius: 16, padding: 24, maxWidth: 600, width: "100%" }} onClick={event => event.stopPropagation()}>

@@ -1,3 +1,4 @@
+import "./ExecutiveWorkspaces.css";
 import { workspaceStyles } from '../components/workspace/workspaceStyles';
 import WorkspaceDataNotice from "../components/WorkspaceDataNotice.jsx";
 import React, { useEffect, useMemo, useState } from "react";
@@ -593,7 +594,7 @@ export default function BoardMode() {
               </div>
 
               <div className="atlas-responsive-row" style={styles.titleRow}>
-                <h1 className="atlas-responsive-title" style={styles.title}>Board Briefing</h1>
+                <h1 className="atlas-responsive-title" style={styles.title}>Executive Board</h1>
 
                 <span
                   style={
@@ -629,7 +630,12 @@ export default function BoardMode() {
 
               <button
                 type="button"
-                onClick={() => window.print()}
+                onClick={() => {
+                  const outlook = document.querySelector('.ew-board-scenarios');
+                  const wasOpen = outlook?.open;
+                  if (outlook) outlook.open = true;
+                  try { window.print(); } finally { if (outlook) outlook.open = wasOpen; }
+                }}
                 style={styles.secondaryButton}
               >
                 Print / Save PDF
@@ -685,10 +691,10 @@ export default function BoardMode() {
             />
           </section>
 
-          <section className="board-section atlas-responsive-card" style={styles.section}>
+          <section className="board-section atlas-responsive-card ew-board-brief" style={styles.section}>
             <SectionHeading
               eyebrow="Executive summary"
-              title="Board Narrative"
+              title="The leadership brief"
             />
 
             <p style={styles.narrative}>{narrative}</p>
@@ -724,7 +730,7 @@ export default function BoardMode() {
             <section className="board-section atlas-responsive-card" style={styles.section}>
               <SectionHeading
                 eyebrow="Leadership response"
-                title="Executive Actions"
+                title="Decisions & next actions"
               />
 
               <div style={styles.list}>
@@ -735,6 +741,7 @@ export default function BoardMode() {
             </section>
           </div>
 
+          <details className="ew-detail ew-board-scenarios"><summary>Explore the outlook <span>Opportunity scenarios & directional projection</span></summary><div className="ew-detail-body">
           <div className="board-two-column atlas-responsive-grid" style={styles.twoColumn}>
             <section className="board-section atlas-responsive-card" style={styles.section}>
               <SectionHeading
@@ -764,6 +771,8 @@ export default function BoardMode() {
               />
             </section>
           </div>
+
+          </div></details>
 
           <footer className="atlas-responsive-row" style={styles.footer}>
             <span>
